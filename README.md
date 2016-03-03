@@ -125,8 +125,5 @@ jQuery plugins required:
 
 ### Tech
 Libraries used:
-* [jQuery] - HTML enhanced for web apps!
-
-And of course Dillinger itself is open source with a [public repository][dill]
- on GitHub.
+* jQuery - HTML enhanced for web apps!
 
