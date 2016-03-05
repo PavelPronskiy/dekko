@@ -125,7 +125,7 @@ jQuery plugins required:
 ```
 
 ### Changelog
-0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
-0.0.6 beta - init version
+    0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
+    0.0.6 beta - init version
 
 
