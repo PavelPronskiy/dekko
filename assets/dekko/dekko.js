@@ -1,7 +1,7 @@
 
 /**
  *
- * Version: 0.0.6 beta
+ * Version: 0.0.7 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -51,6 +51,25 @@
 			var options = $.extend(defaults, opts);
 			
 			window.dekko = {
+				setCookie: function(key, value, expire) {
+					var d = new Date();
+					d.setTime(d.getTime() + (expire*24*60*60*1000));
+					var expires = "expires=" + d.toGMTString();
+					return document.cookie = key+"="+value+"; "+expires;
+				},
+				getCookie: function(key) {
+					var start = document.cookie.indexOf(key + "=");
+					var len = start + key.length + 1;
+
+					if ((!start) && (key != document.cookie.substring(0, key.length))) {
+						return null;
+					}
+					
+					if (start == -1) return null;
+					var end = document.cookie.indexOf(';', len);
+					if (end == -1) end = document.cookie.length;
+					return unescape(document.cookie.substring(len, end));
+				},
 				successInfo: function(objectName) {
 					if (options.console)
 						return console.info('Element: ' + objectName + ' loaded');
@@ -60,9 +79,6 @@
 					try {
 						if ($.fn.jquery < '1.0')
 							throw new Error('jQuery Version outdate ' + $.fn.jquery);
-
-						if (!$.cookie)
-							throw new Error('jQuery cookie plugin required');
 
 						if (!$.easing)
 							throw new Error('jQuery easing plugin required');
@@ -84,16 +100,27 @@
 					return isMobile;
 				},
 				getLSObject: function(name) {
-					if (options.console)
-						console.info('Loading cached element: ' + name);
-
 					return JSON.parse(localStorage.getItem(name));
 				},
-				setLSObject: function(name, object) {
-					if (options.console)
-						console.info('Element: ' + name + ' now cached');
+				setLSObject: function(object, xhr) {
+					var storeVersionNumber = parseInt(object.storeName.replace(/^(.*)-([0-9]+)$/gi, '$2'), 10);
+					if ((typeof storeVersionNumber === 'number') && (storeVersionNumber % 1 === 0)) {
+						var storePreviousVersionNumber = object.name + '-' + (storeVersionNumber - 1);
+						if (this.getLSObject(storePreviousVersionNumber)) {
+							if (options.console)
+								console.info('Element: ' + storePreviousVersionNumber + ' removed in localStorage');
+
+							localStorage.removeItem(storePreviousVersionNumber);
+						}
 						
-					return localStorage.setItem(name, JSON.stringify(object));
+					} else {
+						throw new Error('storeVersion required incremental number');
+					}
+					
+					if (options.console)
+						console.info('Element: ' + object.name + ' cached');
+
+					return localStorage.setItem(object.storeName, JSON.stringify(xhr));
 				},
 				dateToUnixTimeStamp: function(date) {
 					objDate = new Date(date.split(' ').join('T'));
@@ -103,16 +130,17 @@
 					$thisApp = this;
 					
 					try {
-						return $.ajax({
+						$.ajax({
 							type: 'GET',
 							url: object.urlPath,
 							dataType: 'script',
 							cache: options.cache,
 							async: true,
 							success: function(xhr) {
-								// console.log(object.name);
-								$thisApp.setLSObject(object.name, xhr);
-								$thisApp.loader(object);
+								return (
+									$thisApp.setLSObject(object, xhr),
+									$thisApp.loader(object)
+								);
 							},
 							error: function( jqxhr, settings, exception ) {
 								throw new Error('Unable to load popup element: ' + object.name + '\nException handler returned: ' + exception + '\nFile: ' + object.urlPath);
@@ -123,17 +151,16 @@
 					}
 				},
 				route: function(object) {
-					var localCached = $thisApp.getLSObject(object.name);
+					var localCached = this.getLSObject(object.storeName);
 
-					if ($.cookie(object.name) == 'false')
+					if (this.getCookie(object.name) === null)
+						this.setCookie(object.name, true, object.item.cookieExpire);
+
+					if (this.getCookie(object.name) == 'false')
 						return false;
-	
-					if (!$.cookie(object.name))
-						$.cookie(object.name, true, object.cookieExpire);
 	
 					if (object.date.now < object.date.start || object.date.now > object.date.end)
 						return false;
-
 
 					if (options.cache == true && localCached)
 						return (
@@ -147,6 +174,7 @@
 				render: function() {
 					$thisApp = this;
 
+
 					if (!this.checkCompability())
 						return false;
 
@@ -155,12 +183,15 @@
 						
 					if (options.elements.length < 1)
 						return false;
+						
+					if (typeof window.localStorage == 'undefined')
+						return false;
+						
 
 					$.each(options.elements, function(index, object) {
 						$.map(object, function (item, name) {
 							switch (item.type) {
 							case 'popup':
-								
 								// route popups
 								return $thisApp.route({
 									name: name,
@@ -168,10 +199,11 @@
 									urlPath: options.path + '/' + name + '/' + options.scriptName,
 									globElement: globThis,
 									console: options.console,
+									storeName: name + '-' + item.storeVersion,
 									date: {
 										now: Math.round(new Date().getTime() / 1000),
 										start: $thisApp.dateToUnixTimeStamp(item.date.start),
-										end: $thisApp.dateToUnixTimeStamp(item.date.end),
+										end: $thisApp.dateToUnixTimeStamp(item.date.end)
 									},
 									cookieExpire: {
 										expire: new Date().getTime() + (1000*60*60*24*item.cookieExpire)

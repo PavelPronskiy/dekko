@@ -28,9 +28,10 @@ jQuery plugins required:
         				'popup-example1' : {
         				    type: 'popup', // type of method element (required)
         					context: 'магия', // html data (optional)
+        					storeVersion: 8, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 1000, // wait before show (optional)
-        					cookieExpire: 2, // closable element option, specific counting by day (required)
+        					cookieExpire: 2, // closable element option, specific counting by days (required)
         					date: {
         						start: '2016-02-26 10:00:00', // element more start at (required)
         						end: '2016-04-01 23:59:59' // element not started after this date (required)
@@ -49,9 +50,10 @@ jQuery plugins required:
         				'popup-example2' : {
         				    type: 'popup', // type of method element (required)
         					context: 'попап', // html data (optional)
+        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 5000, // wait before show (optional)
-        					cookieExpire: 2, // closable element option, specific counting by day (required)
+        					cookieExpire: 2, // closable element option, specific counting by days (required)
         					date: {
         						start: '2016-02-26 10:00:00', // element more start at (required)
         						end: '2016-04-01 23:59:59' // element not started after this date (required)
@@ -70,9 +72,10 @@ jQuery plugins required:
         				'popup-example3' : {
         				    type: 'popup', // type of method element (required)
         					context: 'весна', // html data (optional)
+        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 2000, // wait before show (optional)
-        					cookieExpire: 2, // closable element option, specific counting by day (required)
+        					cookieExpire: 2, // closable element option, specific counting by days (required)
         					date: {
         						start: '2016-02-26 10:00:00', // element more start at (required)
         						end: '2016-04-01 23:59:59' // element not started after this date (required)
@@ -91,9 +94,10 @@ jQuery plugins required:
         				'popup-example4' : {
         				    type: 'popup', // type of method element (required)
         					context: 'девид блейн', // html data (optional)
+        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 1000, // wait before show (optional)
-        					cookieExpire: 2, // closable element option, specific counting by day (required)
+        					cookieExpire: 2, // closable element option, specific counting by days (required)
         					date: {
         						start: '2016-02-26 10:00:00', // element more start at (required)
         						end: '2016-04-01 23:59:59' // element not started after this date (required)
@@ -120,10 +124,8 @@ jQuery plugins required:
 /assets/dekko/modules/module-name2/default.js
 ```
 
-### Version
-0.0.6 beta
+### Changelog
+0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
+0.0.6 beta - init version
 
-### Tech
-Libraries used:
-* jQuery - HTML enhanced for web apps!
 

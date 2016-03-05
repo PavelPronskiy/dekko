@@ -2,10 +2,11 @@
  * updated ver 0.15 1
  * popup element template
 **/
-(function ($) {
+jQuery(function ($) {
 
 	window.dekko.loader = function (object) {
 		var t = {},
+			$this = window.dekko,
 			animPosOpts = {},
 			wrapPosOpts = {};
 
@@ -152,29 +153,21 @@
 				    duration:'slow'
 				},'linear');
 
-/*				t.wrap.animate({  borderSpacing: -360 }, {
-				    step: function(now,fx) {
-				      $(this).css('-webkit-transform','rotate('+now+'deg)'); 
-				      $(this).css('-moz-transform','rotate('+now+'deg)');
-				      $(this).css('transform','rotate('+now+'deg)');
-				    },
-				    duration:'slow'
-				},'linear').delay(3000);
-*/	
 	
 			t.itemClose.click(function() {
 				t.wrap.animate(t.posWrapHorizStart, object.item.effects.duration, object.item.effects.easing, function() {
-					// $.cookie(object.name, false, object.cookieExpire);
 					$(this).remove();
 				});
+
+				return $this.setCookie(object.name, false, object.item.cookieExpire);
 			});
 	
 			return (
 				object.globElement.append(t.wrap),
-				window.dekko.successInfo(object.name)
+				$this.successInfo(object.name)
 			);
 		} catch (e) {
-			return window.dekko.errorException(e);
+			return $this.errorException(e);
 		}
 
 	};
