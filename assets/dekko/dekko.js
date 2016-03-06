@@ -34,14 +34,12 @@
 (function ($, window) {
 	$.fn.extend({
 		dekko: function (opts) {
-			var urlPath, $thisApp, objDate,
-			startDate, endDate, current = 0,
-			nowDate, cookieExpire,	eachRow = {},
+			var $thisApp, objDate,
 			globThis = $(this),
 			defaults = {
 				cache: true,
 				scriptName: 'default.js',
-				elements: [],
+				modules: [],
 				rotate: false,
 				path: '/media/popup',
 				cookie: true
@@ -155,8 +153,6 @@
 					}
 				},
 				route: function(object) {
-
-
 					if (this.getCookie(object.name) === null)
 						this.setCookie(object.name, true, object.item.cookieExpire);
 
@@ -172,7 +168,6 @@
 							this.loader(object)
 						);
 					
-
 					return this.fetchModules(object);
 				},
 				construct: function (objects) {
@@ -200,7 +195,7 @@
 						});
 					});
 				},
-				fetchElements: function(dataUrl) {
+				fetchModulesOptions: function(dataUrl) {
 					$thisApp = this;
 					try {
 						$.ajax({
@@ -228,17 +223,14 @@
 						if (typeof window.localStorage == 'undefined')
 							return false;
 							
-	
-						// check remote elements options
-						if (typeof options.elementsUrl !== 'undefined')
-							return this.fetchElements(options.elementsUrl);
+							// check remote elements options
+						if (typeof options.modulesUrl !== 'undefined')
+							return this.fetchModulesOptions(options.modulesUrl);
 						
-	
-						if ((options.elements.length > 0))
-							return this.construct(options.elements);
-						
-
-						throw new Error('Dekko loaded, but modules not defined');
+						if ((options.modules.length > 0))
+							return this.construct(options.modules);
+						else
+							throw new Error('Dekko loaded, but modules not defined');
 	
 					} catch (e) {
 						return this.errorException(e);

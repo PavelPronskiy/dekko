@@ -23,8 +23,8 @@ jQuery plugins required:
         		cache: true, // cache requests and save browser localStorage (optional)
         		console: true, // show notices (optional)
         		path: '/assets/dekko/modules', // relative path to element modules (required)
-        // 		elementsUrl: '/example-data.json' // get data elements json
-        		elements: [ // require minimum one array element
+        // 		modulesUrl: '/example-data.json' // get data elements json
+        		modules: [ // require minimum one array element
         			{
         				'popup-example1' : {
         				    type: 'popup', // type of method element (required)
@@ -126,7 +126,7 @@ jQuery plugins required:
 ```
 
 ### Changelog
-    0.0.8 beta - Added elementsUrl, removed required $.easing() plugin. Changed module template.
+    0.0.8 beta - Added modulesUrl, removed required $.easing() plugin. Changed module template.
     0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
     0.0.6 beta - init version
 
