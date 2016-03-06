@@ -18,6 +18,12 @@ jQuery plugins required:
   
 ### example preload modules
 ```js
+        	$('body').dekko({
+        		mobile: false, // mobile is off (optional)
+        		cache: true, // cache requests and save browser localStorage (optional)
+        		console: true, // show notices (optional)
+        		path: '/assets/dekko/modules', // relative path to element modules (required)
+        // 		elementsUrl: '/example-data.json' // get data elements json
         		elements: [ // require minimum one array element
         			{
         				'popup-example1' : {
@@ -108,6 +114,7 @@ jQuery plugins required:
         				}
         			}
         		]
+        	});
 ```
 
 ## modules structure
