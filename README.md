@@ -18,11 +18,6 @@ jQuery plugins required:
   
 ### example preload modules
 ```js
-        	$('body').dekko({
-        		mobile: false, // mobile is off (optional)
-        		cache: false, // cache requests and save browser localStorage (optional)
-        		console: true, // show notices (optional)
-        		path: '/assets/dekko/modules', // relative path to element modules (required)
         		elements: [ // require minimum one array element
         			{
         				'popup-example1' : {
@@ -50,7 +45,7 @@ jQuery plugins required:
         				'popup-example2' : {
         				    type: 'popup', // type of method element (required)
         					context: 'попап', // html data (optional)
-        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
+        					storeVersion: 3, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 5000, // wait before show (optional)
         					cookieExpire: 2, // closable element option, specific counting by days (required)
@@ -113,7 +108,6 @@ jQuery plugins required:
         				}
         			}
         		]
-        	});
 ```
 
 ## modules structure
