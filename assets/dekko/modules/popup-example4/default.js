@@ -2,9 +2,8 @@
  * updated ver 0.15 1
  * popup element template
 **/
-(function ($) {
-
-	window.dekko.loader = function (object) {
+!(function ($, _) { // wrapper
+	_.loader = function (object) { // loader
 		var t = {},
 			animPosOpts = {},
 			wrapPosOpts = {};
@@ -148,15 +147,11 @@
 
 			return (
 				object.globElement.append(t.wrap),
-				window.dekko.successInfo(object.name)
+				_.console('info', 'Element: ' + object.name + ' loaded')
 			);
-
-			
 		} catch (e) {
-			return window.dekko.errorException(e);
+			return _.errorException(e);
 		}
 
 	};
-
-
-}(jQuery));
+}(jQuery, window.dekko));

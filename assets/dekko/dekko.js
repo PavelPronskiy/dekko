@@ -1,7 +1,7 @@
 
 /**
  *
- * Version: 0.0.7 beta
+ * Version: 0.0.8 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -31,25 +31,23 @@
  *
  **/
  
-(function ($) {
+(function ($, window) {
 	$.fn.extend({
 		dekko: function (opts) {
 			var urlPath, $thisApp, objDate,
 			startDate, endDate, current = 0,
 			nowDate, cookieExpire,	eachRow = {},
-			globThis = $(this);
-			
-			var defaults = {
+			globThis = $(this),
+			defaults = {
 				cache: true,
 				scriptName: 'default.js',
 				elements: [],
 				rotate: false,
 				path: '/media/popup',
 				cookie: true
-			};
+			},
+			options = $.extend(defaults, opts);
 
-			var options = $.extend(defaults, opts);
-			
 			window.dekko = {
 				setCookie: function(key, value, expire) {
 					var d = new Date();
@@ -70,25 +68,28 @@
 					if (end == -1) end = document.cookie.length;
 					return unescape(document.cookie.substring(len, end));
 				},
-				successInfo: function(objectName) {
-					if (options.console)
-						return console.info('Element: ' + objectName + ' loaded');
+				console: function(type, message) {
+					
+					if (!options.console)
+						return false;
+					
+					
+					switch(type) {
+						case 'error':
+							// console.error('Exception: ' + message.name + '\nException message: ' + message.message + '\nException stack: ' + message.stack);
+							console.error(message);
+							break;
+						case 'info':
+							console.info(message);
+							break;
+						default:
+							console.log(message);
+					}
+				},
+				errorException: function(e) {
+					return this.console('error', e);
 				},
 				loader: function(object) {},
-				checkCompability: function() {
-					try {
-						if ($.fn.jquery < '1.0')
-							throw new Error('jQuery Version outdate ' + $.fn.jquery);
-
-						if (!$.easing)
-							throw new Error('jQuery easing plugin required');
-
-					} catch (e) {
-						return this.errorException(e);
-					}
-
-					return true;
-				},
 				checkBrowser: function() {
 					var isMobile = false;
 					
@@ -99,10 +100,10 @@
 					
 					return isMobile;
 				},
-				getLSObject: function(name) {
-					return JSON.parse(localStorage.getItem(name));
+				getLSObject: function(key) {
+					return JSON.parse(localStorage.getItem(key));
 				},
-				setLSObject: function(object, xhr) {
+				removeLSDecrementObject: function(object) {
 					var storeVersionNumber = parseInt(object.storeName.replace(/^(.*)-([0-9]+)$/gi, '$2'), 10);
 					if ((typeof storeVersionNumber === 'number') && (storeVersionNumber % 1 === 0)) {
 						var storePreviousVersionNumber = object.name + '-' + (storeVersionNumber - 1);
@@ -110,13 +111,15 @@
 							if (options.console)
 								console.info('Element: ' + storePreviousVersionNumber + ' removed in localStorage');
 
-							localStorage.removeItem(storePreviousVersionNumber);
+							return localStorage.removeItem(storePreviousVersionNumber);
 						}
 						
 					} else {
 						throw new Error('storeVersion required incremental number');
 					}
-					
+				},
+				setLSObject: function(object, xhr) {
+
 					if (options.console)
 						console.info('Element: ' + object.name + ' cached');
 
@@ -126,7 +129,7 @@
 					objDate = new Date(date.split(' ').join('T'));
 					return objDate.getTime() / 1000;
 				},
-				fetch: function (object) {
+				fetchModules: function (object) {
 					$thisApp = this;
 					
 					try {
@@ -138,8 +141,9 @@
 							async: true,
 							success: function(xhr) {
 								return (
-									$thisApp.setLSObject(object, xhr),
-									$thisApp.loader(object)
+										$thisApp.setLSObject(object, xhr)
+									,	$thisApp.removeLSDecrementObject(object)
+									,	$thisApp.loader(object)
 								);
 							},
 							error: function( jqxhr, settings, exception ) {
@@ -151,7 +155,7 @@
 					}
 				},
 				route: function(object) {
-					var localCached = this.getLSObject(object.storeName);
+
 
 					if (this.getCookie(object.name) === null)
 						this.setCookie(object.name, true, object.item.cookieExpire);
@@ -162,33 +166,19 @@
 					if (object.date.now < object.date.start || object.date.now > object.date.end)
 						return false;
 
-					if (options.cache == true && localCached)
+					if (options.cache == true && this.getLSObject(object.storeName))
 						return (
-							$.globalEval(localCached),
+							$.globalEval(this.getLSObject(object.storeName)),
 							this.loader(object)
 						);
 					
 
-					return this.fetch(object);
+					return this.fetchModules(object);
 				},
-				render: function() {
+				construct: function (objects) {
 					$thisApp = this;
-
-
-					if (!this.checkCompability())
-						return false;
-
-					if (this.checkBrowser() || options.mobile == true)
-						return false;
-						
-					if (options.elements.length < 1)
-						return false;
-						
-					if (typeof window.localStorage == 'undefined')
-						return false;
-						
-
-					$.each(options.elements, function(index, object) {
+					
+					return $.each(objects, function(index, object) {
 						$.map(object, function (item, name) {
 							switch (item.type) {
 							case 'popup':
@@ -196,36 +186,104 @@
 								return $thisApp.route({
 									name: name,
 									item: item,
-									urlPath: options.path + '/' + name + '/' + options.scriptName,
 									globElement: globThis,
 									console: options.console,
 									storeName: name + '-' + item.storeVersion,
+									urlPath: options.path + '/' + name + '/' + options.scriptName,
 									date: {
 										now: Math.round(new Date().getTime() / 1000),
 										start: $thisApp.dateToUnixTimeStamp(item.date.start),
 										end: $thisApp.dateToUnixTimeStamp(item.date.end)
-									},
-									cookieExpire: {
-										expire: new Date().getTime() + (1000*60*60*24*item.cookieExpire)
 									}
 								});
 							}
 						});
 					});
 				},
-				errorException: function(e) {
-					
-					if (e.name)
-						console.error('Exception: ' + e.name + '\nException message: ' + e.message + '\nException stack: ' + e.stack);
-					else
-						console.error(e);
+				fetchElements: function(dataUrl) {
+					$thisApp = this;
+					try {
+						$.ajax({
+							type: 'GET',
+							url: dataUrl,
+							dataType: 'json',
+							cache: options.cache,
+							async: true,
+							success: function(data) {
+								return $thisApp.construct(data);
+							},
+							error: function( jqxhr, settings, exception ) {
+								throw new Error('Unable to load ' + dataUrl);
+							}
+						});
+					} catch (e) {
+						return this.errorException(e);
+					}
+				},
+				render: function() {
+					try {
+						if (this.checkBrowser() || options.mobile == true)
+							return false;
+							
+						if (typeof window.localStorage == 'undefined')
+							return false;
+							
+	
+						// check remote elements options
+						if (typeof options.elementsUrl !== 'undefined')
+							return this.fetchElements(options.elementsUrl);
 						
+	
+						if ((options.elements.length > 0))
+							return this.construct(options.elements);
 						
-					return false;
+
+						throw new Error('Dekko loaded, but modules not defined');
+	
+					} catch (e) {
+						return this.errorException(e);
+					}
 				}
 			};
 
+
+			if (typeof $.easing.easeInQuad == 'undefined') {
+				$.extend($.easing, {
+					easeInQuad: function (x, t, b, c, d) { return c*(t/=d)*t + b; },
+					easeOutQuad: function (x, t, b, c, d) { return -c *(t/=d)*(t-2) + b; },
+					easeInOutQuad: function (x, t, b, c, d) { if ((t/=d/2) < 1) return c/2*t*t + b; return -c/2 * ((--t)*(t-2) - 1) + b; },
+					easeInCubic: function (x, t, b, c, d) { return c*(t/=d)*t*t + b; },
+					easeOutCubic: function (x, t, b, c, d) { return c*((t=t/d-1)*t*t + 1) + b; },
+					easeInOutCubic: function (x, t, b, c, d) { if ((t/=d/2) < 1) return c/2*t*t*t + b; return c/2*((t-=2)*t*t + 2) + b; },
+					easeInQuart: function (x, t, b, c, d) { return c*(t/=d)*t*t*t + b; },
+					easeOutQuart: function (x, t, b, c, d) { return -c * ((t=t/d-1)*t*t*t - 1) + b; },
+					easeInOutQuart: function (x, t, b, c, d) { if ((t/=d/2) < 1) return c/2*t*t*t*t + b; return -c/2 * ((t-=2)*t*t*t - 2) + b; },
+					easeInQuint: function (x, t, b, c, d) { return c*(t/=d)*t*t*t*t + b; }, 
+					easeOutQuint: function (x, t, b, c, d) { return c*((t=t/d-1)*t*t*t*t + 1) + b; },
+					easeInOutQuint: function (x, t, b, c, d) { if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b; return c/2*((t-=2)*t*t*t*t + 2) + b; },
+					easeInSine: function (x, t, b, c, d) { return -c * Math.cos(t/d * (Math.PI/2)) + c + b; },
+					easeOutSine: function (x, t, b, c, d) { return c * Math.sin(t/d * (Math.PI/2)) + b; },
+					easeInOutSine: function (x, t, b, c, d) { return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b; },
+					easeInExpo: function (x, t, b, c, d) { return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b; },
+					easeOutExpo: function (x, t, b, c, d) { return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b; },
+					easeInOutExpo: function (x, t, b, c, d) { if (t==0) return b; if (t==d) return b+c; if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b; return c/2 * (-Math.pow(2, -10 * --t) + 2) + b; },
+					easeInCirc: function (x, t, b, c, d) { return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b; },
+					easeOutCirc: function (x, t, b, c, d) { return c * Math.sqrt(1 - (t=t/d-1)*t) + b; },
+					easeInOutCirc: function (x, t, b, c, d) { if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b; return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b; },
+					easeInElastic: function (x, t, b, c, d) { var s=1.70158;var p=0;var a=c; if (t==0) return b; if ((t/=d)==1) return b+c; if (!p) p=d*.3; if (a < Math.abs(c)) { a=c; var s=p/4; } else var s = p/(2*Math.PI) * Math.asin (c/a);return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;},
+					easeOutElastic: function (x, t, b, c, d) { var s=1.70158;var p=0;var a=c; if (t==0) return b; if ((t/=d)==1) return b+c; if (!p) p=d*.3; if (a < Math.abs(c)) { a=c; var s=p/4; } else var s = p/(2*Math.PI) * Math.asin (c/a); return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b; },
+					easeInOutElastic: function (x, t, b, c, d) { var s=1.70158;var p=0;var a=c; if (t==0) return b; if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5); if (a < Math.abs(c)) { a=c; var s=p/4; } else var s = p/(2*Math.PI) * Math.asin (c/a); if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;	return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b; },
+					easeInBack: function (x, t, b, c, d, s) { if (s == undefined) s = 1.70158; return c*(t/=d)*t*((s+1)*t - s) + b; },
+					easeOutBack: function (x, t, b, c, d, s) { if (s == undefined) s = 1.70158;	return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b; },
+					easeInOutBack: function (x, t, b, c, d, s) { if (s == undefined) s = 1.70158; if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b; return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;},
+					easeInBounce: function (x, t, b, c, d) { return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b; },
+					easeOutBounce: function (x, t, b, c, d) { if ((t/=d) < (1/2.75)) { return c*(7.5625*t*t) + b; } else if (t < (2/2.75)) { return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;} else if (t < (2.5/2.75)) { return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;} else { return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;}},
+					easeInOutBounce: function (x, t, b, c, d) { if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b; return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;}
+				});
+			}
+
 			return window.dekko.render();
-		}
+
+		} // dekko
 	});
-}(jQuery));
+}(jQuery, window));

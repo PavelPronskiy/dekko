@@ -125,6 +125,7 @@ jQuery plugins required:
 ```
 
 ### Changelog
+    0.0.8 beta - Added elementsUrl, removed required $.easing() plugin. Changed module template.
     0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
     0.0.6 beta - init version
 
