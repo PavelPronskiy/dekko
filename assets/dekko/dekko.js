@@ -34,20 +34,17 @@
 (function ($, _) {
 	$.fn.extend({
 		dekko: function (opts) {
-			var $thisApp, delay = 0,
-			globThis = $(this),
+			var $thisApp, globThis = $(this),
 			defaults = {
 				cache: true,
 				scriptName: 'default.js',
 				modules: [],
 				rotate: false,
 				path: '/media/popup',
-				cookie: true
+				prevRotateModuleIndex: 'prev-' + this.selector.replace(/( |\.)/gi, '-')
 			},
 			options = $.extend(defaults, opts);
 
-			const prevRotatedModule = 'previewDekkoModuleRotated';
-			
 			_.dekkoModule = function(object) {};
 
 			var dekko = {
@@ -189,7 +186,7 @@
 				},
 				randNumber: function(objects) {
 					var rand,
-						prevRand = (!isNaN(parseInt(this.getCookie(prevRotatedModule), 10))) ? parseInt(this.getCookie(prevRotatedModule), 10) : 1,
+						prevRand = (!isNaN(parseInt(this.getCookie(options.prevRotateModuleIndex), 10))) ? parseInt(this.getCookie(options.prevRotateModuleIndex), 10) : 1,
 						bool = true,
 						incr = 0;
 					
@@ -202,9 +199,7 @@
 
 					}
 
-
-
-					this.setCookie(prevRotatedModule, rand, 10);
+					this.setCookie(options.prevRotateModuleIndex, rand, 10);
 					
 					return rand;
 				},
