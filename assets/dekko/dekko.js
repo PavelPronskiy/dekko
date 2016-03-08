@@ -31,10 +31,10 @@
  *
  **/
  
-(function ($, window) {
+(function ($, _) {
 	$.fn.extend({
 		dekko: function (opts) {
-			var $thisApp, objDate,
+			var $thisApp, delay = 0,
 			globThis = $(this),
 			defaults = {
 				cache: true,
@@ -46,7 +46,11 @@
 			},
 			options = $.extend(defaults, opts);
 
-			window.dekko = {
+			const prevRotatedModule = 'previewDekkoModuleRotated';
+			
+			_.dekkoModule = function(object) {};
+
+			var dekko = {
 				setCookie: function(key, value, expire) {
 					var d = new Date();
 					d.setTime(d.getTime() + (expire*24*60*60*1000));
@@ -57,9 +61,9 @@
 					var start = document.cookie.indexOf(key + "=");
 					var len = start + key.length + 1;
 
-					if ((!start) && (key != document.cookie.substring(0, key.length))) {
+					if ((!start) && (key != document.cookie.substring(0, key.length)))
 						return null;
-					}
+					
 					
 					if (start == -1) return null;
 					var end = document.cookie.indexOf(';', len);
@@ -87,7 +91,6 @@
 				errorException: function(e) {
 					return this.console('error', e);
 				},
-				loader: function(object) {},
 				checkBrowser: function() {
 					var isMobile = false;
 					
@@ -118,20 +121,20 @@
 				},
 				setLSObject: function(object, xhr) {
 
-					if (options.console)
+					if (options.console && options.cache)
 						console.info('Element: ' + object.name + ' cached');
 
 					return localStorage.setItem(object.storeName, JSON.stringify(xhr));
 				},
 				dateToUnixTimeStamp: function(date) {
-					objDate = new Date(date.split(' ').join('T'));
+					var objDate = new Date(date.split(' ').join('T'));
 					return objDate.getTime() / 1000;
 				},
 				fetchModules: function (object) {
 					$thisApp = this;
 					
 					try {
-						$.ajax({
+						return $.ajax({
 							type: 'GET',
 							url: object.urlPath,
 							dataType: 'script',
@@ -139,48 +142,93 @@
 							async: true,
 							success: function(xhr) {
 								return (
-										$thisApp.setLSObject(object, xhr)
-									,	$thisApp.removeLSDecrementObject(object)
-									,	$thisApp.loader(object)
+										$thisApp.removeLSDecrementObject(object)
+									,	$thisApp.setLSObject(object, xhr)
+									,	_.dekkoModule.call($thisApp, object)
+									// ,	_.dekkoModule = null
 								);
 							},
 							error: function( jqxhr, settings, exception ) {
-								throw new Error('Unable to load popup element: ' + object.name + '\nException handler returned: ' + exception + '\nFile: ' + object.urlPath);
+								throw new Error('Unable to load ' + object.type + ' element: ' + object.name + '\nException handler returned: ' + exception + '\nFile: ' + object.urlPath);
 							}
 						});
 					} catch (e) {
 						return this.errorException(e);
 					}
 				},
+				loadCachedModule: function (object) {
+					return (
+						$.globalEval(this.getLSObject(object.storeName)),
+						_.dekkoModule.call(this, object)
+					);
+				},
 				route: function(object) {
-					if (this.getCookie(object.name) === null)
-						this.setCookie(object.name, true, object.item.cookieExpire);
 
-					if (this.getCookie(object.name) == 'false')
-						return false;
+					if (this.getCookie(object.name) === null)
+						this.setCookie(object.name, true, object.item.closeExpire);
 	
+					if (this.getCookie(object.name) === 'false')
+						return false;
+
 					if (object.date.now < object.date.start || object.date.now > object.date.end)
 						return false;
 
-					if (options.cache == true && this.getLSObject(object.storeName))
-						return (
-							$.globalEval(this.getLSObject(object.storeName)),
-							this.loader(object)
-						);
+					if (options.cache === true && this.getLSObject(object.storeName))
+						return this.loadCachedModule(object);
+					else
+						return this.fetchModules(object);
+
+				},
+				getCookieNameBool: function(object) {
+					var o;
+					$.map(object, function(i,n) {
+						o = ($thisApp.getCookie(n) === 'false') ? false : true;
+					});
 					
-					return this.fetchModules(object);
+					return o;
+				},
+				randNumber: function(objects) {
+					var rand,
+						prevRand = (!isNaN(parseInt(this.getCookie(prevRotatedModule), 10))) ? parseInt(this.getCookie(prevRotatedModule), 10) : 1,
+						bool = true,
+						incr = 0;
+					
+					while (bool) {
+						rand = parseInt(Math.floor(Math.random() * objects.length), 10);
+						var checkClosed = this.getCookieNameBool(objects[rand]);
+						bool = (rand !== prevRand && checkClosed) ? false : true;
+
+						if (incr++ > 20) return false;
+
+					}
+
+
+
+					this.setCookie(prevRotatedModule, rand, 10);
+					
+					return rand;
 				},
 				construct: function (objects) {
 					$thisApp = this;
-					
-					return $.each(objects, function(index, object) {
-						$.map(object, function (item, name) {
-							switch (item.type) {
-							case 'popup':
-								// route popups
-								return $thisApp.route({
+					var obj = [];
+
+					try {
+
+						if (options.rotate && objects.length > 1) {
+							var rand = this.randNumber(objects);
+							obj.push(objects[rand]);
+						} else {
+							obj = objects;
+						}
+	
+						$.each(obj, function(index, object) {
+							$.map(object, function (item, name) {
+
+								var objectParams = {
+									index: parseInt(index, 10),
 									name: name,
 									item: item,
+									path: options.path + '/' + name,
 									globElement: globThis,
 									console: options.console,
 									storeName: name + '-' + item.storeVersion,
@@ -190,10 +238,15 @@
 										start: $thisApp.dateToUnixTimeStamp(item.date.start),
 										end: $thisApp.dateToUnixTimeStamp(item.date.end)
 									}
-								});
-							}
+								};
+								
+								return $thisApp.route(objectParams);
+							});
 						});
-					});
+
+					} catch (e) {
+						return this.errorException(e);
+					}
 				},
 				fetchModulesOptions: function(dataUrl) {
 					$thisApp = this;
@@ -204,8 +257,8 @@
 							dataType: 'json',
 							cache: options.cache,
 							async: true,
-							success: function(data) {
-								return $thisApp.construct(data);
+							success: function(opts) {
+								return $thisApp.construct(opts);
 							},
 							error: function( jqxhr, settings, exception ) {
 								throw new Error('Unable to load ' + dataUrl);
@@ -215,13 +268,13 @@
 						return this.errorException(e);
 					}
 				},
-				render: function() {
+				render: function(options) {
 					try {
 						if (this.checkBrowser() || options.mobile == true)
 							return false;
 							
 						if (typeof window.localStorage == 'undefined')
-							return false;
+							throw new Error('Browser not support localStorage');
 							
 							// check remote elements options
 						if (typeof options.modulesUrl !== 'undefined')
@@ -274,7 +327,7 @@
 				});
 			}
 
-			return window.dekko.render();
+			return dekko.render(options);
 
 		} // dekko
 	});
