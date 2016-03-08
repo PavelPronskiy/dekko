@@ -1,7 +1,7 @@
 
 /**
  *
- * Version: 0.0.8 beta
+ * Version: 0.0.9 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
