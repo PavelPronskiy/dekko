@@ -31,8 +31,6 @@
  **/
  
 (function ($) {
-
-
 	$.fn.dekko = function(opts) {
 
 		// capsule
@@ -124,10 +122,10 @@
 				var r,c,j,t = true, self = this, p;
 				p = (e.context.cookie)
 					? self.storePoint.prev + e.context.cookie
-					: self.storePoint.prev + e.selector;
+					: self.storePoint.prev + e.selector.replace(/ /gi, '');
 
 				if (self.getStore(p) === false)
-					self.setStore(p, 1);
+					self.setStore(p, -1);
 
 				c = self.getStore(p);
 				
