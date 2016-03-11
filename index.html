@@ -14,7 +14,7 @@
             <div class="cover-container">
               <div class="masthead clearfix">
                 <div class="container-fluid centered">
-                  <h3>Dekko jQuery advert initialization Ver 0.0.9 beta</h3>
+                  <h3>Dekko jQuery advert initialization Ver 0.1.0 beta</h3>
                 </div>
               </div>
              <div class="inner">
@@ -44,81 +44,20 @@
         
         <script type="text/javascript">
 
-            /*
-        	 * Examplate initialization figure
+          /*
+        	 * examples 
         	*/
 
-        	$('div.example-728x90').dekko({
-        		mobile: false, // mobile is off (optional)
-        		cache: false, // cache requests and save browser localStorage (optional)
-        		console: true, // show notices (optional)
-        		rotate: true, // enable rotate elements on refresh page
-        		path: '/assets/dekko/modules', // relative path to element modules (required)
-        // 		modulesUrl: '/example-data.json' // get data elements json
-        		modules: [ // require minimum one array element
-        			{
-        				'bitcoin-cex' : {
-        					storeVersion: 9, // cache versioning incremental option (required if cache enabled)
-        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			},
-              {
-        				'bitcoin-cex1' : {
-        					storeVersion: 9, // cache versioning incremental option (required if cache enabled)
-        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			},
-        			{
-        				'cheap-bitcoin' : {
-        					storeVersion: 8, // cache versioning incremental option (required if cache enabled)
-        					url: '/3321/12321.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			}
-        		]
-        	});
-
         	$('body').dekko({
-        		mobile: false, // mobile is off (optional)
-        		cache: false, // cache requests and save browser localStorage (optional)
-        		console: true, // show notices (optional)
+        		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: false,
         		path: '/assets/dekko/modules', // relative path to element modules (required)
-        // 		modulesUrl: '/example-data.json' // get data elements json
-        		modules: [ // require minimum one array element
+        		modules: '/example-data.json',
+        		/*[ // require minimum one array element
         			{
         				'popup-example1' : {
         					context: 'магия', // html data (optional)
-        					storeVersion: 8, // cache versioning incremental option (required if cache enabled)
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: 'http://ya.ru', // click wrap element (optional)
         					delay: 1000, // wait before show (optional)
         					closeExpire: 2, // closable element option, specific counting by days (required)
@@ -139,7 +78,7 @@
         			{
         				'popup-example2' : {
         					context: 'попап', // html data (optional)
-        					storeVersion: 3, // cache versioning incremental option (required if cache enabled)
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 5000, // wait before show (optional)
         					closeExpire: 2, // closable element option, specific counting by days (required)
@@ -160,7 +99,7 @@
         			{
         				'popup-example3' : {
         					context: 'весна', // html data (optional)
-        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: '/3321/12321.html', // click wrap element (optional)
         					delay: 2000, // wait before show (optional)
         					closeExpire: 2, // closable element option, specific counting by days (required)
@@ -181,7 +120,7 @@
         			{
         				'popup-example4' : {
         					context: 'девид', // html data (optional)
-        					storeVersion: 1, // cache versioning incremental option (required if cache enabled)
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: 'http://google.ru', // click wrap element (optional)
         					delay: 1000, // wait before show (optional)
         					closeExpire: 2, // closable element option, specific counting by days (required)
@@ -199,11 +138,66 @@
         					}
         				}
         			}
-        		]
+        		]*/
         	});
 
-
+        	$('div.example-728x90').dekko({
+        		cache: false, // cache requests and save browser localStorage (optional)
+        		rotate: true, // enable rotate elements on refresh page
+        		path: '/assets/dekko/modules', // relative path to element modules (required)
+        		modules: '/example-data2.json',
+        		
+        		/*[ // require minimum one array element
+        			{
+        				'bitcoin-cex' : {
+        					revision: 100, // cache versioning incremental option (required if cache enabled)
+        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
+        					delay: 500, // wait before show (optional)
+        					closeExpire: 2, // closable element option, specific counting by days (required)
+        					date: {
+        						start: '2016-02-26 10:00:00', // element more start at (required)
+        						end: '2017-04-01 23:59:59' // element not started after this date (required)
+        					},
+        					effects: {
+        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
+        						duration: 1000 // easing duration (optional)
+        					}
+        				}
+        			},
+              {
+        				'bitcoin-cex1' : {
+        					revision: 100, // cache versioning incremental option (required if cache enabled)
+        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
+        					delay: 500, // wait before show (optional)
+        					closeExpire: 2, // closable element option, specific counting by days (required)
+        					date: {
+        						start: '2016-02-26 10:00:00', // element more start at (required)
+        						end: '2017-04-01 23:59:59' // element not started after this date (required)
+        					},
+        					effects: {
+        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
+        						duration: 1000 // easing duration (optional)
+        					}
+        				}
+        			},
+        			{
+        				'cheap-bitcoin' : {
+        					revision: 100, // cache versioning incremental option (required if cache enabled)
+        					url: '/3321/12321.html', // click wrap element (optional)
+        					delay: 500, // wait before show (optional)
+        					closeExpire: 2, // closable element option, specific counting by days (required)
+        					date: {
+        						start: '2016-02-26 10:00:00', // element more start at (required)
+        						end: '2017-04-01 23:59:59' // element not started after this date (required)
+        					},
+        					effects: {
+        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
+        						duration: 1000 // easing duration (optional)
+        					}
+        				}
+        			}
+        		]*/
+        	});
         </script>
-        
     </body>
 </html>

@@ -1,12 +1,11 @@
 /**
- * updated ver 0.16
+ * updated ver 0.17
  * popup element template
 **/
 
 window.dekkoModule = function (object) {
-
-		var t = {}, animPosOpts = {}, wrapPosOpts = {},
-		$this = this,
+		var t = {},
+		self = this,
 		css = {
 			wrap: {
 				'position' 				: 'fixed',
@@ -119,7 +118,7 @@ window.dekkoModule = function (object) {
 			function() { $(this).css(css.close.normal) }
 		).click(function() {
 			t.wrap.animate(t.posWrapHorizStart, object.item.effects.duration, object.item.effects.easing[1], function() {
-				$this.setCookie(object.name, false);
+				self.setStore(object.closePoint, [true, object.date.now]);
 				$(this).remove();
 			});
 		});
@@ -134,13 +133,11 @@ window.dekkoModule = function (object) {
 			$(this).css(object.item.position);
 		});
 
-
-
-		t.wrap.appendTo(object.globElement);
-		$this.console('info', 'Element: ' + object.name + ' loaded');
-
+		t.wrap.appendTo(object.append);
+		
 	} catch (e) {
-		return $this.errorException(e); // return callback exception
+		return console.error(e);
+	} finally {
+		return self.notice(object);
 	}
-	
 };

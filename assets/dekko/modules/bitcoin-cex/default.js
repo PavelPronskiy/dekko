@@ -51,7 +51,7 @@ window.dekkoModule = function (object) {
 		}
 	},
 	t = {},
-	$this = this;
+	self = this;
 
 
 	try {
@@ -66,12 +66,10 @@ window.dekkoModule = function (object) {
 		t.close.appendTo(t.item);
 		t.img.appendTo(t.link);
 		t.link.appendTo(t.item);
-		t.wrap.appendTo(object.globElement);
+		t.wrap.appendTo(object.append);
 
 		t.wrap.delay(object.item.delay)
-		.slideDown(object.item.effects.duration, object.item.effects.easing[0], function() {
-				// console.log(this);
-		});
+			.slideDown(object.item.effects.duration, object.item.effects.easing[0]);
 
 		t.close.hover(function() {
 				$(this).css(css.close.hover);
@@ -80,15 +78,14 @@ window.dekkoModule = function (object) {
 			}
 		).click(function() {
 			t.wrap.slideUp(object.item.effects.duration, object.item.effects.easing[1], function() {
-				// $this.setCookie(object.name, false);
+				self.setStore(object.closePoint, [true, object.date.now]);
 				t.wrap.remove();
 			});
 		});
 
-		$this.console('info', 'Element: ' + object.name + ' 1 loaded');
-
 	} catch (e) {
-		return $this.errorException(e); // return callback exception
+		return console.error(e);
+	} finally {
+		return self.notice(object);
 	}
-	
 };
