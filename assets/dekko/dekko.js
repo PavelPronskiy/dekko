@@ -146,7 +146,7 @@
 					k = Object.keys(e)[0];
 					modules.push({
 						name		: k,
-						storeName	: k + '.r' + e[k].revision,
+						storeName	: k + self.storePoint.rev + e[k].revision,
 						path		: o.path + '/' + k,
 						file		: o.templateName,
 						delay		: e[k].delay,
