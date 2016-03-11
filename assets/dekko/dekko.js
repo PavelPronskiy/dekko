@@ -150,6 +150,7 @@
 						file		: o.templateName,
 						delay		: e[k].delay,
 						item		: e[k],
+						cache		: o.cache,
 						closePoint	: self.storePoint.closed + k + self.storePoint.rev + e[k].revision,
 						append		: o.element,
 						date: {
