@@ -59,7 +59,8 @@
 			storePoint: {
 				closed: 'closed.',
 				prev: 'rotate.',
-				rev: '.r'
+				rev: '.r',
+				slash: '/'
 			},
 			dateToUnixTimeStamp: function(date) {
 				var objDate = new Date(date.split(' ').join('T'));
@@ -109,7 +110,7 @@
 						return self.render(e);
 	
 					$.ajax({
-						url			: e.path + '/' + e.file,
+						url			: e.path + self.storePoint.slash + e.file,
 						dataType	: 'script',
 						success		: function(xhr) {
 							return e.xhr = xhr
@@ -147,7 +148,7 @@
 					modules.push({
 						name		: k,
 						storeName	: k + self.storePoint.rev + e[k].revision,
-						path		: o.path + '/' + k,
+						path		: o.path + self.storePoint.slash + k,
 						file		: o.templateName,
 						delay		: e[k].delay,
 						item		: e[k],
