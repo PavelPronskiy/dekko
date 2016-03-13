@@ -1,4 +1,4 @@
-modules([
+[
    {
       "bitcoin-cex": {
          "revision": 103,
@@ -56,4 +56,4 @@ modules([
          }
       }
    }
-]);
+]

@@ -31,6 +31,7 @@
  **/
  
 (function ($) {
+
 	$.fn.dekko = function(opts) {
 
 		// capsule
@@ -40,7 +41,7 @@
 		var options = {
 			revision		: 0, 					// this opt require incremental number and cache true (required if cache enabled)
 			cache			: false, 				// (optional)
-			console			: true, 				// (optional)
+			verbose			: true, 				// (optional)
 			templateName	: 'default.js',			// (required)
 			modules			: [],					// (required if modulesUrl not defined)
 			rotate			: false,				// (optional)
@@ -55,6 +56,10 @@
 			}
 		},
 		constructor = {
+			console: {
+				timeModule: 'Module load time ',
+				totalTime: 'Total time load '
+			},
 			storePoint: {
 				closed: 'closed.',
 				modules: 'modules.',
@@ -85,7 +90,9 @@
 				return window.dekkoModule.call(self, o);
 			},
 			notice: function(o) {
-				return console.info('Module: ' + o.name + ' loaded');
+				return (o.verbose)
+					? this.timeEnd(o.timePoint)
+					: false;
 			},
 			expire: function(o) {
  				var a,b;
@@ -107,35 +114,32 @@
 					// check closed
 					if (self.expire(e) === true)
 						return false;
-	
+					
 					// check store and return render
 					if (e.cache && self.getStore(e.storeName))
 						return self.render(e);
 	
-					
-
 					ajax = {
 						url			: e.path + self.storePoint.slash + e.file,
-						cache		: o.cache,
+						cache		: e.cache,
 						dataType	: 'script',
 					},
 					ajax.success = function(xhr) {
-						return e.xhr = xhr
-						,	self.setStore(e.storeName, e.xhr)
-						,	self.render(e);
+						e.xhr = xhr;
+						self.setStore(e.storeName, e.xhr);
+						return self.render(e);
 					};
 
 					return self.ajax(ajax);
 				});
 			},
 			randModule: function(o, m) {
-				var r,c,j,t = true, self = this,
-				p = self.storePoint.prev + o.smp;
+				var r,c,j,t = true, self = this;
 
-				if (self.getStore(p) === false)
-					self.setStore(p, -1);
+				if (self.getStore(o.ppm) === false)
+					self.setStore(o.ppm, -1);
 
-				c = self.getStore(p);
+				c = self.getStore(o.ppm);
 				
 				while (t) {
 					r = parseInt(Math.floor(Math.random() * m.length), 10);
@@ -143,11 +147,11 @@
 					t = (r !== c && !j) ? false : true;
 				}
 				
-				self.setStore(p, r);
+				self.setStore(o.ppm, r);
 				return m[r];
 			},
 			constructParams: function(o) {
-				var obj = [], modules = [], self = this, keyName, object;
+				var obj = [], modules = [], self = this, keyName, object, cnt;
 				
 				obj = (o.modules && o.modules.length > 0)
 					? o.modules
@@ -156,9 +160,10 @@
 				if (obj === false)
 					return false;
 
-				obj.forEach(function(e) {
+				obj.forEach(function(e, i) {
 					keyName = Object.keys(e)[0],
 					object = e[keyName],
+					
 					modules.push({
 						name		: keyName,
 						storeName	: keyName + self.storePoint.rev + object.revision,
@@ -167,6 +172,8 @@
 						delay		: object.delay,
 						item		: object,
 						cache		: o.cache,
+						verbose		: o.verbose,
+						timePoint	: self.console.timeModule + keyName,
 						closePoint	: self.storePoint.closed + keyName + self.storePoint.rev + object.revision,
 						append		: o.element,
 						date: {
@@ -176,6 +183,8 @@
 							close	: object.closeExpire,
 						}
 					});
+
+					(o.verbose) && self.time(modules[i].timePoint);
 				});
 	
 				return self.route((o.rotate)
@@ -183,60 +192,90 @@
 					: modules);
 			},
 			getModules: function(o) {
-				var self = this, ajax, stored,
-				rev = (typeof o.revision == 'number') ? o.revision : 0;
-				o.smp = o.modules.replace(/(^(https?)|(\/|\.|\:))/gi, '');
-				o.spm = self.storePoint.modules + o.smp + self.storePoint.rev + rev;
+				var	self 	= this, ajax,
 				stored = self.getStore(o.spm);
 
 				if (stored && o.cache)
 					return o.modules = stored
 					,	self.constructParams(o);
 
+
 				// get modules callback function
-			ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
-				? {
+				ajax = o.modules.match(/(^(https?|\/\/)|jsonp)/)
+				?
+				{
 					crossDomain 	: true,
-					dataType 		: 'jsonp',
+					dataType 		: 'json',
 					contentType 	: "application/json",
-					jsonpCallback 	: 'modules',
-					cache			: o.cache,
 					data : {
-						domain: window.location.hostname || window.location.host
+						domain: window.location.hostname
+						|| window.location.host
 					}
 				}
-				: {
-					cache			: o.cache,
+				:
+				{
 					dataType 		: 'json'
 				},
-				ajax.url = o.modules;
+
+				ajax.context = self,
+				ajax.cache = o.cache,
+				ajax.url = o.modules,
+
 				ajax.error = function(a,b,c) {
-					throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);
+					self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				},
 				ajax.success = function(data) {
 					o.modules = data;
-					
 					if (self.getStore(o.spm) === false)
 						self.setStore(o.spm, data);
-						
+					
 					self.constructParams(o);
 				};
 
+				// return;
+
+
 				return this.ajax(ajax);
 			},
-			ajaxErrors: function(a,b,c) {
-				throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);
+			ajaxErrors: function(msg) {
+				throw new Error(msg);
 			},
 			ajax: function(o) {
 				return $.ajax(o);
 			},
+			time: function(o) {
+				return console.time(o);
+			},
+			timeEnd: function(o) {
+				return console.timeEnd(o);
+			},
 			init: function (e,o) {
-				var self = this, c;
-				o.element = e;
+				var self = this, c, point,
+				
+				rev = (typeof o.revision == 'number')
+				? o.revision
+				: 0;
+				
+				o.element = e,
+				
+				point = (typeof o.modules == 'object')
+				? e.selector.replace(/(\.|\-)/gi, '')
+				: o.modules.replace(/(^(https?)|(\/|\.|\:))/gi, ''),
+				
+				o.spm = self.storePoint.modules + point + self.storePoint.rev + rev,
+				o.ppm = self.storePoint.prev + point + self.storePoint.rev + rev,
+				
 				c = (typeof o.modules == 'string')
 				? self.getModules(o)
 				: self.constructParams(o);
-				return c;
+				
+				// self.time(self.console.totalTime);
+				
+				return $.when(c).done(function() {
+					// self.timeEnd(self.console.totalTime);
+				}).fail(function() {
+					// self.timeEnd(self.console.totalTime);
+				});
 			}
 		};
 
@@ -248,14 +287,19 @@
 			if (typeof window.localStorage == 'undefined')
 				throw new Error('Browser not support localStorage');
 
+			
+
 			// main call
-			return $.when(constructor.init(this, options))
-				.done(function(d) {
+			return constructor.init(this, options);
+			/*$.when(
+					constructor.time(),
+					constructor.init(this, options)
+				).done(function(d) {
 					// all objects
 					// console.log(d);
 				}).fail(function() {
 					console.warn('load fully fail');
-				});
+				});*/
 
 		} catch (e) {
 			return console.error(e);
