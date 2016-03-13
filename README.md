@@ -35,7 +35,7 @@ modules: http://domain.tld/path/to/modules.json?callback=modules
         					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: 'http://ya.ru', // click wrap element (optional)
         					delay: 1000, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
+        					closeExpire: 120, // closable element option, specific counting by minutes (required)
         					date: {
         						start: '2016-02-26 10:00:00', // element more start at (required)
         						end: '2016-04-01 23:59:59' // element not started after this date (required)
