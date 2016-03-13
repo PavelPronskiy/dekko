@@ -2,13 +2,13 @@ modules([
    {
       "popup-example1": {
          "context": "магия",
-         "revision": 106,
+         "revision": 107,
          "url": "http://ya.ru",
          "delay": 1000,
          "closeExpire": 120,
          "date": {
             "start": "2016-02-26 10:00:00",
-            "end": "2016-05-12 00:13:59"
+            "end": "2017-05-12 00:13:59"
          },
          "effects": {
             "easing": [

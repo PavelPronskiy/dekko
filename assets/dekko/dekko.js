@@ -79,8 +79,10 @@
 			},
 			render: function(o) {
 				var self = this,
-				xhr = (o.xhr) ? o.xhr : self.getStore(o.storeName);
-				return $.globalEval(xhr) || window.dekkoModule.call(self, o);
+				stored = self.getStore(o.storeName),
+				xhr = (o.xhr) ? o.xhr : stored;
+				$.globalEval(xhr);
+				return window.dekkoModule.call(self, o);
 			},
 			notice: function(o) {
 				return console.info('Module: ' + o.name + ' loaded');
@@ -99,9 +101,9 @@
 				o.forEach(function(e) {
 
 					// check time expire
-					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
+					if (e.date.now() < e.date.start && e.date.now() > e.date.end)
 						return false;
-					
+
 					// check closed
 					if (self.expire(e) === true)
 						return false;
@@ -110,9 +112,11 @@
 					if (e.cache && self.getStore(e.storeName))
 						return self.render(e);
 	
+					
+
 					ajax = {
 						url			: e.path + self.storePoint.slash + e.file,
-						cache		: e.cache,
+						cache		: o.cache,
 						dataType	: 'script',
 					},
 					ajax.success = function(xhr) {
@@ -180,17 +184,20 @@
 					: modules);
 			},
 			getModules: function(o) {
-				var self = this,
+				var self = this, ajax,
 				rev = (typeof o.revision == 'number') ? o.revision : 0,
 				spm = self.storePoint.modules + o.element.context.cookie + self.storePoint.rev + rev,
 				stored = self.getStore(spm);
+				
+				
+				//console.log(o);
 				
 				if (stored && o.cache)
 					return o.modules = stored
 					,	self.constructParams(o);
 
 				// get modules callback function
-				o.ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
+			o.ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
 				? {
 					crossDomain 	: true,
 					dataType 		: 'jsonp',
