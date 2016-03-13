@@ -128,11 +128,9 @@
 					return self.ajax(ajax);
 				});
 			},
-			randModule: function(e, o) {
+			randModule: function(o, m) {
 				var r,c,j,t = true, self = this,
-				p = self.storePoint.prev
-					+ e.context.cookie;
-
+				p = self.storePoint.prev + o.smp;
 
 				if (self.getStore(p) === false)
 					self.setStore(p, -1);
@@ -140,16 +138,17 @@
 				c = self.getStore(p);
 				
 				while (t) {
-					r = parseInt(Math.floor(Math.random() * o.length), 10);
-					j = self.getStore(o[r].closePoint)[0];
+					r = parseInt(Math.floor(Math.random() * m.length), 10);
+					j = self.getStore(m[r].closePoint)[0];
 					t = (r !== c && !j) ? false : true;
 				}
 				
 				self.setStore(p, r);
-				return o[r];
+				return m[r];
 			},
 			constructParams: function(o) {
-				var obj = [], modules = [], self = this, keyName, object,
+				var obj = [], modules = [], self = this, keyName, object;
+				
 				obj = (o.modules && o.modules.length > 0)
 					? o.modules
 					: false;
@@ -180,24 +179,22 @@
 				});
 	
 				return self.route((o.rotate)
-					? [self.randModule(o.element, modules)]
+					? [self.randModule(o, modules)]
 					: modules);
 			},
 			getModules: function(o) {
-				var self = this, ajax,
-				rev = (typeof o.revision == 'number') ? o.revision : 0,
-				spm = self.storePoint.modules + o.element.context.cookie + self.storePoint.rev + rev,
-				stored = self.getStore(spm);
-				
-				
-				//console.log(o);
-				
+				var self = this, ajax, stored,
+				rev = (typeof o.revision == 'number') ? o.revision : 0;
+				o.smp = o.modules.replace(/(^(https?)|(\/|\.|\:))/gi, '');
+				o.spm = self.storePoint.modules + o.smp + self.storePoint.rev + rev;
+				stored = self.getStore(o.spm);
+
 				if (stored && o.cache)
 					return o.modules = stored
 					,	self.constructParams(o);
 
 				// get modules callback function
-			o.ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
+			ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
 				? {
 					crossDomain 	: true,
 					dataType 		: 'jsonp',
@@ -212,20 +209,20 @@
 					cache			: o.cache,
 					dataType 		: 'json'
 				},
-				o.ajax.url = o.modules;
-				o.ajax.error = function(a,b,c) {
+				ajax.url = o.modules;
+				ajax.error = function(a,b,c) {
 					throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);
 				},
-				o.ajax.success = function(data) {
+				ajax.success = function(data) {
 					o.modules = data;
 					
-					if (self.getStore(spm) === false)
-						self.setStore(spm, data);
+					if (self.getStore(o.spm) === false)
+						self.setStore(o.spm, data);
 						
 					self.constructParams(o);
 				};
 
-				return this.ajax(o.ajax);
+				return this.ajax(ajax);
 			},
 			ajaxErrors: function(a,b,c) {
 				throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);

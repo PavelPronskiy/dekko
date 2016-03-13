@@ -68,22 +68,22 @@
         	});*/
 
         	$('div.example-728x90').dekko({
+        		revision: 4, // enable rotate elements on refresh page
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: true, // enable rotate elements on refresh page
-        		revision: 4, // enable rotate elements on refresh page
         		path: '/assets/dekko/modules', // relative path to element modules (required)
         		modules: '/example-banners-jsonp.json'
         	});
 
         	
         	$('body').dekko({
+        		revision: 4,
         		cache: true, // cache requests and save browser localStorage (optional)
-        		rotate: false,
-        		path: '/assets/dekko/modules', // relative path to element modules (required)
-        		revision: 3,
         		// modules: '/example-data.json',
-        		modules: '/example-data-jsonp.json',
-        		/* modules: [ // require minimum one array element
+        		path: '/assets/dekko/modules', // relative path to element modules (required)
+        		modules: 'http://php-pavelpronskiy.c9users.io/example-data-jsonp.json',
+        		// modules: 
+        		/*[ // require minimum one array element
         			{
         				'popup-example1' : {
         					context: 'магия', // html data (optional)
@@ -168,9 +168,9 @@
         					}
         				}
         			}
-        		] */
+        		]*/
+        	  
         	});
-
         </script>
     </body>
 </html>
