@@ -1,6 +1,6 @@
 /**
  *
- * Version: 0.1.0 beta
+ * Version: 0.1.1 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -38,6 +38,7 @@
 
 
 		var options = {
+			revision		: 0, 					// this opt require incremental number and cache true (required if cache enabled)
 			cache			: false, 				// (optional)
 			console			: true, 				// (optional)
 			templateName	: 'default.js',			// (required)
@@ -53,16 +54,18 @@
 				throw new Error('Ajax returned exception handler: ' + exception);
 			}
 		},
-		dekkoConstructor = {
+		constructor = {
 			storePoint: {
 				closed: 'closed.',
+				modules: 'modules.',
 				prev: 'rotate.',
 				rev: '.r',
 				slash: '/'
 			},
-			dateToUnixTimeStamp: function(date) {
-				var objDate = new Date(date.split(' ').join('T'));
-				return objDate.getTime() / 1000;
+			dateToUnixTimeStamp: function(o) {
+				var d = new Date(o.split(' ').join('T'));
+				d = d.getTime() / 1000;
+				return (d) ? d : false;
 			},
 			setStore: function(n, o) {
 				return localStorage.setItem(n, JSON.stringify(o));
@@ -77,7 +80,7 @@
 			render: function(o) {
 				var self = this,
 				xhr = (o.xhr) ? o.xhr : self.getStore(o.storeName);
-				return $.globalEval(xhr), window.dekkoModule.call(self, o);
+				return $.globalEval(xhr) || window.dekkoModule.call(self, o);
 			},
 			notice: function(o) {
 				return console.info('Module: ' + o.name + ' loaded');
@@ -86,17 +89,17 @@
  				var a,b;
 				a = this.getStore(o.closePoint);
 				if (a === false) return false;
-				b = (a[0] === true) ? Math.floor((o.date.now - a[1]) / 60) : false; // minutes ago
+				b = (a[0] === true) ? Math.floor((o.date.now() - a[1]) / 60) : false; // minutes ago
 				return (b && b > o.date.close)
 					? this.delStore(o.closePoint)
 					: true;
 			},
 			route: function(o) {
-				var self = this;
+				var self = this, ajax;
 				o.forEach(function(e) {
-	
+
 					// check time expire
-					if (e.date.now < e.date.start || e.date.now > e.date.end)
+					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
 						return false;
 					
 					// check closed
@@ -107,22 +110,24 @@
 					if (e.cache && self.getStore(e.storeName))
 						return self.render(e);
 	
-					$.ajax({
+					ajax = {
 						url			: e.path + self.storePoint.slash + e.file,
 						dataType	: 'script',
-						success		: function(xhr) {
-							return e.xhr = xhr
-							,	self.setStore(e.storeName, e.xhr)
-							,	self.render(e);
-						}
-					});
+					},
+					ajax.success = function(xhr) {
+						return e.xhr = xhr
+						,	self.setStore(e.storeName, e.xhr)
+						,	self.render(e);
+					};
+
+					return self.ajax(ajax);
 				});
 			},
 			randModule: function(e, o) {
-				var r,c,j,t = true, self = this, p;
-				p = (e.context.cookie)
-					? self.storePoint.prev + e.context.cookie
-					: self.storePoint.prev + e.selector.replace(/ /gi, '');
+				var r,c,j,t = true, self = this,
+				p = self.storePoint.prev
+					+ e.context.cookie;
+
 
 				if (self.getStore(p) === false)
 					self.setStore(p, -1);
@@ -139,25 +144,32 @@
 				return o[r];
 			},
 			constructParams: function(o) {
-				var obj = [], modules = [], self = this, k;
-				obj = (o.modules && o.modules.length > 0) ? o.modules : o;
+				var obj = [], modules = [], self = this, keyName, object,
+				obj = (o.modules && o.modules.length > 0)
+					? o.modules
+					: false;
+
+				if (obj === false)
+					return false;
+
 				obj.forEach(function(e) {
-					k = Object.keys(e)[0];
+					keyName = Object.keys(e)[0],
+					object = e[keyName],
 					modules.push({
-						name		: k,
-						storeName	: k + self.storePoint.rev + e[k].revision,
-						path		: o.path + self.storePoint.slash + k,
+						name		: keyName,
+						storeName	: keyName + self.storePoint.rev + object.revision,
+						path		: o.path + self.storePoint.slash + keyName,
 						file		: o.templateName,
-						delay		: e[k].delay,
-						item		: e[k],
+						delay		: object.delay,
+						item		: object,
 						cache		: o.cache,
-						closePoint	: self.storePoint.closed + k + self.storePoint.rev + e[k].revision,
+						closePoint	: self.storePoint.closed + keyName + self.storePoint.rev + object.revision,
 						append		: o.element,
 						date: {
-							now		: Math.round(new Date().getTime() / 1000),
-							end		: self.dateToUnixTimeStamp(e[k].date.end),
-							start	: self.dateToUnixTimeStamp(e[k].date.start),
-							close	: e[k].closeExpire,
+							now		: function() { return Math.round(new Date().getTime() / 1000) },
+							end		: self.dateToUnixTimeStamp(object.date.end),
+							start	: self.dateToUnixTimeStamp(object.date.start),
+							close	: object.closeExpire,
 						}
 					});
 				});
@@ -166,19 +178,64 @@
 					? [self.randModule(o.element, modules)]
 					: modules);
 			},
+			getModules: function(o) {
+				var self = this,
+				rev = (typeof o.revision == 'number') ? o.revision : 0,
+				spm = self.storePoint.modules + o.element.context.cookie + self.storePoint.rev + rev,
+				stored = self.getStore(spm);
+				
+
+				if (stored && o.cache)
+					return o.modules = stored
+					,	self.constructParams(o);
+
+				// get modules callback function
+				o.ajax = o.modules.match(/(^(http|https|\/\/)|jsonp)/)
+				? {
+					crossDomain 	: true,
+					dataType 		: 'jsonp',
+					contentType 	: "application/json",
+					jsonpCallback 	: 'modules',
+					cache			: o.cache,
+					data : {
+						domain: window.location.hostname || window.location.host
+					}
+				}
+				: {
+					cache			: o.cache,
+					dataType 		: 'json',
+					context			: this
+				},
+				o.ajax.url = o.modules;
+				o.ajax.error = function(a,b,c) {
+					throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);
+				},
+				o.ajax.success = function(data) {
+					o.modules = data;
+					
+					if (self.getStore(spm) === false)
+						self.setStore(spm, data);
+						
+					self.constructParams(o);
+				};
+
+
+
+				return this.ajax(o.ajax);
+			},
+			ajaxErrors: function(a,b,c) {
+				throw new Error(this.modules + ' ' + a.status + ' ' + a.statusText);
+			},
+			ajax: function(o) {
+				return $.ajax(o);
+			},
 			init: function (e,o) {
-				var self = this;
+				var self = this, c;
 				o.element = e;
-	
-				// type to get modules
-				return (
-					typeof o.modules == 'string' &&
-					o.modules.match(/\//gi)
-				)
-				? $.getJSON(o.modules, function(x) {
-					o.modules = x;
-					return self.constructParams(o)})
+				c = (typeof o.modules == 'string')
+				? self.getModules(o)
 				: self.constructParams(o);
+				return c;
 			}
 		};
 
@@ -190,9 +247,14 @@
 			if (typeof window.localStorage == 'undefined')
 				throw new Error('Browser not support localStorage');
 
-
 			// main call
-			return dekkoConstructor.init(this, options);
+			return $.when(constructor.init(this, options))
+				.done(function(d) {
+					// all objects
+					// console.log(d);
+				}).fail(function() {
+					console.warn('load fully fail');
+				});
 
 		} catch (e) {
 			return console.error(e);

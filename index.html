@@ -48,12 +48,33 @@
         	 * examples 
         	*/
 
+        	/*$('div.site-wrapper').dekko({
+        		cache: false, // cache requests and save browser localStorage (optional)
+        		rotate: false,
+        		path: '/assets/dekko/modules', // relative path to element modules (required)
+        		modules: [ // require minimum one array element
+        			{
+        				'branding-page' : {
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
+        					url: 'http://ya.ru', // click wrap element (optional)
+        					delay: 0, // wait before show (optional)
+        					date: {
+        						start: '2016-02-26 10:00:00', // element more start at (required)
+        						end: '2016-04-01 23:59:59' // element not started after this date (required)
+        					}
+        				}
+        			}
+        		]
+        	});*/
+        	
         	$('body').dekko({
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: false,
         		path: '/assets/dekko/modules', // relative path to element modules (required)
+        		revision: 1,
         		modules: '/example-data.json',
-        		/*[ // require minimum one array element
+        		// modules: 'http://work.pronskiy.ru/example-data-jsonp.json',
+        		/* modules: [ // require minimum one array element
         			{
         				'popup-example1' : {
         					context: 'магия', // html data (optional)
@@ -138,16 +159,16 @@
         					}
         				}
         			}
-        		]*/
+        		] */
         	});
 
-        	$('div.example-728x90').dekko({
+        	/*$('div.example-728x90').dekko({
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: true, // enable rotate elements on refresh page
         		path: '/assets/dekko/modules', // relative path to element modules (required)
         		modules: '/example-data2.json',
-        		
-        		/*[ // require minimum one array element
+        	});        		
+        		[ // require minimum one array element
         			{
         				'bitcoin-cex' : {
         					revision: 100, // cache versioning incremental option (required if cache enabled)
@@ -197,7 +218,7 @@
         				}
         			}
         		]*/
-        	});
+
         </script>
     </body>
 </html>

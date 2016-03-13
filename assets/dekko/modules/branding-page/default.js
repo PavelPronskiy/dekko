@@ -56,7 +56,11 @@ window.dekkoModule = function (object) {
 
 	try {
 
-		t.wrap 		= $('<div/>', { id: object.name + '-wrap' }).css(css.wrap);
+		var xx = $(object.append);
+
+		console.log(xx);
+
+/*		t.wrap 		= $('<div/>', { id: object.name + '-wrap' }).css(css.wrap);
 		t.item 		= $('<div/>').css(css.item);
 		t.close 	= $('<div/>').css(css.close.normal).html('&times;');
 		t.link 		= $('<a/>', { href: object.item.url, target: '_blank' }).css(css.link);
@@ -82,7 +86,7 @@ window.dekkoModule = function (object) {
 				t.wrap.remove();
 			});
 		});
-
+*/
 	} catch (e) {
 		return console.error(e);
 	} finally {

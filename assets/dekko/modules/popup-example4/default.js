@@ -118,7 +118,7 @@ window.dekkoModule = function (object) {
 			function() { $(this).css(css.close.normal) }
 		).click(function() {
 			t.wrap.animate(t.posWrapHorizStart, object.item.effects.duration, object.item.effects.easing[1], function() {
-				self.setStore(object.closePoint, [true, object.date.now]);
+				self.setStore(object.closePoint, [true, object.date.now()]);
 				$(this).remove();
 			});
 		});

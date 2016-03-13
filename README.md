@@ -6,7 +6,16 @@
   - fast loading advert elements
   - start and stop at specific date defines
   - position loading and animation
-  
+
+
+### load methods
+
+```
+modules: [ modules array ]
+modules: /relative/path/to/modules.json
+modules: http://domain.tld/path/to/modules.json?callback=modules
+```
+
 ### modules structure 	&#128690;	&#128690;	&#128690;
 ![dekko](https://cloud.githubusercontent.com/assets/2042729/13509896/73c77c8c-e1a7-11e5-948c-13083e3c0b31.jpg)
 
@@ -16,6 +25,7 @@
         	$('body').dekko({
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: false,
+        		revision: 1,
         		path: '/assets/dekko/modules', // relative path to element modules (required)
         		modules: '/example-data.json',
         		[ // require minimum one array element
@@ -54,7 +64,8 @@
 ```
 
 ### Changelog
-    0.1.0 beta - Fixing code.
+    0.1.1 beta - New option revision and jsonp format modules list.
+    0.1.0 beta - Fixes.
     0.0.9 beta - Added added new param rotate.
     0.0.8 beta - Added modulesUrl, removed required $.easing() plugin. Changed module template.
     0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin

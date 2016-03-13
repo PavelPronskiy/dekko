@@ -78,7 +78,7 @@ window.dekkoModule = function (object) {
 			}
 		).click(function() {
 			t.wrap.slideUp(object.item.effects.duration, object.item.effects.easing[1], function() {
-				self.setStore(object.closePoint, [true, object.date.now]);
+				self.setStore(object.closePoint, [true, object.date.now()]);
 				t.wrap.remove();
 			});
 		});

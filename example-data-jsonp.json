@@ -1,4 +1,4 @@
-[
+modules([
    {
       "popup-example1": {
          "context": "магия",
@@ -95,4 +95,4 @@
          }
       }
    }
-]
+]);
