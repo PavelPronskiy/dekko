@@ -162,63 +162,13 @@
         		] */
         	});
 
-        	/*$('div.example-728x90').dekko({
+        	$('div.example-728x90').dekko({
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: true, // enable rotate elements on refresh page
+        		revision: 2, // enable rotate elements on refresh page
         		path: '/assets/dekko/modules', // relative path to element modules (required)
-        		modules: '/example-data2.json',
-        	});        		
-        		[ // require minimum one array element
-        			{
-        				'bitcoin-cex' : {
-        					revision: 100, // cache versioning incremental option (required if cache enabled)
-        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			},
-              {
-        				'bitcoin-cex1' : {
-        					revision: 100, // cache versioning incremental option (required if cache enabled)
-        					url: '/follow-link-relative-or-absolute/notbeenparsedurl1.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			},
-        			{
-        				'cheap-bitcoin' : {
-        					revision: 100, // cache versioning incremental option (required if cache enabled)
-        					url: '/3321/12321.html', // click wrap element (optional)
-        					delay: 500, // wait before show (optional)
-        					closeExpire: 2, // closable element option, specific counting by days (required)
-        					date: {
-        						start: '2016-02-26 10:00:00', // element more start at (required)
-        						end: '2017-04-01 23:59:59' // element not started after this date (required)
-        					},
-        					effects: {
-        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-        						duration: 1000 // easing duration (optional)
-        					}
-        				}
-        			}
-        		]*/
-
+        		modules: 'http://php-pavelpronskiy.c9users.io/example-banners-jsonp.json'
+        	});
         </script>
     </body>
 </html>

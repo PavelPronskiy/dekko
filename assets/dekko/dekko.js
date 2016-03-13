@@ -112,6 +112,7 @@
 	
 					ajax = {
 						url			: e.path + self.storePoint.slash + e.file,
+						cache		: e.cache,
 						dataType	: 'script',
 					},
 					ajax.success = function(xhr) {
@@ -184,7 +185,6 @@
 				spm = self.storePoint.modules + o.element.context.cookie + self.storePoint.rev + rev,
 				stored = self.getStore(spm);
 				
-
 				if (stored && o.cache)
 					return o.modules = stored
 					,	self.constructParams(o);
@@ -203,8 +203,7 @@
 				}
 				: {
 					cache			: o.cache,
-					dataType 		: 'json',
-					context			: this
+					dataType 		: 'json'
 				},
 				o.ajax.url = o.modules;
 				o.ajax.error = function(a,b,c) {
@@ -218,8 +217,6 @@
 						
 					self.constructParams(o);
 				};
-
-
 
 				return this.ajax(o.ajax);
 			},

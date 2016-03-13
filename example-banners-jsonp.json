@@ -1,0 +1,59 @@
+modules([
+   {
+      "bitcoin-cex": {
+         "revision": 103,
+         "url": "/follow-link-relative-or-absolute/notbeenparsedurl1.html",
+         "delay": 500,
+         "closeExpire": 2,
+         "date": {
+            "start": "2016-02-26 10:00:00",
+            "end": "2017-04-01 23:59:59"
+         },
+         "effects": {
+            "easing": [
+               "easeInOutElastic",
+               "easeOutElastic"
+            ],
+            "duration": 1000
+         }
+      }
+   },
+   {
+      "bitcoin-cex1": {
+         "revision": 103,
+         "url": "/follow-link-relative-or-absolute/notbeenparsedurl1.html",
+         "delay": 500,
+         "closeExpire": 2,
+         "date": {
+            "start": "2016-02-26 10:00:00",
+            "end": "2017-04-01 23:59:59"
+         },
+         "effects": {
+            "easing": [
+               "easeInOutElastic",
+               "easeOutElastic"
+            ],
+            "duration": 1000
+         }
+      }
+   },
+   {
+      "cheap-bitcoin": {
+         "revision": 103,
+         "url": "/3321/12321.html",
+         "delay": 500,
+         "closeExpire": 2,
+         "date": {
+            "start": "2016-02-26 10:00:00",
+            "end": "2017-04-01 23:59:59"
+         },
+         "effects": {
+            "easing": [
+               "easeInOutElastic",
+               "easeOutElastic"
+            ],
+            "duration": 1000
+         }
+      }
+   }
+]);
