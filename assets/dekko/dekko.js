@@ -151,7 +151,7 @@
 				return m[r];
 			},
 			constructParams: function(o) {
-				var obj = [], modules = [], self = this, keyName, object, cnt;
+				var obj = [], modules = [], self = this, keyName, object;
 				
 				obj = (o.modules && o.modules.length > 0)
 					? o.modules
@@ -166,7 +166,7 @@
 					
 					modules.push({
 						name		: keyName,
-						storeName	: keyName + self.storePoint.rev + object.revision,
+						storeName	: keyName + self.storePoint.rev + o.revision + self.storePoint.rev + object.revision,
 						path		: o.path + self.storePoint.slash + keyName,
 						file		: o.templateName,
 						delay		: object.delay,
@@ -174,7 +174,7 @@
 						cache		: o.cache,
 						verbose		: o.verbose,
 						timePoint	: self.console.timeModule + keyName,
-						closePoint	: self.storePoint.closed + keyName + self.storePoint.rev + object.revision,
+						closePoint	: self.storePoint.closed + keyName + self.storePoint.rev + o.revision + self.storePoint.rev + object.revision,
 						append		: o.element,
 						date: {
 							now		: function() { return Math.round(new Date().getTime() / 1000) },
