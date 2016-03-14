@@ -150,6 +150,7 @@
 					j = self.getStore(m[r].closePoint)[0];
 					t = (r !== c && !j) ? false : true;
 
+					// exit loop
 					if (i++ > m.length)
 						return false;
 					
