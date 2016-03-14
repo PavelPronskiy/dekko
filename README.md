@@ -13,7 +13,7 @@
 ```
 modules: [ modules array ]
 modules: /relative/path/to/modules.json
-modules: http://domain.tld/path/to/modules.json?callback=modules
+modules: http://domain.tld/path/to/modules.json
 ```
 
 ### modules structure 	&#128690;	&#128690;	&#128690;
@@ -64,6 +64,7 @@ modules: http://domain.tld/path/to/modules.json?callback=modules
 ```
 
 ### Changelog
+    0.1.2 beta - New bugs and fixes.
     0.1.1 beta - New option revision and jsonp format modules list.
     0.1.0 beta - Fixes.
     0.0.9 beta - Added added new param rotate.
