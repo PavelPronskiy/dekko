@@ -133,9 +133,16 @@ window.dekkoModule = function (object) {
 			$(this).css(object.item.position);
 		});
 
-
-
 		t.wrap.appendTo(object.append);
+		
+		
+		(function animate() {
+			t.wrap.animate({
+				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=179')
+			}, 15000, animate);
+		})();
+
+
 
 	} catch (e) {
 		return console.error(e);

@@ -1,3 +1,4 @@
+
 /**
  * updated ver 0.16
  * banner element template
@@ -6,14 +7,18 @@
 window.dekkoModule = function (object) {
 
 	var css = {
-		wrap: {
-			'display' 					: 'none',
-			'width' 					: '728px',
-			'height' 					: '90px',
-			// 'background' 			: 'url(' + object.path + '/bg.jpg) no-repeat left top',
+		container: {
+			'background-color'			: '#fff',
+			// 'border'					: '1px solid red',
 			'-webkit-box-shadow'	 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 			'-moz-box-shadow' 			: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 			'box-shadow' 				: '0px 0px 10px rgba(50, 50, 50, 0.6)',
+
+		},
+		wrap: {
+			// 'border'					: '1px solid blue',
+			// 'background-color'			: '#ccc',
+			// 'background' 			: 'url(' + object.path + '/bg.jpg) no-repeat left top',
 		},
 		head: {
 			// 'position' 					: 'relative',
@@ -34,9 +39,23 @@ window.dekkoModule = function (object) {
 
 	try {
 
-		var xx = $(object.append);
+		// $('footer').
+		
+		// $('div.body').wrap('<div class="' + object.name + '-wrap"></div>')
 
-		console.log(xx);
+		// $('.' + object.name + '-wrap').css(css.wrap);
+
+		// $('div.body').css(css.container);
+
+		(function animate() {
+			var a = $('body');
+			a.animate({
+				backgroundColor: $.Color(a.css('backgroundColor')).hue('+=179')
+			}, 50000, animate);
+		})();
+
+
+
 
 /*		t.wrap 		= $('<div/>', { id: object.name + '-wrap' }).css(css.wrap);
 		t.item 		= $('<div/>').css(css.item);

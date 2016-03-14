@@ -5,6 +5,8 @@
  */
 
 body {
+    /*background-color:#000;*/
+    background: hsl(205, 66%, 40%);
     padding-top: 70px; /* Required padding for .navbar-fixed-top. Change if height of navigation changes. */
 }
 
@@ -28,4 +30,8 @@ footer {
     .navbar-fixed-top .navbar-brand {
         padding: 15px 0;
     }
+}
+
+.body {
+    background-color:#fff;
 }

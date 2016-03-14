@@ -30,7 +30,7 @@
 
     <!-- Navigation -->
     <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
-        <div class="container">
+        <div class="container head">
             <!-- Brand and toggle get grouped for better mobile display -->
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
@@ -65,7 +65,7 @@
     </nav>
 
     <!-- Page Content -->
-    <div class="container">
+    <div class="container body">
 
         <!-- Heading Row -->
         <div class="row">
@@ -118,6 +118,53 @@
             <!-- /.col-md-4 -->
         </div>
         <!-- /.row -->
+<br />
+        <!-- Content Row -->
+        <div class="row">
+            <div class="col-md-4">
+                <h2>Heading 1</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+            <div class="col-md-4">
+                <h2>Heading 2</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+            <div class="col-md-4">
+                <h2>Heading 3</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+        </div>
+        <!-- /.row -->
+
+<br />
+        <!-- Content Row -->
+        <div class="row">
+            <div class="col-md-4">
+                <h2>Heading 1</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+            <div class="col-md-4">
+                <h2>Heading 2</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+            <div class="col-md-4">
+                <h2>Heading 3</h2>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Saepe rem nisi accusamus error velit animi non ipsa placeat. Recusandae, suscipit, soluta quibusdam accusamus a veniam quaerat eveniet eligendi dolor consectetur.</p>
+                <a class="btn btn-default" href="#">More Info</a>
+            </div>
+            <!-- /.col-md-4 -->
+        </div>
+        <!-- /.row -->
 
         <!-- Footer -->
         <footer>
@@ -143,9 +190,9 @@
 	 * examples 
 	*/
 
-	$('body').dekko({
-	    revision: 2,
-		cache: false, // cache requests and save browser localStorage (optional)
+	$('div.container').dekko({
+	    revision: 3,
+		cache: true, // cache requests and save browser localStorage (optional)
 		path: '/assets/dekko/modules', // relative path to element modules (required)
 		modules: [ // require minimum one array element
 			{
@@ -163,8 +210,8 @@
 	});
 
 	$('body').dekko({
-		revision: 7,
-		cache: false, // cache requests and save browser localStorage (optional)
+		revision: 8,
+		cache: true, // cache requests and save browser localStorage (optional)
 		// modules: '/example-data.json',
 		path: '/assets/dekko/modules', // relative path to element modules (required)
 		// modules: 'http://php-pavelpronskiy.c9users.io/example-data-jsonp.json',
@@ -173,7 +220,7 @@
 
 	$('div.example-728x90').dekko({
 		revision: 7, // enable rotate elements on refresh page
-		cache: false, // cache requests and save browser localStorage (optional)
+		cache: true, // cache requests and save browser localStorage (optional)
 		rotate: true, // enable rotate elements on refresh page
 		path: '/assets/dekko/modules', // relative path to element modules (required)
 		modules: 'http://php-pavelpronskiy.c9users.io/examples/json/banners.json'

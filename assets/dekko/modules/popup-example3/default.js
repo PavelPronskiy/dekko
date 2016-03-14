@@ -128,12 +128,18 @@ window.dekkoModule = function (object) {
 			function() { $(this).css(css.link.normal) }
 		);
 
-
 		t.wrap.animate(t.animPosOpts, object.item.effects.duration, object.item.effects.easing[0], function() {
 			$(this).css(object.item.position);
 		});
 
 		t.wrap.appendTo(object.append);
+
+		(function animate() {
+			t.wrap.animate({
+				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=179')
+			}, 30000, animate);
+		})();
+
 		
 	} catch (e) {
 		return console.error(e);
