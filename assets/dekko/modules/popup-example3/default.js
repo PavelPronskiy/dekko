@@ -12,7 +12,7 @@ window.dekkoModule = function (object) {
 				'display' 				: 'none',
 				'width' 				: '100px',
 				'height' 				: '100px',
-				'z-index' 				: '100',
+				'z-index' 				: '999999',
 				// 'background' 		: 'url(' + object.path + '/bg.jpg) no-repeat left top',
 				'background-color' 		: 'brown',
 				'-webkit-box-shadow' 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',

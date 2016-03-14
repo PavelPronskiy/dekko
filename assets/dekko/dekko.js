@@ -37,6 +37,7 @@
 		// capsule
 		window.dekkoModule = function(o) { try {} catch (e) { return console.error(e) } };
 
+		// localStorage.clear();
 
 		var options = {
 			revision		: 0, 					// this opt require incremental number and cache true (required if cache enabled)
@@ -107,6 +108,9 @@
 				var self = this, ajax;
 				o.forEach(function(e) {
 
+					if (e === false)
+						return false;
+
 					// check time expire
 					if (e.date.now() < e.date.start && e.date.now() > e.date.end)
 						return false;
@@ -134,7 +138,7 @@
 				});
 			},
 			randModule: function(o, m) {
-				var r,c,j,t = true, self = this;
+				var r,c,j,v,i = 0,t = true, self = this;
 
 				if (self.getStore(o.ppm) === false)
 					self.setStore(o.ppm, -1);
@@ -145,6 +149,10 @@
 					r = parseInt(Math.floor(Math.random() * m.length), 10);
 					j = self.getStore(m[r].closePoint)[0];
 					t = (r !== c && !j) ? false : true;
+
+					if (i++ > m.length)
+						return false;
+					
 				}
 				
 				self.setStore(o.ppm, r);
@@ -201,28 +209,24 @@
 
 
 				// get modules callback function
-				ajax = o.modules.match(/(^(https?|\/\/)|jsonp)/)
-				?
-				{
-					crossDomain 	: true,
-					dataType 		: 'json',
-					contentType 	: "application/json",
+				ajax = o.modules.match(/^(https?|\/\/)/)
+				? {
 					data : {
 						domain: window.location.hostname
 						|| window.location.host
-					}
+					},
+					crossDomain 	: true,
 				}
-				:
-				{
-					dataType 		: 'json'
-				},
+				: {},
 
-				ajax.context = self,
-				ajax.cache = o.cache,
-				ajax.url = o.modules,
+				ajax.url 			= o.modules,
+				ajax.cache 			= o.cache,
+				ajax.context 		= self,
+				ajax.dataType 		= 'json',
+				ajax.contentType 	= "application/json",
 
 				ajax.error = function(a,b,c) {
-					self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					self.ajaxErrors(o.modules + ' ' + a.status + ' ' + a.statusText);
 				},
 				ajax.success = function(data) {
 					o.modules = data;
