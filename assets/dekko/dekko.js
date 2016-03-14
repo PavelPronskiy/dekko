@@ -61,10 +61,14 @@
 		},
 		
 		constructor = {
+			
+			// verbose options
 			console: {
 				timeModule: 'Module load time ',
 				totalTime: 'Total time load '
 			},
+			
+			// static prefix points
 			storePoint: {
 				closed: 'closed.',
 				modules: 'modules.',
@@ -87,6 +91,8 @@
 				var x = localStorage.getItem(o);
 				return (x !== null) ? JSON.parse(x) : false ;
 			},
+			
+			// callback final
 			render: function(o) {
 				var self = this,
 				stored = self.getStore(o.storeName),
@@ -108,6 +114,8 @@
 					? this.delStore(o.closePoint)
 					: true;
 			},
+			
+			// check options and switch request to render
 			route: function(o) {
 				var self = this, ajax;
 				o.forEach(function(e) {
@@ -163,6 +171,8 @@
 				self.setStore(o.ppm, r);
 				return m[r];
 			},
+			
+			// objects params build
 			constructParams: function(o) {
 				var obj = [], modules = [], self = this, keyName, object;
 				
@@ -212,13 +222,13 @@
 					: modules);
 			},
 			getModules: function(o) {
-				var	self 	= this, ajax,
-				stored = self.getStore(o.spm);
+				var	self = this, ajax;
+				/*stored = (o.cache) ? self.getStore(o.spm) : false;
 
-				if (stored && o.cache)
-					return o.modules = stored
-					,	self.constructParams(o);
-
+				if (o.cache && stored) {
+					o.modules = stored;
+					return self.constructParams(o);
+				}*/
 
 				// get modules callback function
 				ajax = o.modules.match(/^(https?|\/\/)/)
@@ -271,8 +281,7 @@
 					: console.timeEnd(o);
 			},
 			init: function (e,o) {
-				var self = this, c, point, cc,
-				
+				var self = this, c, point, storedModules,
 				rev = (typeof o.revision == 'number')
 				? o.revision
 				: 0;
@@ -285,18 +294,29 @@
 				
 				o.spm = self.storePoint.modules + point + self.storePoint.rev + rev,
 				o.ppm = self.storePoint.prev + point + self.storePoint.rev + rev,
-				
-				c = (typeof o.modules == 'string')
-				? self.getModules(o)
-				: self.constructParams(o);
-				
-				cc = (o.cache) ? '[cache: enabled] ' : '[cache: disabled] ';
-				// cc = cc + self.console.totalTime + o.spm;
 
-				// self.time.call(, cc);
+				storedModules = (o.cache)
+					? self.getStore(o.spm)
+					: false,
+					
+				o.modules = (storedModules !== false)
+					? storedModules
+					: o.modules;
+					
+				if (storedModules !== false)
+					c = self.constructParams(o);
+				else
+					c = (typeof o.modules == 'string')
+					? self.getModules(o)
+					: self.constructParams(o);
+				
+
+				// self.time(o.spm);
 				
 				return $.when(c).done(function() {
+					// self.timeEnd(o.spm);
 					self.timeEnd(null, o.spm);
+					// console.log(o.spm);
 				}).fail(function() {
 					console.error('when return error');
 				});

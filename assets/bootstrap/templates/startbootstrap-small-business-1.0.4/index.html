@@ -70,7 +70,7 @@
         <!-- Heading Row -->
         <div class="row">
             <div class="col-md-8">
-                <br /><br /><br /><div class="example-728x90"></div>
+                <br /><br /><span style="color:white">banner module example:</span><br /><div class="example-728x90"></div>
                 <!--<img class="img-responsive img-rounded" src="http://placehold.it/900x350" alt="">-->
             </div>
             <!-- /.col-md-8 -->
@@ -170,12 +170,13 @@
         <footer>
             <div class="row">
                 <div class="col-lg-12">
-                    <p>Copyright &copy; Your Website 2014</p>
+                    <p>Copyright &copy; Dekko plugin Website 206</p>
                 </div>
             </div>
         </footer>
-
     </div>
+
+        <br /><br /><br />
     <!-- /.container -->
 
     <!-- jQuery -->
@@ -192,7 +193,7 @@
 
 	$('div.container').dekko({
 	    revision: 3,
-		cache: true, // cache requests and save browser localStorage (optional)
+		cache: false, // cache requests and save browser localStorage (optional)
 		path: '/assets/dekko/modules', // relative path to element modules (required)
 		modules: [ // require minimum one array element
 			{
@@ -202,7 +203,7 @@
 					delay: 0, // wait before show (optional)
 					date: {
 						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2016-04-01 23:59:59' // element not started after this date (required)
+						end: '2016-07-01 23:59:59' // element not started after this date (required)
 					}
 				}
 			}
@@ -210,7 +211,7 @@
 	});
 
 	$('body').dekko({
-		revision: 8,
+		revision: 9,
 		cache: true, // cache requests and save browser localStorage (optional)
 		// modules: '/example-data.json',
 		path: '/assets/dekko/modules', // relative path to element modules (required)
@@ -219,7 +220,7 @@
 	});
 
 	$('div.example-728x90').dekko({
-		revision: 7, // enable rotate elements on refresh page
+		revision: 8, // enable rotate elements on refresh page
 		cache: true, // cache requests and save browser localStorage (optional)
 		rotate: true, // enable rotate elements on refresh page
 		path: '/assets/dekko/modules', // relative path to element modules (required)

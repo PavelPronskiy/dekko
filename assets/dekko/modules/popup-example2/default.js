@@ -137,8 +137,8 @@ window.dekkoModule = function (object) {
 		
 		(function animate() {
 			t.wrap.animate({
-				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=179')
-			}, 15000, animate);
+				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=50')
+			}, 6000, animate);
 		})();
 
 

@@ -8,7 +8,7 @@ window.dekkoModule = function (object) {
 
 	var css = {
 		container: {
-			'background-color'			: '#fff',
+			'background'				: 'url(' + object.path + '/body_background_birds.png) repeat left top',
 			// 'border'					: '1px solid red',
 			'-webkit-box-shadow'	 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 			'-moz-box-shadow' 			: '0px 0px 10px rgba(50, 50, 50, 0.6)',
@@ -45,13 +45,13 @@ window.dekkoModule = function (object) {
 
 		// $('.' + object.name + '-wrap').css(css.wrap);
 
-		// $('div.body').css(css.container);
+		$('div.body').css(css.container);
 
 		(function animate() {
 			var a = $('body');
 			a.animate({
-				backgroundColor: $.Color(a.css('backgroundColor')).hue('+=179')
-			}, 50000, animate);
+				backgroundColor: $.Color(a.css('backgroundColor')).hue('+=1')
+			}, 1000, animate);
 		})();
 
 
