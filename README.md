@@ -64,6 +64,7 @@ modules: http://domain.tld/path/to/modules.json
 ```
 
 ### Changelog
+    0.1.3 beta - Added new get method.
     0.1.2 beta - New bugs and fixes.
     0.1.1 beta - New option revision and jsonp format modules list.
     0.1.0 beta - Fixes.

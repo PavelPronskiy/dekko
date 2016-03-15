@@ -1,6 +1,6 @@
 /**
  *
- * Version: 0.1.2 beta
+ * Version: 0.1.3 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -32,34 +32,37 @@
  
 (function ($) {
 
-	$.fn.dekko = function(opts) {
+	$.fn.dekko = function(options) {
 
 		// capsule
 		window.dekkoModule = function(o) { try {} catch (e) { return console.error(e) } };
 
 		// localStorage.clear();
 
-		var 
-		
-		options = {
+		var settings = {}, constructor;
+
+		// default settings
+		settings.app = {
 			revision		: 0, 					// this opt require incremental number and cache true (required if cache enabled)
-			cache			: false, 				// (optional)
+			cache			: true, 				// (optional)
 			verbose			: true, 				// (optional)
 			templateName	: 'default.js',			// (required)
 			modules			: [],					// (required if modulesUrl not defined)
 			rotate			: false,				// (optional)
 			path			: '/media/popup',		// (required)
 		},
-		
-		ajaxOptions = {
+
+		// default ajax settings
+		settings.ajax = {
 			async: true,
-			cache: options.cache,
+			cache: settings.app.cache,
 			type: 'GET',
 			error: function(jqxhr, settings, exception) {
 				throw new Error('Ajax returned exception handler: ' + exception);
 			}
 		},
-		
+
+		// chains
 		constructor = {
 			
 			// verbose options
@@ -71,6 +74,8 @@
 			// static prefix points
 			storePoint: {
 				closed: 'closed.',
+				options: 'options.',
+				module: 'module.',
 				modules: 'modules.',
 				prev: 'rotate.',
 				rev: '.r',
@@ -84,14 +89,22 @@
 			setStore: function(n, o) {
 				return localStorage.setItem(n, JSON.stringify(o));
 			},
-			delStore: function(o) {
-				return localStorage.removeItem(o);
+			delStore: function(o, p) {
+				if (p && localStorage.length > 0) {
+					for (var l in localStorage) {
+						var regex = new RegExp('^' + p);
+						if (l.match(regex))
+							this.delStore(l);
+					}
+					
+				} else
+					return localStorage.removeItem(o);
 			},
 			getStore: function(o) {
 				var x = localStorage.getItem(o);
 				return (x !== null) ? JSON.parse(x) : false ;
 			},
-			
+
 			// callback final
 			render: function(o) {
 				var self = this,
@@ -100,6 +113,8 @@
 				$.globalEval(xhr);
 				return window.dekkoModule.call(self, o);
 			},
+			
+			// request module callback
 			notice: function(o) {
 				return (o.verbose)
 					? this.timeEnd(o.timePoint)
@@ -142,6 +157,7 @@
 					},
 					ajax.success = function(xhr) {
 						e.xhr = xhr;
+						self.delStore(null, self.storePoint.module + e.name);
 						self.setStore(e.storeName, e.xhr);
 						return self.render(e);
 					};
@@ -149,6 +165,8 @@
 					return self.ajax(ajax);
 				});
 			},
+			
+			// get random object
 			randModule: function(o, m) {
 				var r,c,j,i = 0,t = true, self = this;
 
@@ -183,17 +201,15 @@
 				if (obj === false)
 					return false;
 
-				
 				if (o.verbose)
 					self.time(null, o.spm);
 
 				obj.forEach(function(e, i) {
 					keyName = Object.keys(e)[0],
-					object = e[keyName];
-
+					object = e[keyName],
 					modules.push({
 						name		: keyName,
-						storeName	: keyName + self.storePoint.rev + o.revision + self.storePoint.rev + object.revision,
+						storeName	: self.storePoint.module + keyName + self.storePoint.rev + o.revision + self.storePoint.rev + object.revision,
 						path		: o.path + self.storePoint.slash + keyName,
 						file		: o.templateName,
 						delay		: object.delay,
@@ -221,45 +237,35 @@
 					? [self.randModule(o, modules)]
 					: modules);
 			},
+			
+			// fetch modules array
 			getModules: function(o) {
-				var	self = this, ajax;
-				/*stored = (o.cache) ? self.getStore(o.spm) : false;
+				var	self = this, url, ajax = {};
 
-				if (o.cache && stored) {
-					o.modules = stored;
-					return self.constructParams(o);
-				}*/
-
-				// get modules callback function
-				ajax = o.modules.match(/^(https?|\/\/)/)
-				? {
-					data : {
-						domain: window.location.hostname
-						|| window.location.host
-					},
-					crossDomain 	: true,
-				}
-				: {},
-
-				ajax.url 			= o.modules,
-				ajax.cache 			= o.cache,
-				ajax.context 		= self,
-				ajax.dataType 		= 'json',
-				ajax.contentType 	= "application/json",
+				if (o.modules === '')
+					return false;
+				
+				ajax.url 				= o.modules,
+				ajax.cache 				= o.cache,
+				ajax.context 			= self,
+				ajax.dataType 			= 'json',
+				ajax.contentType 		= "application/json",
+				ajax.data 				= {},
+				ajax.data.domain 		= window.location.hostname || window.location.host,
+				ajax.data.crossDomain 	= ajax.url.match(/^(https?|\/\/)/) ? true : false,
 
 				ajax.error = function(a,b,c) {
-					self.ajaxErrors(o.modules + ' ' + a.status + ' ' + a.statusText);
+					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				},
 				ajax.success = function(data) {
 					o.modules = data;
-					if (self.getStore(o.spm) === false)
+					if (self.getStore(o.spm) === false) {
+						self.delStore(null, self.storePoint.modules);
 						self.setStore(o.spm, data);
+					}
 					
 					self.constructParams(o);
 				};
-
-				// return;
-
 
 				return this.ajax(ajax);
 			},
@@ -273,15 +279,69 @@
 				return (g)
 					? console.group(g)
 					: console.time(o);
-				
 			},
 			timeEnd: function(o, g) {
 				return (g)
 					? console.groupEnd(g)
 					: console.timeEnd(o);
 			},
-			init: function (e,o) {
-				var self = this, c, point, storedModules,
+			getOptions: function(e) {
+				console.log(options);
+				var	self = this, ajax = {}, rev, u,
+				storedOptionsPointer, storedOptions,
+				url = options.match(/^(https?|\/|\/\/)/) ? options : false;
+
+				if (url === false) return false;
+
+				ajax.url 			= url,
+				ajax.cache 			= settings.app.cache,
+				ajax.context 		= self,
+				ajax.dataType 		= 'json',
+				ajax.contentType 	= "application/json",
+				ajax.crossDomain 	= url.match(/^(https?|\/)/gi) ? true : false,
+				ajax.data			= {},
+				ajax.data.domain	= window.location.hostname || window.location.host,
+				
+				u = url.replace(/(^(https?|\/\/)|(\/|\.|\:))/gi, ''),
+
+				rev = JSON.parse(u.replace(/^.*\?r=([0-9]+)$/gi, '$1')),
+				rev = (rev) ? rev : 0,
+				storedOptionsPointer = self.storePoint.options + u.replace(/\?.*/g, '') + self.storePoint.rev + rev,
+				storedOptions = self.getStore(storedOptionsPointer),
+				
+				ajax.error = function(a,b,c) {
+					return self.ajaxErrors(url + ' ' + a.status + ' ' + a.statusText);
+				},
+				ajax.success = function(d) {
+					d.revision = rev;
+					self.delStore(null, self.storePoint.options);
+					self.setStore(storedOptionsPointer, d);
+					return self.modulesConstructor(e, d);
+				};
+
+				return (storedOptions.cache)
+					? self.modulesConstructor(e, storedOptions)
+					: this.ajax(ajax);
+			},
+			
+			// pre-construct options (once)
+			modulesConstructor: function (e, opts) {
+				var self = this, c, point,
+					storedModules, rev, o = {};
+
+				// return console.log(opts);
+				/*if (typeof opts == 'object')
+					return false;*/
+
+				if (Object.keys(opts).length === 0)
+					return false;
+
+
+
+				/*if (typeof opts.modules !== 'object' && !opts.modules.match(/^(https?|\/)/gi))
+					return false;*/
+
+				o = $.extend(settings.app, opts),
 				rev = (typeof o.revision == 'number')
 				? o.revision
 				: 0;
@@ -302,14 +362,14 @@
 				o.modules = (storedModules !== false)
 					? storedModules
 					: o.modules;
-					
+
+
 				if (storedModules !== false)
 					c = self.constructParams(o);
 				else
 					c = (typeof o.modules == 'string')
 					? self.getModules(o)
 					: self.constructParams(o);
-				
 
 				// self.time(o.spm);
 				
@@ -325,16 +385,23 @@
 
 		try {
 
-			$.extend(options, opts || {});
-			$.ajaxSetup(ajaxOptions);
-
+			$.ajaxSetup(settings.ajax);
+			
 			if (typeof window.localStorage == 'undefined')
 				throw new Error('Browser not support localStorage');
 
-			
+			if (typeof options !== 'object' && typeof options !== 'string')
+				return false;
 
-			// main call
-			return constructor.init(this, options);
+			if (typeof options == 'object') {
+				return constructor.modulesConstructor(this, options);
+			}
+
+			// $.dekko('//url/path/to/options.json')
+			if (typeof options == 'string' && typeof options.match(/^(https?)|(\/|\.|\:)/)) {
+				// main call
+				return constructor.getOptions(this);
+			}
 
 		} catch (e) {
 			return console.error(e);

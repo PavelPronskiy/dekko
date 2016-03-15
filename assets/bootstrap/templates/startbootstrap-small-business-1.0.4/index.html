@@ -192,7 +192,6 @@
 	*/
 
 	$('div.container').dekko({
-	    revision: 3,
 		cache: false, // cache requests and save browser localStorage (optional)
 		path: '/assets/dekko/modules', // relative path to element modules (required)
 		modules: [ // require minimum one array element
@@ -210,21 +209,19 @@
 		]
 	});
 
-	$('body').dekko({
-		revision: 9,
-		cache: true, // cache requests and save browser localStorage (optional)
-		// modules: '/example-data.json',
-		path: '/assets/dekko/modules', // relative path to element modules (required)
-		// modules: 'http://php-pavelpronskiy.c9users.io/example-data-jsonp.json',
-		modules: '/examples/json/popups.json'
-	});
+    
+    // load settings and modules
+	$('body').dekko('http://php-pavelpronskiy.c9users.io/examples/json/dekko.json?r=13315818');
+
+
+
 
 	$('div.example-728x90').dekko({
-		revision: 8, // enable rotate elements on refresh page
-		cache: true, // cache requests and save browser localStorage (optional)
+		revision: 9, // enable rotate elements on refresh page
+		cache: false, // cache requests and save browser localStorage (optional)
 		rotate: true, // enable rotate elements on refresh page
 		path: '/assets/dekko/modules', // relative path to element modules (required)
-		modules: 'http://php-pavelpronskiy.c9users.io/examples/json/banners.json'
+		modules: '/examples/json/banners.json'
 	});
 
 	  /*modules: 
