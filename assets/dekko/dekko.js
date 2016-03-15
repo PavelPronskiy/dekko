@@ -286,7 +286,6 @@
 					: console.timeEnd(o);
 			},
 			getOptions: function(e) {
-				console.log(options);
 				var	self = this, ajax = {}, rev, u,
 				storedOptionsPointer, storedOptions,
 				url = options.match(/^(https?|\/|\/\/)/) ? options : false;
@@ -329,17 +328,8 @@
 				var self = this, c, point,
 					storedModules, rev, o = {};
 
-				// return console.log(opts);
-				/*if (typeof opts == 'object')
-					return false;*/
-
 				if (Object.keys(opts).length === 0)
 					return false;
-
-
-
-				/*if (typeof opts.modules !== 'object' && !opts.modules.match(/^(https?|\/)/gi))
-					return false;*/
 
 				o = $.extend(settings.app, opts),
 				rev = (typeof o.revision == 'number')
@@ -363,7 +353,6 @@
 					? storedModules
 					: o.modules;
 
-
 				if (storedModules !== false)
 					c = self.constructParams(o);
 				else
@@ -371,15 +360,11 @@
 					? self.getModules(o)
 					: self.constructParams(o);
 
-				// self.time(o.spm);
-				
-				return $.when(c).done(function() {
-					// self.timeEnd(o.spm);
-					self.timeEnd(null, o.spm);
-					// console.log(o.spm);
-				}).fail(function() {
-					console.error('when return error');
-				});
+				return $.when(c).done(
+					function() {
+						self.timeEnd(null, o.spm);
+					}
+				);
 			}
 		};
 
