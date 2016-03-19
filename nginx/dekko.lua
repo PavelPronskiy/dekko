@@ -34,8 +34,8 @@ local args = ngx.req.get_uri_args();
 local red = redis:new();
 
 local redis_pool = {
-	"127.0.0.1:6379:rbcfrere";
-	"127.0.0.2:6379";
+	"127.0.0.2:6379:password";
+	"127.0.0.1:6379";
 	"127.0.0.2:6379";
 	"127.0.0.3:6379";
 };
