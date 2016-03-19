@@ -110,7 +110,7 @@ local redis_cluster = function(rp)
         return result;
     end
 
-    -- get random ip port
+    -- check ip port
     for i, host in pairs(rp) do
         local s = split_host(host, ':');
         local con, err = red:connect(s[1], s[2]);
