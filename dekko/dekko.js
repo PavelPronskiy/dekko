@@ -1,14 +1,16 @@
 /**
  *
- * Version: 0.1.3 beta
+ * name: Dekko
+ * description: advert loader
+ * Version: 0.1.4 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
- * Copyright (c) 2016 Pavel Pronskiy
+ * Copyright (c) 2016 Dekko Pavel Pronskiy
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without
+ * files (the "dekko"), to deal in the Software without
  * restriction, including without limitation the rights to use,
  * copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the
@@ -37,8 +39,6 @@
 		// capsule
 		window.dekkoModule = function(o) { try {} catch (e) { return console.error(e) } };
 
-		// localStorage.clear();
-
 		var settings = {}, constructor;
 
 		// default settings
@@ -48,6 +48,7 @@
 			verbose			: true, 				// (optional)
 			templateName	: 'default.js',			// (required)
 			modules			: [],					// (required if modulesUrl not defined)
+			adType			: '',					// (module advert type)
 			rotate			: false,				// (optional)
 			path			: '/media/popup',		// (required)
 		},
@@ -55,11 +56,16 @@
 		// default ajax settings
 		settings.ajax = {
 			async: true,
-			cache: settings.app.cache,
 			type: 'GET',
-			error: function(jqxhr, settings, exception) {
-				throw new Error('Ajax returned exception handler: ' + exception);
+			status: {
+				'404': 'Not found',
+				'400': 'Incorrect attempt',
+				'401': 'Internal error'
 			}
+		},
+		settings.regex = {
+			remote: /(^(https?|\/\/)|(\/|\.|\:))/gi,
+			host: /^(https?|\/\/)/
 		},
 
 		// chains
@@ -73,14 +79,17 @@
 			
 			// static prefix points
 			storePoint: {
-				closed: 'closed.',
-				options: 'options.',
-				module: 'module.',
-				modules: 'modules.',
-				prev: 'rotate.',
-				rev: '.r',
+				closed: 'closed:',
+				options: 'options:',
+				module: 'module:',
+				modules: 'modules:',
+				prev: 'rotate:',
+				rev: ':r',
 				slash: '/'
 			},
+			advertType: [
+				'banner', 'branding', 'popup', 'mediaBar'
+			],
 			dateToUnixTimeStamp: function(o) {
 				var d = new Date(o.split(' ').join('T'));
 				d = d.getTime() / 1000;
@@ -102,16 +111,17 @@
 			},
 			getStore: function(o) {
 				var x = localStorage.getItem(o);
-				return (x !== null) ? JSON.parse(x) : false ;
+				return (x !== null && typeof x !== 'undefined') ? JSON.parse(x) : false;
 			},
 
 			// callback final
 			render: function(o) {
-				var self = this,
-				stored = self.getStore(o.storeName),
-				xhr = (o.xhr) ? o.xhr : stored;
+				
+				var stored = this.getStore(o.storeName),
+					xhr = (o.xhr) ? o.xhr : stored;
+					
 				$.globalEval(xhr);
-				return window.dekkoModule.call(self, o);
+				return window.dekkoModule.call(this, o);
 			},
 			
 			// request module callback
@@ -132,7 +142,7 @@
 			
 			// check options and switch request to render
 			route: function(o) {
-				var self = this, ajax;
+				var self = this, ajax = {};
 				o.forEach(function(e) {
 
 					if (e === false)
@@ -150,12 +160,19 @@
 					if (e.cache && self.getStore(e.storeName))
 						return self.render(e);
 	
-					ajax = {
-						url			: e.path + self.storePoint.slash + e.file,
-						cache		: e.cache,
-						dataType	: 'script',
+					ajax.url				= e.path + self.storePoint.slash + e.file,
+					ajax.crossDomain 		= false, // needed to jquery ajax crossDomain absolute path
+					ajax.cache				= e.cache,
+					ajax.dataType			= 'script',
+
+					ajax.error = function(a) {
+						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 					},
-					ajax.success = function(xhr) {
+					ajax.success = function(xhr, status, c) {
+						// check data consistent
+						if (self.serverExceptions(e.verbose, xhr, ajax))
+							return false;
+						
 						e.xhr = xhr;
 						self.delStore(null, self.storePoint.module + e.name);
 						self.setStore(e.storeName, e.xhr);
@@ -201,8 +218,7 @@
 				if (obj === false)
 					return false;
 
-				if (o.verbose)
-					self.time(null, o.spm);
+				(o.verbose) && self.time(null, o.spm);
 
 				obj.forEach(function(e, i) {
 					keyName = Object.keys(e)[0],
@@ -240,7 +256,7 @@
 			
 			// fetch modules array
 			getModules: function(o) {
-				var	self = this, url, ajax = {};
+				var	self = this, ajax = {};
 
 				if (o.modules === '')
 					return false;
@@ -252,12 +268,17 @@
 				ajax.contentType 		= "application/json",
 				ajax.data 				= {},
 				ajax.data.domain 		= window.location.hostname || window.location.host,
-				ajax.data.crossDomain 	= ajax.url.match(/^(https?|\/\/)/) ? true : false,
+				ajax.data.type 			= o.type,
+				ajax.crossDomain 		= ajax.url.match(settings.regex.host) ? true : false,
 
 				ajax.error = function(a,b,c) {
-					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				},
 				ajax.success = function(data) {
+
+					if (self.serverExceptions(o.verbose, data, ajax))
+						return false;
+					
 					o.modules = data;
 					if (self.getStore(o.spm) === false) {
 						self.delStore(null, self.storePoint.modules);
@@ -268,6 +289,26 @@
 				};
 
 				return this.ajax(ajax);
+			},
+			serverExceptions: function(v, o, a) {
+				
+				if (typeof o == 'undefined') {
+					this.time(null, a.url);
+					console.error('Module cannot load: ' + a.url + ' incorrect results');
+					(v) && console.warn(a);
+					this.timeEnd(null, a.url);
+					return true;
+				}
+			
+				if (typeof settings.ajax.status[o.status] !== 'undefined') {
+					this.time(null, a.url);
+					console.error('status: ' + o.status + ', message: ' + settings.ajax.status[o.status]);
+					(v) && console.warn(a);
+					this.timeEnd(null, a.url);
+					return true;
+				}
+
+				return false;
 			},
 			ajaxErrors: function(msg) {
 				throw new Error(msg);
@@ -285,10 +326,12 @@
 					? console.groupEnd(g)
 					: console.timeEnd(o);
 			},
+			
+			// fetch remote options (bad idea)
 			getOptions: function(e) {
 				var	self = this, ajax = {}, rev, u,
 				storedOptionsPointer, storedOptions,
-				url = options.match(/^(https?|\/|\/\/)/) ? options : false;
+				url = options.match(settings.regex.host) ? options : false;
 
 				if (url === false) return false;
 
@@ -297,13 +340,14 @@
 				ajax.context 		= self,
 				ajax.dataType 		= 'json',
 				ajax.contentType 	= "application/json",
-				ajax.crossDomain 	= url.match(/^(https?|\/)/gi) ? true : false,
+				ajax.crossDomain 	= url.match(settings.regex.host) ? true : false,
 				ajax.data			= {},
 				ajax.data.domain	= window.location.hostname || window.location.host,
 				
-				u = url.replace(/(^(https?|\/\/)|(\/|\.|\:))/gi, ''),
+				
+				u = url.replace(settings.regex.remote, ''),
 
-				rev = JSON.parse(u.replace(/^.*\?r=([0-9]+)$/gi, '$1')),
+				rev = JSON.parse(u.replace(/^.*\?r=([0-9]+)$/g, '$1')),
 				rev = (rev) ? rev : 0,
 				storedOptionsPointer = self.storePoint.options + u.replace(/\?.*/g, '') + self.storePoint.rev + rev,
 				storedOptions = self.getStore(storedOptionsPointer),
@@ -340,7 +384,7 @@
 				
 				point = (typeof o.modules == 'object')
 				? e.selector.replace(/(\.|\-)/gi, '')
-				: o.modules.replace(/(^(https?)|(\/|\.|\:))/gi, ''),
+				: o.modules.replace(settings.regex.remote, ''),
 				
 				o.spm = self.storePoint.modules + point + self.storePoint.rev + rev,
 				o.ppm = self.storePoint.prev + point + self.storePoint.rev + rev,
@@ -360,8 +404,7 @@
 					? self.getModules(o)
 					: self.constructParams(o);
 
-				return $.when(c).done(
-					function() {
+				return $.when(c).done(function() {
 						self.timeEnd(null, o.spm);
 					}
 				);
@@ -378,15 +421,14 @@
 			if (typeof options !== 'object' && typeof options !== 'string')
 				return false;
 
-			if (typeof options == 'object') {
+			// $.dekko({ options, modules: []})
+			if (typeof options == 'object')
 				return constructor.modulesConstructor(this, options);
-			}
 
 			// $.dekko('//url/path/to/options.json')
-			if (typeof options == 'string' && typeof options.match(/^(https?)|(\/|\.|\:)/)) {
-				// main call
+			if (typeof options == 'string' && typeof options.match(settings.regex.remote))
 				return constructor.getOptions(this);
-			}
+
 
 		} catch (e) {
 			return console.error(e);
@@ -394,7 +436,7 @@
 	};
 }(jQuery));
 
-// other plugins
+// addition plugins
 
 /*
  * jQuery Easing v1.3 - http://gsgd.co.uk/sandbox/jquery/easing/

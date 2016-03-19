@@ -2,7 +2,7 @@
  * updated ver 0.17
  * popup element template
 **/
-
+(function ($) {
 window.dekkoModule = function (object) {
 		var t = {},
 		self = this,
@@ -10,11 +10,11 @@ window.dekkoModule = function (object) {
 			wrap: {
 				'position' 				: 'fixed',
 				'display' 				: 'none',
-				'width' 				: '120px',
-				'height' 				: '120px',
+				'width' 				: '100px',
+				'height' 				: '100px',
 				'z-index' 				: '999999',
 				// 'background' 		: 'url(' + object.path + '/bg.jpg) no-repeat left top',
-				'background-color' 		: 'green',
+				'background-color' 		: 'brown',
 				'-webkit-box-shadow' 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 				'-moz-box-shadow' 		: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 				'box-shadow' 			: '0px 0px 10px rgba(50, 50, 50, 0.6)',
@@ -128,25 +128,23 @@ window.dekkoModule = function (object) {
 			function() { $(this).css(css.link.normal) }
 		);
 
-
 		t.wrap.animate(t.animPosOpts, object.item.effects.duration, object.item.effects.easing[0], function() {
 			$(this).css(object.item.position);
 		});
 
 		t.wrap.appendTo(object.append);
-		
-		
-		(function animate() {
+
+/*		(function animate() {
 			t.wrap.animate({
-				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=50')
-			}, 5000, animate);
-		})();
+				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=30')
+			}, 6000, animate);
+		})();*/
 
-
-
+		
 	} catch (e) {
 		return console.error(e);
 	} finally {
 		return self.notice(object);
 	}
 };
+}(jQuery));

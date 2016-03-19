@@ -20,11 +20,13 @@ modules: http://domain.tld/path/to/modules.json
 ![dekko](https://cloud.githubusercontent.com/assets/2042729/13509896/73c77c8c-e1a7-11e5-948c-13083e3c0b31.jpg)
 
   
-### example preload modules
+### examples
 ```js
         	$('body').dekko({
         		cache: true, // cache requests and save browser localStorage (optional)
         		rotate: false,
+        		verbose: true,
+        		type: 'popup',
         		revision: 1,
         		path: '/assets/dekko/modules', // relative path to element modules (required)
         		modules: '/example-data.json',
@@ -50,9 +52,20 @@ modules: http://domain.tld/path/to/modules.json
         					}
         				}
         			}
-        			...
         		]
         	});
+
+
+        // redis support
+    	$('body').dekko({
+    	    type: 'popup',
+    		revision: 14, // enable rotate elements on refresh page
+    		cache: false, // cache requests and save browser localStorage (optional)
+    		path: 'http://dekko-pavelpronskiy.c9users.io/assets/dekko/modules', // path to element modules (required)
+    // 		path: '/assets/dekko/modules', // relative path to element modules (required)
+    		modules: 'http://dekko-pavelpronskiy.c9users.io/dekko.json' // ?type=popup&domain=targetdomain.tld
+    	});
+
 ```
 
 ## modules structure
@@ -63,7 +76,19 @@ modules: http://domain.tld/path/to/modules.json
 /assets/dekko/modules/module-name2/default.js
 ```
 
+## nginx configuration
+```
+lua_package_path "/path/to/lua/5.1/resty/redis.lua;;";
+
+server {
+	location = /dekko.json {
+		content_by_lua_file '/path/to/dekko.lua';
+	}
+}
+
+```
 ### Changelog
+    0.1.4 beta - Added new features. Redis, Nginx, Lua.
     0.1.3 beta - Added new get method.
     0.1.2 beta - New bugs and fixes.
     0.1.1 beta - New option revision and jsonp format modules list.
