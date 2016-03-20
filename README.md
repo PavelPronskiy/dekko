@@ -87,6 +87,11 @@ server {
 }
 
 ```
+## redis configuration
+```
+
+
+```
 ### Changelog
     0.1.4 beta - Added new features. Redis, Nginx, Lua.
     0.1.3 beta - Added new get method.

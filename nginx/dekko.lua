@@ -32,62 +32,76 @@
 local redis = require "resty.redis";
 local args = ngx.req.get_uri_args();
 local red = redis:new();
+local dekko = {};
+dekko.ngx = {};
+dekko.redis = {};
+dekko.construct = {};
+dekko.redis.timeout = 1000;
 
-local redis_pool = {
-	"127.0.0.2:6379:password";
-	"127.0.0.1:6379";
-	"127.0.0.2:6379";
-	"127.0.0.3:6379";
+dekko.redis.pool = {
+	"127.0.0.2:6379:password",
+	"127.0.0.1:6379",
+	"127.0.0.2:6379",
+	"127.0.0.3:6379"
 };
 
--- code exceptions
-local codes = {
-	[403] = "Redis auth failed";
-	[404] = "Not found";
-	[400] = "Bad request";
-	[502] = "Redis not online";
+dekko.redis.prefixes = {
+    ["modules"] = ":modules:",
+    ["clicks"] = ":clicks:",
+    ["hosts"] = ":hosts:"
 };
 
-ngx.header["Content-Type"] = "application/json";
-ngx.header["Access-Control-Allow-Origin"] = '*';
-ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT";
-ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token";
-ngx.header["Access-Control-Allow-Credentials"] = "true";
+dekko.redis.codes = {
+	[403] = "Redis auth failed",
+	[404] = "Not found",
+	[400] = "Bad request",
+	[502] = "Redis not online"
+};
 
--- code exceptions construct
-local error_code = function(code)
-	local view = function(t)
-		ngx.say('{ status: '..code..', message: "' .. codes[code] .. '" }');
-		return ngx.exit(code);
+dekko.ngx.headers = function()
+	ngx.header["Content-Type"] = "application/json";
+	ngx.header["Access-Control-Allow-Origin"] = '*';
+	ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT";
+	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token";
+	ngx.header["Access-Control-Allow-Credentials"] = "true";
+end
+
+dekko.ngx.exception = function(c)
+    ngx.say('{ status: ' .. c .. ', message: "' .. dekko.redis.codes[c] .. '" }');
+    return ngx.exit(c);
+end
+
+dekko.splitHost = function(s,d)
+	local result = {};
+	for match in (s..d):gmatch("(.-)"..d) do
+		table.insert(result, match);
 	end
-	return view(code);
+	return result;
 end
 
--- check url vars
-if args.type == nil or args.domain == nil then
-	return error_code(400);
-end
-
--- get keyhash modules
-local adverts = function(arg)
-	local data = {};
-	local n;
-	local hash = arg.domain .. ":" .. arg.type;
-
+dekko.redis.hgetall = function(hash)
 	local hgetall, err = red:hgetall(hash)
 		if not hgetall then
-		return error_code(404);
+		return dekko.ngx.exception(404);
 	end
 
 	if #hgetall == 0 then
-		return error_code(404);
+		return dekko.ngx.exception(404);
 	end
 
 	if type(hgetall) ~= "table" then
-		return error_code(400);
+		return dekko.ngx.exception(400);
 	end
 
-	for i,v in pairs(hgetall) do
+	return hgetall;
+	
+end
+
+-- get keyhash modules
+dekko.construct.adverts = function(hash)
+	local data = {}, n;
+
+	for i, v in pairs(dekko.redis.hgetall(hash)) do
 		if i % 2 == 1 then n = v
 		else table.insert(data, ' { "' .. n .. '" : ' .. v .. ' } ') end
 	end
@@ -95,46 +109,63 @@ local adverts = function(arg)
 	return ngx.say(string.format("[ %s ]", table.concat(data, ', ')))
 end
 
-local redis_cluster = function(rp)
+-- route objects
+function dekko:router(obj)
+
+    if obj.route == 'adverts' then
+        return self.construct.adverts(obj.hash);
+    end
+
+end
+
+-- redis connect
+function dekko:connect(obj)
 	local target = false;
-	red:set_timeout(1000);
-	
+
 	-- math.randomseed(os.time());
 	-- host = split_host(rp[math.random(#rp)], ':');
-	
-	-- split ip and port
-	function split_host(s, d)
-		result = {};
-		for match in (s..d):gmatch("(.-)"..d) do
-			table.insert(result, match);
-		end
-		return result;
-	end
+    -- local hash = arg.domain .. redis_hash_modules_prefix .. arg.type;
+
+	red:set_timeout(dekko.redis.timeout);
 
 	-- check ip port
-	for i, host in pairs(rp) do
-		local s = split_host(host, ':');
+	for i, host in pairs(dekko.redis.pool) do
+		local s = dekko.splitHost(host, ':');
 		local con, err = red:connect(s[1], s[2]);
 			if con then target = true;
-
 			if s[3] then
 				local res, err = red:auth(s[3])
 				if not res then
-					return error_code(403);
+					return dekko.ngx.exception(403);
 				end
 			end
-
-			return adverts(args);
+			return self:router(obj);
 		end
 	end
 
 	-- host not online
 	if not target then
-		return error_code(502);
+		return dekko.ngx.exception(502);
 	end
 
 	red:close();
 end
 
--- storing array
-redis_cluster(redis_pool);
+
+
+-- check advert params
+function dekko:init()
+    local objects = {};
+    
+    dekko.ngx.headers();
+    if args.type ~= nil or args.domain ~= nil then
+        objects.route = 'adverts';
+        objects.hash = args.domain .. dekko.redis.prefixes.modules .. args.type;
+
+        return dekko:connect(objects);
+    else
+    	return dekko.ngx.exception(400);
+    end
+end
+
+dekko:init();
