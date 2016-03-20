@@ -97,7 +97,8 @@ window.dekkoModule = function (object) {
 		// t.item 					= $('<div/>', { id: object.name + '-item' }).css(css.item),
 		// t.head	 				= $('<div/>').css(css.head),
 		t.body	 				= $('<div/>', { id: object.name + '-body' }).css(css.body), //.html(object.item.context);
-		t.link	 				= $('<a/>', { href: object.item.url, target: '_blank' }).css(css.link.normal),
+		// t.link	 				= $('<a/>', { href: object.item.url, target: '_blank' }).css(css.link.normal),
+		t.link	 				= $('<a/>', { href: object.item.url }).css(css.link.normal),
 		t.close		 			= $('<div/>').css(css.close.normal).html('&times;'),
 		t.animPosOpts 			= $.extend(t.posWrapVertAnimate, t.posWrapHorizAnimate),
 		t.wrapPosOpts 			= $.extend(t.posWrapVertStart, t.posWrapHorizStart),
@@ -135,8 +136,10 @@ window.dekkoModule = function (object) {
 			$(this).css(object.item.position);
 		}),
 
-		t.body.click(function() {
-			console.log('click: ' + object.name)
+
+		t.link.bind('click', function() {
+			return self.clickAdvert(object);
+			// console.log('click: ' + object.name)
 		});
 
 		t.wrap.appendTo(object.append)

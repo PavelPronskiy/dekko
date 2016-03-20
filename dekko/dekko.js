@@ -88,7 +88,7 @@
 				slash: '/'
 			},
 			advertType: [
-				'banner', 'branding', 'popup', 'mediaBar'
+				'banner', 'branding', 'popup', 'bar'
 			],
 			dateToUnixTimeStamp: function(o) {
 				var d = new Date(o.split(' ').join('T'));
@@ -236,6 +236,8 @@
 						closePoint	: self.storePoint.closed + keyName + self.storePoint.rev + o.revision + self.storePoint.rev + object.revision,
 						append		: o.element,
 						spm			: o.spm,
+						ajaxUrl		: o.ajaxUrl,
+						type		: o.type,
 						date: {
 							now		: function() { return Math.round(new Date().getTime() / 1000) },
 							end		: self.dateToUnixTimeStamp(object.date.end),
@@ -280,6 +282,7 @@
 						return false;
 					
 					o.modules = data;
+					o.ajaxUrl = ajax.url;
 					if (self.getStore(o.spm) === false) {
 						self.delStore(null, self.storePoint.modules);
 						self.setStore(o.spm, data);
@@ -291,18 +294,21 @@
 				return this.ajax(ajax);
 			},
 			serverExceptions: function(v, o, a) {
-				
-				if (typeof o == 'undefined') {
+				var message;
+				// return console.log(o.status);
+			
+				if (typeof settings.ajax.status[o.status] !== 'undefined') {
 					this.time(null, a.url);
-					console.error('Module cannot load: ' + a.url + ' incorrect results');
+					message = (o.message) ? o.message : settings.ajax.status[o.status];
+					console.error('status: ' + o.status + ', message: ' + message);
 					(v) && console.warn(a);
 					this.timeEnd(null, a.url);
 					return true;
 				}
-			
-				if (typeof settings.ajax.status[o.status] !== 'undefined') {
+				
+				if (typeof o == 'undefined') {
 					this.time(null, a.url);
-					console.error('status: ' + o.status + ', message: ' + settings.ajax.status[o.status]);
+					console.error('Module cannot load: ' + a.url + ' incorrect results');
 					(v) && console.warn(a);
 					this.timeEnd(null, a.url);
 					return true;
@@ -408,7 +414,37 @@
 						self.timeEnd(null, o.spm);
 					}
 				);
-			}
+			},
+			// for module clients click
+			clickAdvert: function(o) {
+				var	self = this, ajax = {}, url;
+
+				ajax.url 				= o.ajaxUrl,
+				ajax.cache 				= true,
+				ajax.context 			= self,
+				ajax.dataType 			= 'json',
+				ajax.contentType 		= "application/json",
+				ajax.data 				= {},
+				ajax.data.domain 		= window.location.hostname || window.location.host,
+				ajax.data.type 			= o.type,
+				ajax.data.click			= true,
+				ajax.data.module		= o.name,
+				ajax.crossDomain 		= false,
+
+				ajax.error = function(a,b,c) {
+					console.log(b);
+					return self.serverExceptions(o.verbose, a.responseText, ajax);
+					// return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
+				},
+				ajax.success = function(data) {
+
+					if (self.serverExceptions(o.verbose, data, ajax))
+						return false;
+					
+				};
+				// return console.log(ajax);
+				return this.ajax(ajax);
+			},
 		};
 
 		try {

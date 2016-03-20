@@ -47,12 +47,12 @@ window.dekkoModule = function (object) {
 
 		$('div.body').css(css.container);
 
-		(function animate() {
+/*		(function animate() {
 			var a = $('body');
 			a.animate({
 				backgroundColor: $.Color(a.css('backgroundColor')).hue('+=1')
 			}, 1000, animate);
-		})();
+		})();*/
 
 
 

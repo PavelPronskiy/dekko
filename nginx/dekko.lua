@@ -39,19 +39,21 @@ dekko.construct = {};
 dekko.redis.timeout = 1000;
 
 dekko.redis.pool = {
-	"127.0.0.2:6379:password",
+	"127.0.0.2:6379:passwd",
 	"127.0.0.1:6379",
 	"127.0.0.2:6379",
 	"127.0.0.3:6379"
 };
 
-dekko.redis.prefixes = {
-    ["modules"] = ":modules:",
-    ["clicks"] = ":clicks:",
-    ["hosts"] = ":hosts:"
+dekko.redis.prefix = {
+    ["modules"] = "modules",
+    ["stat"] = "stat",
+    ["clicks"] = "clicks",
+    ["hosts"] = "hosts"
 };
 
 dekko.redis.codes = {
+	[200] = "OK",
 	[403] = "Redis auth failed",
 	[404] = "Not found",
 	[400] = "Bad request",
@@ -67,7 +69,7 @@ dekko.ngx.headers = function()
 end
 
 dekko.ngx.exception = function(c)
-    ngx.say('{ status: ' .. c .. ', message: "' .. dekko.redis.codes[c] .. '" }');
+    ngx.say('{ "status": ' .. c .. ', "message": "' .. dekko.redis.codes[c] .. '" }');
     return ngx.exit(c);
 end
 
@@ -109,12 +111,35 @@ dekko.construct.adverts = function(hash)
 	return ngx.say(string.format("[ %s ]", table.concat(data, ', ')))
 end
 
+dekko.construct.clicks = function(obj)
+	
+	-- local res, err = red:hmset("myhash", "field1", "Hello", "field2", "World")
+	-- if not res
+	
+	red:init_pipeline()
+	red:hincrby(obj.hash.clicks, args.module, 1)
+	red:hmset(obj.hash.hosts, ngx.var.remote_addr, args.module)
+
+	local results, err = red:commit_pipeline()
+	if not results then
+		return dekko.ngx.exception(400);
+	end
+	
+	-- ngx.say(obj.hash.clicks);
+	return dekko.ngx.exception(200);
+end
+
 -- route objects
 function dekko:router(obj)
 
     if obj.route == 'adverts' then
         return self.construct.adverts(obj.hash);
     end
+
+    if obj.route == 'click' then
+        return self.construct.clicks(obj);
+    end
+
 
 end
 
@@ -155,17 +180,23 @@ end
 
 -- check advert params
 function dekko:init()
-    local objects = {};
+    local obj = {};
     
     dekko.ngx.headers();
-    if args.type ~= nil or args.domain ~= nil then
-        objects.route = 'adverts';
-        objects.hash = args.domain .. dekko.redis.prefixes.modules .. args.type;
-
-        return dekko:connect(objects);
+    if args.type ~= nil and args.domain ~= nil and args.click == nil then
+        obj.route = 'adverts';
+        obj.hash = args.domain .. ':' .. dekko.redis.prefix.modules .. ':' .. args.type;
+    elseif args.type ~= nil and args.domain ~= nil and args.click ~= nil and args.module ~= nil then
+        obj.hash = {};
+        obj.route = 'click';
+        obj.module = args.module;
+        obj.hash.clicks = args.domain .. ':' .. dekko.redis.prefix.stat .. ':' .. dekko.redis.prefix.clicks;
+        obj.hash.hosts = args.domain .. ':' .. dekko.redis.prefix.stat .. ':' .. dekko.redis.prefix.hosts;
     else
     	return dekko.ngx.exception(400);
     end
+
+    return dekko:connect(obj);
 end
 
 dekko:init();
