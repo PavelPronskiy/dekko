@@ -34,6 +34,16 @@
 	 * examples 
 	*/
 
+	// get settings and modules
+	
+/*	types:
+		popup
+		banner
+		bar
+		branding
+*/	
+	
+
 /*	$('div.container').dekko({
 		cache: false, // cache requests and save browser localStorage (optional)
 		path: '/assets/dekko/modules', // relative path to element modules (required)
@@ -54,30 +64,25 @@
 */
     
     // load settings and modules
-// 	$('body').dekko('http://php-pavelpronskiy.c9users.io/examples/json/dekko.json?r=13315818');
-
-
-
-/*
-	$('div.example-728x90').dekko({
+	$('body').dekko('/sa', { type: 'popup' });
+	
+/*	$('div.example-728x90').dekko({
 		revision: 9, // enable rotate elements on refresh page
 		cache: false, // cache requests and save browser localStorage (optional)
 		rotate: true, // enable rotate elements on refresh page
-		path: '/assets/dekko/modules', // relative path to element modules (required)
+		path: '/dekko/modules', // relative path to element modules (required)
 		modules: '/examples/json/banners.json'
 	});
 */
-	$('body').dekko({
-	    type: 'popup',
-		revision: 14, // enable rotate elements on refresh page
-		cache: false, // cache requests and save browser localStorage (optional)
-		path: 'http://dekko-pavelpronskiy.c9users.io/dekko/modules', // relative path to element modules (required)
-// 		path: '/assets/dekko/modules', // relative path to element modules (required)
-		modules: 'http://dekko-pavelpronskiy.c9users.io/dekko.json' // ?type=popup&domain=targetdomain.tld
-	});
-
-	  /*modules: 
-		[ // require minimum one array element
+	//$('body').dekko({
+//	    type: 'popup',
+//		revision: 14, // enable rotate elements on refresh page
+//		cache: false, // cache requests and save browser localStorage (optional)
+		// path: 'http://dekko.pronskiy.ru/dekko/modules', // relative path to element modules (required)
+//		path: '/dekko/modules', // relative path to element modules (required)
+//		modules: '/examples/json/popups.json' // ?type=popup&domain=targetdomain.tld
+		/*modules: 
+		[
 			{
 				'popup-example1' : {
 					context: 'магия', // html data (optional)
@@ -162,7 +167,7 @@
 					}
 				}
 			}
-		]*/
+		]*/	//});
 
         	  
 

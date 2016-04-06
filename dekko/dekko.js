@@ -2,7 +2,7 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.1.5 beta
+ * Version: 0.1.6 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -50,7 +50,7 @@
 			modules			: [],					// (required if modulesUrl not defined)
 			adType			: '',					// (module advert type)
 			rotate			: false,				// (optional)
-			path			: '/dekko/modules',
+			path			: '/media/dekko/modules',
 			staticWebStore	: '//static.cdn.net'
 		};
 
@@ -108,7 +108,7 @@
 				return (d) ? d : false;
 			},
 			setStore: function(n, o) {
-				return localStorage.setItem(n, JSON.stringify(o));
+				return window.localStorage.setItem(n, JSON.stringify(o));
 			},
 			delStore: function(o) { // deprecated
 /*				if (p && localStorage.length > 0) {
@@ -119,10 +119,10 @@
 					}
 					
 				} else
-*/					return localStorage.removeItem(o);
+*/					return window.localStorage.removeItem(o);
 			},
 			getStore: function(o) {
-				var x = localStorage.getItem(o);
+				var x = window.localStorage.getItem(o);
 				return (x !== null && typeof x !== 'undefined') ? JSON.parse(x) : false;
 			},
 			gEval: function(xhr, o) {
@@ -167,7 +167,7 @@
 						return false;
 
 					// check time expire
-					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
+					if (e.date.now() < e.date.start && e.date.now() > e.date.end)
 						return false;
 
 					// check closed
@@ -217,7 +217,7 @@
 			
 			// get random object
 			randModule: function(o, m) {
-				var r,c,j,i = 0,t = true, self = this;
+				var r, c, j, i = 0, t = true, self = this;
 
 				if (self.getStore(o.ppm) === false)
 					self.setStore(o.ppm, -1);
@@ -225,16 +225,17 @@
 				c = self.getStore(o.ppm);
 				
 				while (t) {
+
 					r = parseInt(Math.floor(Math.random() * m.length), 10);
-					j = self.getStore(m[r].closePoint)[0];
-					t = (r !== c && !j) ? false : true;
-					
-					// exit loop without object 
-					if (i > m.length)
+					j = (typeof self.getStore(m[r].closePoint)[0] !== 'undefined') ? self.getStore(m[r].closePoint)[0] : false;
+					t = (r !== c && j !== true) ? false : true;
+
+					if (i > m.length * 2) {
+						r = c;
 						t = false;
-					
+					}
+
 					i++;
-					
 				}
 				
 				self.setStore(o.ppm, r);
