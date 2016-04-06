@@ -167,7 +167,7 @@
 						return false;
 
 					// check time expire
-					if (e.date.now() < e.date.start && e.date.now() > e.date.end)
+					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
 						return false;
 
 					// check closed
