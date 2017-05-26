@@ -135,11 +135,11 @@ window.dekkoModule = function (object) {
 
 		t.wrap.appendTo(object.append);
 		
-		(function animate() {
+/*		(function animate() {
 			t.wrap.animate({
 				backgroundColor: $.Color(t.wrap.css('backgroundColor')).hue('+=50')
 			}, 6000, animate);
-		})();
+		})();*/
 
 
 	} catch (e) {
