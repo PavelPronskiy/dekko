@@ -279,10 +279,16 @@
 			
 			// objects params build
 			constructParams: function(o) {
-				var obj = [], modules = [], self = this,
-					keyName, object, type, objGeoTargets = [],
-					geoLocationObject, routeModules, objGeoData = {},
-					geoTargetingPoint = self.storePoint.name + o.fingerPrint + self.storePoint.geo;
+				var obj = [],
+						modules = [],
+						self = this,
+						keyName,
+						object,
+						type,
+						objGeoData = {}, 
+						objGeoTargeting,
+						routeModules,
+						geoTargetingPoint = self.storePoint.name + o.fingerPrint + self.storePoint.geo;
 	
 				try {
 				
