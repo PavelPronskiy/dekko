@@ -51,10 +51,35 @@ modules: http://domain.tld/path/to/modules.json
         						top: '15px' // vertical position (required)
         					}
         				}
+        			},
+        			{
+        				'popup-example2' : {
+        					geoTargeting: ['Saint-Peterburg', 'Moscow', 'Omsk'], // geo targeting support
+        					revision: 102, // cache versioning incremental option (required if cache enabled)
+        					url: 'http://ya.ru', // click wrap element (optional)
+        					delay: 1000, // wait before show (optional)
+        					closeExpire: 120, // closable element option, specific counting by minutes (required)
+        					date: {
+        						start: '2016-02-26 10:00:00', // element more start at (required)
+        						end: '2017-12-01 23:59:59' // element not started after this date (required)
+        					},
+        					effects: {
+        						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
+        						duration: 1000 // easing duration (optional)
+        					},
+        					position: {
+        						right: '15px', // horizontal position (required)
+        						top: '15px' // vertical position (required)
+        					}
+        				}
         			}
+
         		]
         	});
 
+
+        // nginx lua support
+        $('body').dekko('/sa', { type: 'popup' });
 
         // redis support
     	$('body').dekko({
@@ -93,6 +118,9 @@ server {
 
 ```
 ### Changelog
+    0.1.7 beta - Added geo targeting by geoip-db.com and many fixes
+    0.1.6 beta - Bug fixes.
+    0.1.5 beta - Bug fixes.
     0.1.4 beta - Added new features. Redis, Nginx, Lua.
     0.1.3 beta - Added new get method.
     0.1.2 beta - New bugs and fixes.
