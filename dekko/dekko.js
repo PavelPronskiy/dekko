@@ -548,8 +548,7 @@
 				ajax.contentType = "application/json";
 
 				ajax.error = function(a,b,c) {
-					return self.serverExceptions(o.verbose, a.responseText, ajax);
-					// return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
 				ajax.success = function(data) {
 
