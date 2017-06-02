@@ -27,7 +27,7 @@
 	<div class="example-728x90"></div>
 	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script> -->
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
-	<script src="/dekko/dekko.min.js" type="text/javascript"></script>
+	<script src="/dekko/dekko.js" type="text/javascript"></script>
 	<script type="text/javascript">
 
     /*
@@ -85,6 +85,7 @@
 		[
 			{
 				'popup-example1' : {
+					mobile: false,
 					geoTargeting: ['Moscow', 'Saint-Peterburg', 'Omsk'],
 					revision: 102, // cache versioning incremental option (required if cache enabled)
 					url: 'http://ya.ru', // click wrap element (optional)
@@ -106,6 +107,9 @@
 			},
 			{
 				'popup-example2' : {
+					mobile: {
+						type: ''
+					}, // bool or object // default without param - false
 					geoTargeting: ['Saint-Peterburg', 'Moscow', 'Omsk'],
 					context: 'попап', // html data (optional)
 					revision: 102, // cache versioning incremental option (required if cache enabled)

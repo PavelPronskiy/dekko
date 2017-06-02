@@ -33,6 +33,7 @@ modules: http://domain.tld/path/to/modules.json
         		[ // require minimum one array element
         			{
         				'popup-example1' : {
+        				    mobile: false, // default false (disable view to mobile devices) // false by default
         					context: 'магия', // html data (optional)
         					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: 'http://ya.ru', // click wrap element (optional)
@@ -54,6 +55,9 @@ modules: http://domain.tld/path/to/modules.json
         			},
         			{
         				'popup-example2' : {
+        				    mobile: {
+        				        // params css etc..
+        				    },
         					geoTargeting: ['Saint-Peterburg', 'Moscow', 'Omsk'], // geo targeting support
         					revision: 102, // cache versioning incremental option (required if cache enabled)
         					url: 'http://ya.ru', // click wrap element (optional)
@@ -118,6 +122,7 @@ server {
 
 ```
 ### Changelog
+    0.1.8 beta - Added new param mobile view adv
     0.1.7 beta - Added geo targeting by geoip-db.com and many fixes
     0.1.6 beta - Bug fixes.
     0.1.5 beta - Bug fixes.

@@ -2,7 +2,7 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.1.7 beta
+ * Version: 0.1.8 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -34,6 +34,8 @@
  
 ;(function ($, window, document) {
 
+
+
 	$.fn.dekko = function(url, options) {
 
 		// capsule
@@ -58,8 +60,10 @@
 
 		// default ajax settings
 		settings.ajax = {
-			async: true,
-			type: 'GET',
+			async				: true,
+			type				: 'GET',
+			contentType 		: "application/json",
+			dataType			: 'json',
 			status: {
 				'404'			: 'Not found',
 				'400'			: 'Incorrect attempt',
@@ -146,6 +150,40 @@
 				var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
 				return keyValue ? JSON.parse(this.base64decode(keyValue[2])) : null;
 			},
+			isMobile: function() {
+				return 'ontouchstart' in window // works on most browsers 
+					|| 'onmsgesturechange' in window; // works on ie10
+			},
+			each: function (obj, iterator, context) {
+				var nativeForEach = Array.prototype.forEach;
+				
+				if (obj === null)
+					return;
+				
+				if (nativeForEach && obj.forEach === nativeForEach) {
+					obj.forEach(iterator, context);
+				} else if (obj.length === +obj.length) {
+					for (var i = 0, l = obj.length; i < l; i++) {
+						if (iterator.call(context, obj[i], i, obj) === {}) return;
+					}
+				} else {
+					for (var key in obj) {
+						if (obj.hasOwnProperty(key)) {
+							if (iterator.call(context, obj[key], key, obj) === {}) return;
+						}
+					}
+				}
+			},
+			map: function(obj, iterator, context) {
+				var results = [],
+				nativeMap = Array.prototype.map;
+				if (obj == null) return results;
+				if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
+				this.each(obj, function(value, index, list) {
+				results[results.length] = iterator.call(context, value, index, list);
+				});
+				return results;
+			},
 			gEval: function(xhr, o) {
 				$.globalEval(xhr);
 				return window.dekkoModule.call(this, o);
@@ -191,6 +229,10 @@
 					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
 						return false;
 
+					// check mobile device and mobile params
+					if (self.isMobile() === true && e.mobile === false)
+						return false;
+						
 					// check closed
 					if (self.expire(e) === true)
 						return false;
@@ -369,6 +411,11 @@
 												[],
 
 							domain			: window.location.hostname || window.location.host,
+							mobile			: typeof object.mobile == 'object' ?
+												object.mobile :
+													typeof object.mobile == 'boolean' ?
+														object.mobile :
+														false,
 							type			: o.type,
 							date: {
 								now			: function() {
@@ -397,7 +444,7 @@
 						if (self.getCookie(geoTargetingPoint) === null)
 							self.getGeoLocation(o).success(function(xhr) {
 
-								if (typeof xhr.city == 'undefined') {
+								if (typeof xhr.city == 'undefined' || xhr.city === null) {
 									if (o.verbose)
 										console.warn('Server GEO result empty object: ' + xhr);
 
@@ -434,8 +481,6 @@
 				ajax.url 				= o.modules;
 				ajax.cache 				= o.cache;
 				ajax.context 			= self;
-				ajax.dataType 			= 'json';
-				ajax.contentType 		= "application/json";
 				ajax.data 				= {};
 				ajax.data.d		 		= window.location.hostname || window.location.host;
 				ajax.data.t 			= o.type;
@@ -544,8 +589,6 @@
 				ajax.url = o.ajaxUrl;
 				ajax.cache = true;
 				ajax.context = self;
-				ajax.dataType = 'json';
-				ajax.contentType = "application/json";
 
 				ajax.error = function(a,b,c) {
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
@@ -615,30 +658,31 @@
 				return h1 >>> 0;
 			},
 			fingerPrintConstructor: function() {
-				var keys = [];
-				keys.push(navigator.userAgent);
-				keys.push(navigator.language);
-				keys.push(screen.colorDepth);
-				keys.push((screen.height > screen.width) ? [screen.height, screen.width] : [screen.width, screen.height]);
-				keys.push(new Date().getTimezoneOffset());
-				keys.push(!!window.sessionStorage);
-				keys.push(!!window.localStorage);
-				keys.push(!!window.indexedDB);
-				keys.push(typeof(window.openDatabase));
-				keys.push(navigator.cpuClass);
-				keys.push(navigator.platform);
-				keys.push(navigator.doNotTrack);
-				keys.push($.map(navigator.plugins, function (p) {
-					var mimeTypes = $.map(p, function(mt){
-						return [mt.type, mt.suffixes].join('~');
-					}).join(',');
-					return [p.name, p.description, mimeTypes].join('::');
-				}, this).join(';'));
-				
-				return this.murmurhash3_32_gc(keys.join('###'), 31);
+				var k = [
+					window.navigator.userAgent,
+					window.navigator.language,
+					screen.colorDepth,
+					(screen.height > screen.width) ? [screen.height, screen.width] : [screen.width, screen.height],
+					new Date().getTimezoneOffset(),
+					!!window.sessionStorage,
+					!!window.localStorage,
+					!!window.indexedDB,
+					typeof(window.openDatabase),
+					window.navigator.cpuClass,
+					window.navigator.platform,
+					window.navigator.doNotTrack,
+					this.map(window.navigator.plugins, function (p) {
+						var mimeTypes = this.map(p, function(mt) {
+							return [mt.type, mt.suffixes].join('~');
+						}).join(',');
+						return [p.name, p.description, mimeTypes].join('::');
+					}, this).join(';')
+				];
+
+				return this.murmurhash3_32_gc(k.join('###'), 31);
 			},
 			checkjQueryEasing: function() {
-				if (!jQuery.easing.def)
+				if (!$.easing.def)
 					return $.getScript(settings.app.jQueryEasingUrl);
 				else
 					return false;
@@ -652,7 +696,6 @@
 				ajax.dataType 		= 'jsonp';
 				ajax.jsonpCallback 	= 'callback';
 				ajax.timeout 		= 3000;
-				ajax.contentType 	= "application/json";
 				ajax.data 			= {};
 				ajax.error 			= function(a,b,c) {
 					return self.serverExceptions(o.verbose, a.responseText, ajax);
@@ -663,6 +706,9 @@
 		};
 
 		try {
+
+			if (typeof window.navigator === 'undefined')
+				throw new Error('Browser not support variable navigator');
 
 			if (typeof window.localStorage == 'undefined')
 				throw new Error('Browser not support localStorage');
