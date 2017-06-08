@@ -44,7 +44,7 @@ dekko.redis.timeout = 1000
 
 
 dekko.redis.pool = {
-	"127.0.0.1:6379:passwd",
+	"127.0.0.1:6379",
 	-- "127.0.0.2:6379:passwd",
 	-- "127.0.0.3:6379",
 	-- "127.0.0.4:6379",
@@ -69,10 +69,18 @@ dekko.redis.codes = {
 function dekko.ngx.headers(type)
 	if type == 'json' then
 		ngx.header["Content-Type"] = "application/json"
+		ngx.header["Access-Control-Allow-Origin"] = '*'
+		ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
+		ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
+		ngx.header["Access-Control-Allow-Credentials"] = "true"
 	end
 
 	if type == 'script' then
 		ngx.header["Content-Type"] = "text/javascript"
+		ngx.header["Access-Control-Allow-Origin"] = '*'
+		ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
+		ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
+		ngx.header["Access-Control-Allow-Credentials"] = "true"
 	end
 end
 
@@ -252,7 +260,7 @@ function dekko.init()
 		obj.header = 'json'
 		obj.hash.counter = args.d .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.clicks
 		obj.hash.hosts = args.d .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.hosts
-		obj.hash.hostkey = ngx.var.remote_addr .. ':' .. args.f .. args.c
+		obj.hash.hostkey = ngx.var.remote_addr .. ':' .. args.f .. ':' .. args.c
 	
 	-- modules scripts widgets
 	-- url?t=popup&d=domain.name&f=fingerprint&m=module-name

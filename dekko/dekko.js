@@ -589,6 +589,11 @@
 				ajax.url = o.ajaxUrl;
 				ajax.cache = true;
 				ajax.context = self;
+				ajax.data			= {};
+				ajax.data.c			= o.date.now();
+				ajax.data.d			= window.location.hostname || window.location.host;
+				ajax.data.m			= o.name;
+				ajax.data.f			= o.fingerPrint;
 
 				ajax.error = function(a,b,c) {
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
