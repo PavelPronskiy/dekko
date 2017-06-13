@@ -216,7 +216,7 @@
 			
 			// check options and switch request to render
 			route: function(m, o) {
-				var self = this, ajax = {},
+				var self = this, ajax = settings.ajax,
 					geoTargetingPoint = self.storePoint.name + o.fingerPrint + self.storePoint.geo,
 					clientGeoData;
 
@@ -259,7 +259,7 @@
 					ajax.cache				= true;
 					ajax.crossOrigin		= true;
 					ajax.dataType			= 'script';
-					
+
 					if (e.dataStore)
 						ajax.data = {
 							t: e.type,
@@ -476,7 +476,7 @@
 			
 			// get object settings and array modules
 			getModules: function(e, o) {
-				var	self = this, ajax = {}, data = {};
+				var	self = this, ajax = settings.ajax, data = {};
 			
 				ajax.url 				= o.modules;
 				ajax.cache 				= o.cache;
@@ -555,8 +555,6 @@
 			modulesConstructor: function (e, opts) {
 				var self = this, c, point, o = {}, optRev;
 
- 				$.ajaxSetup(settings.ajax);
-
 				if (typeof opts.modules == 'string')
 					settings.app.path = self.parseUrl(opts.modules).prop('origin') + settings.app.path;
  
@@ -585,10 +583,11 @@
 			},
 			// for module clients click
 			clickAdvert: function(o) {
-				var	self = this, ajax = {};
-				ajax.url = o.ajaxUrl;
-				ajax.cache = true;
-				ajax.context = self;
+				var	self = this, ajax = settings.ajax;
+				
+				ajax.url			= o.ajaxUrl;
+				ajax.cache			= true;
+				ajax.context		= self;
 				ajax.data			= {};
 				ajax.data.c			= o.date.now();
 				ajax.data.d			= window.location.hostname || window.location.host;
@@ -694,7 +693,7 @@
 			},
 			getGeoLocation: function(o) {
 
-				var	self = this, ajax = {};
+				var	self = this, ajax = settings.ajax;
 				
 				ajax.url 			= settings.app.geoTargetingUrl;
 				ajax.cache 			= true;
