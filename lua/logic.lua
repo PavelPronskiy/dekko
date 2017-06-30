@@ -1,7 +1,7 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.1.5 beta
+-- Version: 0.1.9 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
@@ -60,6 +60,7 @@ dekko.redis.prefix = {
 
 dekko.redis.codes = {
 	[200] = "OK",
+	[204] = "Nothing else",
 	[403] = "Auth failed",
 	[404] = "Not found",
 	[400] = "Bad request",
@@ -86,6 +87,8 @@ end
 
 function dekko.ngx.exception(c)
 	ngx.status = c
+	header = 'json'
+	dekko.ngx.headers(header)
 	ngx.say('{ "status": ' .. c .. ', "message": "' .. dekko.redis.codes[c] .. '" }')
 	return ngx.exit(c)
 end
@@ -104,11 +107,11 @@ function dekko.redis.hgetall(hash)
 	
 	local hgetall, err = red:hgetall(hash)
 		if not hgetall then
-		return dekko.ngx.exception(404)
+		return dekko.ngx.exception(204)
 	end
 
 	if #hgetall == 0 then
-		return dekko.ngx.exception(404)
+		return dekko.ngx.exception(204)
 	end
 
 	if type(hgetall) ~= "table" then
@@ -131,7 +134,7 @@ function dekko.redis.hmget(hash, name)
 
 	local hmget, err = red:hmget(hash, name)
 		if not hmget and type(hmget[1]) ~= 'string' then
-		return dekko.ngx.exception(404)
+		return dekko.ngx.exception(204)
 	end
 
 	return hmget
@@ -278,7 +281,7 @@ function dekko.init()
 	
 	-- exception bad request
 	else
-		return dekko.ngx.exception(400)
+		return dekko.ngx.exception(204)
 	end
 	
 	-- pool connect

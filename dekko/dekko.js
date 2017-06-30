@@ -2,7 +2,7 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.1.8 beta
+ * Version: 0.1.9 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -151,8 +151,9 @@
 				return keyValue ? JSON.parse(this.base64decode(keyValue[2])) : null;
 			},
 			isMobile: function() {
-				return 'ontouchstart' in window // works on most browsers 
-					|| 'onmsgesturechange' in window; // works on ie10
+				return (/Mobi/.test(window.navigator.userAgent)) ? true : false;
+				// return 'ontouchstart' in window // works on most browsers 
+					// || 'onmsgesturechange' in window; // works on ie10
 			},
 			each: function (obj, iterator, context) {
 				var nativeForEach = Array.prototype.forEach;
@@ -184,18 +185,19 @@
 				});
 				return results;
 			},
-			gEval: function(xhr, o) {
-				$.globalEval(xhr);
-				return window.dekkoModule.call(this, o);
-			},
 			// callback final
 			render: function(o) {
 				
 				var stored = this.getStore(o.storeName),
-				xhr = (o.cache && stored !== false) ? stored : (o.xhr) ? o.xhr : false;
+				xhr = (o.cache && stored !== false)
+					? stored
+					: (o.xhr)
+						? o.xhr
+						: false;
 					
 				if (xhr !== false)
-					this.gEval(xhr, o);
+					return window.dekkoModule.call(this, o);
+					// this.gEval(xhr, o);
 				
 				return false;
 			},
