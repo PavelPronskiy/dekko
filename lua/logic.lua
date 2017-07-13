@@ -147,7 +147,7 @@ function dekko.geoTargetingByRegionCode(moduleParams)
 	
 	local bool
 	local c = cjson.decode(moduleParams)
-	local clientRegion = ngx.var.region
+	local clientRegion = tonumber(ngx.var.region)
 
 	-- check geotargeting option exist and not empty
 	if c.geoTargeting ~= nil and type(c.geoTargeting) == 'table' and #c.geoTargeting > 0 then
@@ -155,7 +155,7 @@ function dekko.geoTargetingByRegionCode(moduleParams)
 			if tonumber(c.geoTargeting[i]) ~= nil then
 				-- check client region and geotargeting option
 				if clientRegion == c.geoTargeting[i] then
-					bool = true
+					return true
 				else
 					bool = false
 				end
