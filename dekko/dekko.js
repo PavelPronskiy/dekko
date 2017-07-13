@@ -2,7 +2,7 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.1.9 beta
+ * Version: 0.2.0 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -34,14 +34,14 @@
  
 ;(function ($, window, document) {
 
-
-
 	$.fn.dekko = function(url, options) {
 
 		// capsule
 		window.dekkoModule = function(o) {};
 
-		var settings = {}, constructor, $this = this;
+		var settings = {},
+			constructor,
+			$this = this;
 
 		// default settings
 		settings.app = {
@@ -52,10 +52,7 @@
 			modules				: [],					// (required if modulesUrl not defined)
 			adType				: '',					// (module advert type)
 			rotate				: false,				// (optional)
-			path				: '/media/dekko/modules',
-			jQueryEasingUrl		: 'https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.js',
-			geoTargetingUrl		: 'https://geoip-db.com/jsonp',
-			staticWebStore		: '//static.cdn.net'
+			path				: '/media/dekko/modules'
 		};
 
 		// default ajax settings
@@ -87,7 +84,6 @@
 			// verbose options
 			console: {
 				timeModule 		: 'Loaded dekko module: ',
-				geoTargeting 	: ', geoTargeting: ',
 				timeSeconds		: ', execution time',
 				totalTime 		: 'Total time load '
 			},
@@ -101,7 +97,6 @@
 				modules 		: ':modules:',
 				prev 			: ':rotate:',
 				rev 			: ':r',
-				geo 			: ':geo',
 				p 				: ':',
 				slash			: '/'
 			},
@@ -135,7 +130,9 @@
 			},
 			getStore: function(o) {
 				var x = window.localStorage.getItem(o);
-				return (x !== null && typeof x !== 'undefined') ? JSON.parse(x) : false;
+				return (x !== null && typeof x !== 'undefined')
+					? JSON.parse(x)
+					: false;
 			},
 			delStore: function(o) { // deprecated
 				return window.localStorage.removeItem(o);
@@ -148,12 +145,14 @@
 			},
 			getCookie: function(key) {
 				var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
-				return keyValue ? JSON.parse(this.base64decode(keyValue[2])) : null;
+				return keyValue
+					? JSON.parse(this.base64decode(keyValue[2]))
+					: null;
 			},
 			isMobile: function() {
-				return (/Mobi/.test(window.navigator.userAgent)) ? true : false;
-				// return 'ontouchstart' in window // works on most browsers 
-					// || 'onmsgesturechange' in window; // works on ie10
+				return (/Mobi/.test(window.navigator.userAgent))
+					? true
+					: false;
 			},
 			each: function (obj, iterator, context) {
 				var nativeForEach = Array.prototype.forEach;
@@ -185,6 +184,14 @@
 				});
 				return results;
 			},
+			gEval: function(xhr, o) {
+
+				(window.execScript)
+					? window.execScript(xhr)
+					: (new Function(xhr))(); // execute module
+				
+				return window.dekkoModule.call(this, o); // put options module and start rendering 
+			},
 			// callback final
 			render: function(o) {
 				
@@ -196,34 +203,41 @@
 						: false;
 					
 				if (xhr !== false)
-					return window.dekkoModule.call(this, o);
-					// this.gEval(xhr, o);
+					return this.gEval(xhr, o);
 				
 				return false;
 			},
-			
 			// request module callback
 			notice: function(o) {
-				return (o.verbose) ?
-					this.timeEnd(o.timePoint) :
-					false;
+				return (o.verbose)
+					? this.timeEnd(o.timePoint)
+					: false;
 			},
 			expire: function(o) {
 				var a,b;
 				a = this.getStore(o.closePoint);
-				if (a === false) return false;
-				b = (a[0] === true) ? Math.floor((o.date.now() - a[1]) / 60) : false; // minutes ago
-				return (b && b > o.date.close) ? this.delStore(o.closePoint) : true;
+
+				if (a === false)
+					return false;
+
+				b = (a[0] === true)
+					? Math.floor((o.date.now() - a[1]) / 60)
+					: false; // minutes ago
+
+				return (b && b > o.date.close)
+					? this.delStore(o.closePoint)
+					: true;
 			},
 			
 			// check options and switch request to render
 			route: function(m, o) {
-				var self = this, ajax = settings.ajax,
-					geoTargetingPoint = self.storePoint.name + o.fingerPrint + self.storePoint.geo,
-					clientGeoData;
 
-				m.forEach(function(e) {
+				var self = this,
+					ajax = settings.ajax;
 
+				self.each(m, function(e, i) {
+
+					// check false
 					if (e === false)
 						return false;
 
@@ -239,24 +253,14 @@
 					if (self.expire(e) === true)
 						return false;
 
-					/**
-						-> geo targeting module
-						<obj>.cc = country code
-						<obj>.cn = country name
-						<obj>.cs = city name
-					*/
-					clientGeoData = self.getCookie(geoTargetingPoint);
-					if (e.geoTargeting.length > 0 && typeof clientGeoData.cs != 'undefined')
-						if (e.geoTargeting.indexOf(clientGeoData.cs) === -1)
-							return false;
-
-
 					// check store and return render
 					if (e.cache && self.getStore(e.storeName))
 						return self.render(e);
 
+					ajax.url = (e.dataStore)
+						? e.ajaxUrl
+						: e.url;
 
-					ajax.url				= (e.dataStore) ? e.ajaxUrl	: e.url;
 					ajax.crossDomain 		= false; // needed to jquery ajax crossDomain absolute path
 					ajax.cache				= true;
 					ajax.crossOrigin		= true;
@@ -264,8 +268,8 @@
 
 					if (e.dataStore)
 						ajax.data = {
-							t: e.type,
 							d: e.domain,
+							t: e.type,
 							m: e.name,
 							f: e.fingerPrint
 						};
@@ -274,9 +278,6 @@
 						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 					};
 					ajax.success = function(xhr) {
-
-						if (!xhr.match(settings.regex.dkm)) // check dekkoModule exists
-							return false;
 
 						// check data
 						if (self.serverExceptions(e.verbose, xhr, ajax))
@@ -296,7 +297,10 @@
 			
 			// get random object
 			randModule: function(o, m) {
-				var r, c, j, i = 0, t = true, self = this;
+				var r, c, j,
+					i = 0,
+					t = true,
+					self = this;
 
 				if (self.getStore(o.ppm) === false)
 					self.setStore(o.ppm, -1);
@@ -306,8 +310,14 @@
 				while (t) {
 
 					r = parseInt(Math.floor(Math.random() * m.length), 10);
-					j = (typeof self.getStore(m[r].closePoint)[0] !== 'undefined') ? self.getStore(m[r].closePoint)[0] : false;
-					t = (r !== c && j !== true) ? false : true;
+					
+					j = (typeof self.getStore(m[r].closePoint)[0] !== 'undefined')
+						? self.getStore(m[r].closePoint)[0]
+						: false;
+
+					t = (r !== c && j !== true)
+						? false
+						: true;
 
 					if (i > m.length * 2) {
 						r = c;
@@ -324,21 +334,18 @@
 			// objects params build
 			constructParams: function(o) {
 				var obj = [],
-						modules = [],
-						self = this,
-						keyName,
-						object,
-						type,
-						objGeoData = {}, 
-						objGeoTargeting,
-						routeModules,
-						geoTargetingPoint = self.storePoint.name + o.fingerPrint + self.storePoint.geo;
+					modules = [],
+					self = this,
+					keyName,
+					object,
+					type,
+					routeModules;
 	
 				try {
 				
-					obj = (o.modules && o.modules.length > 0) ?
-						o.modules :
-						false;
+					obj = (o.modules && o.modules.length > 0)
+						? o.modules
+						: false;
 	
 					if (obj === false)
 						return false;
@@ -346,12 +353,13 @@
 					if (o.verbose)
 						self.time(null, o.spm);
 	
-					type = (o.type) ? o.type : '';
+					type = (o.type)
+						? o.type
+						: '';
 					
-					obj.forEach(function(e, i) {
+					self.each(obj, function(e, i) {
 						keyName = Object.keys(e)[0];
 						object = e[keyName];
-						
 
 						modules.push({
 							name			: keyName,
@@ -391,33 +399,32 @@
 												keyName +
 												self.console.timeSeconds,
 
-							geoTargeting 	: typeof object.geoTargeting == 'object' ?
-												object.geoTargeting :
-												[],
 							append			: o.element,
 							dataStore		: o.dataStore,
 							spm				: o.spm,
 							
-							ajaxUrl			: typeof o.ajaxUrl == 'undefined' ?
-												null :
-												o.ajaxUrl,
+							ajaxUrl			: typeof o.ajaxUrl == 'undefined'
+												? null
+												: o.ajaxUrl,
 
 							fingerPrint		: o.fingerPrint,
 
-							images			: typeof object.images == 'object' ?
-												object.images :
-												[],
+							images			: typeof object.images == 'object'
+												? object.images
+												: [],
 
-							excludes		: typeof object.excludes == 'object' ?
-												object.excludes :
-												[],
+							excludes		: typeof object.excludes == 'object'
+												? object.excludes
+												: [],
 
 							domain			: window.location.hostname || window.location.host,
-							mobile			: typeof object.mobile == 'object' ?
-												object.mobile :
-													typeof object.mobile == 'boolean' ?
-														object.mobile :
-														false,
+
+							mobile			: typeof object.mobile == 'object'
+												? object.mobile
+												: typeof object.mobile == 'boolean'
+													? object.mobile
+													: false,
+
 							type			: o.type,
 							date: {
 								now			: function() {
@@ -429,46 +436,17 @@
 								close		: object.closeExpire
 							}
 						});
-	
 
 						if (o.verbose)
 							self.time(modules[i].timePoint);
 							
 					});
 
-					routeModules = (o.rotate) ? [self.randModule(o, modules)] : modules;
+					routeModules = (o.rotate)
+						? [self.randModule(o, modules)]
+						: modules;
 
-					objGeoTargeting = $.grep(modules, function (m) {
-						return (m.geoTargeting.length > 0) ? true : null; 
-					});
-					
-					if (objGeoTargeting.length > 0)
-						if (self.getCookie(geoTargetingPoint) === null)
-							self.getGeoLocation(o).success(function(xhr) {
-
-								if (typeof xhr.city == 'undefined' || xhr.city === null) {
-									if (o.verbose)
-										console.warn('Server GEO result empty object: ' + xhr);
-
-									return self.route(routeModules, o);
-								}
-
-
-								objGeoData.cc = xhr.country_code;
-								objGeoData.cn = xhr.country_name;
-								objGeoData.cs = xhr.city;
-
-								self.setCookie(geoTargetingPoint, objGeoData);
-								return self.route(routeModules, o);
-
-							}).error(function(a,b,c) {
-								console.warn(a.status + ' ' + a.statusText);
-								return self.route(routeModules, o);
-							});
-						else
-							return self.route(routeModules, o);
-					else
-						return self.route(routeModules, o);
+					return self.route(routeModules, o);
 					
 
 				} catch (e) {
@@ -494,8 +472,8 @@
 				};
 				ajax.success = function(d) {
 
-					if (self.serverExceptions(settings.verbose, d, ajax))
-						return false;
+					// if (self.serverExceptions(settings.verbose, d, ajax))
+						// return false;
 			
 					data.modules 		= d;
 					data.ajaxUrl 		= ajax.url;
@@ -509,11 +487,18 @@
 			},
 			serverExceptions: function(v, o, a) {
 				var message;
-				// return console.log(o.status);
-			
+				
+				if (typeof o === 'undefined') {
+					return true;
+				}
+
 				if (typeof settings.ajax.status[o.status] !== 'undefined') {
 					this.time(null, a.url);
-					message = (o.message) ? o.message : settings.ajax.status[o.status];
+
+					message = (o.message)
+						? o.message
+						: settings.ajax.status[o.status];
+
 					console.error('status: ' + o.status + ', message: ' + message);
 					if (v) console.warn(a);
 					this.timeEnd(null, a.url);
@@ -545,14 +530,14 @@
 				return $.ajax(o);
 			},
 			time: function(o, g) {
-				return (g) ?
-					console.group(g) :
-					console.time(o);
+				return (g)
+					? console.group(g)
+					: console.time(o);
 			},
 			timeEnd: function(o, g) {
-				return (g) ?
-					console.groupEnd(g) :
-					console.timeEnd(o);
+				return (g)
+					? console.groupEnd(g)
+					: console.timeEnd(o);
 			},
 			modulesConstructor: function (e, opts) {
 				var self = this, c, point, o = {}, optRev;
@@ -560,23 +545,29 @@
 				if (typeof opts.modules == 'string')
 					settings.app.path = self.parseUrl(opts.modules).prop('origin') + settings.app.path;
  
-				opts.dataStore = typeof url == 'string' && typeof opts == 'object' ? true : false;
+				opts.dataStore = (typeof url == 'string' && typeof opts == 'object')
+					? true
+					: false;
 
 				o = $.extend(settings.app, opts);
 				o.element = e;
 				
-				point = (o.ajaxUrl) ?
-					o.ajaxUrl.replace(settings.regex.remote, '') :
-						typeof o.modules == 'string' ? o.modules.replace(settings.regex.remote, '') :
-						e.selector.replace(/(\.|\-)/gi, '');
+				point = (o.ajaxUrl)
+					? o.ajaxUrl.replace(settings.regex.remote, '')
+					: typeof o.modules == 'string'
+						? o.modules.replace(settings.regex.remote, '')
+						: e.selector.replace(/(\.|\-)/gi, '');
 				
-				optRev = (typeof opts.revision == 'number') ?
-					self.storePoint.rev + o.revision : '';
+				optRev = (typeof opts.revision == 'number')
+						? self.storePoint.rev + o.revision
+						: '';
 					
 				o.spm = self.storePoint.name + o.fingerPrint + self.storePoint.p + o.type + self.storePoint.p + point + optRev;
 				o.ppm = self.storePoint.name + o.fingerPrint + self.storePoint.p + o.type + self.storePoint.p + self.storePoint.prev + point + optRev;
 
-				c = typeof o.modules == 'string' ? self.getModules(e, o) : self.constructParams(o);
+				c = (typeof o.modules == 'string')
+					? self.getModules(e, o)
+					: self.constructParams(o);
 
 				return $.when(c).done(function() {
 						self.timeEnd(null, o.spm);
@@ -590,20 +581,18 @@
 				ajax.url			= o.ajaxUrl;
 				ajax.cache			= true;
 				ajax.context		= self;
-				ajax.data			= {};
-				ajax.data.c			= o.date.now();
-				ajax.data.d			= window.location.hostname || window.location.host;
-				ajax.data.m			= o.name;
-				ajax.data.f			= o.fingerPrint;
+				ajax.data 			= {
+					c: o.date.now(),
+					d: window.location.hostname || window.location.host,
+					m: o.name,
+					f: o.fingerPrint
+				};
+
 
 				ajax.error = function(a,b,c) {
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
 				ajax.success = function(data) {
-
-					if (self.serverExceptions(o.verbose, data, ajax))
-						return false;
-					
 					return data;
 				};
 				
@@ -663,7 +652,7 @@
 
 				return h1 >>> 0;
 			},
-			fingerPrintConstructor: function() {
+			fingerPrint: function() {
 				var k = [
 					window.navigator.userAgent,
 					window.navigator.language,
@@ -692,22 +681,6 @@
 					return $.getScript(settings.app.jQueryEasingUrl);
 				else
 					return false;
-			},
-			getGeoLocation: function(o) {
-
-				var	self = this, ajax = settings.ajax;
-				
-				ajax.url 			= settings.app.geoTargetingUrl;
-				ajax.cache 			= true;
-				ajax.dataType 		= 'jsonp';
-				ajax.jsonpCallback 	= 'callback';
-				ajax.timeout 		= 3000;
-				ajax.data 			= {};
-				ajax.error 			= function(a,b,c) {
-					return self.serverExceptions(o.verbose, a.responseText, ajax);
-				};
-
-				return $.ajax(ajax);
 			}
 		};
 
@@ -731,15 +704,151 @@
 			if (Object.keys(options).length === 0 || options.modules === '')
 				return false;
 
-			options.fingerPrint 	= constructor.fingerPrintConstructor();
+			options.fingerPrint 	= constructor.fingerPrint();
 			options.local 			= (typeof options.modules == 'object') ? true : false;
 
-			return $.when(constructor.checkjQueryEasing()).done(function() {
-				constructor.modulesConstructor($this, options);
-			});
+			return constructor.modulesConstructor($this, options);
 
 		} catch (e) {
 			return console.error(e);
 		}
 	};
+
+	// easing
+	if (!$.easing.def) {
+		jQuery.easing['jswing'] = jQuery.easing['swing'];
+		jQuery.extend( jQuery.easing,
+		{
+			def: 'easeOutQuad',
+			swing: function (x, t, b, c, d) {
+				//alert(jQuery.easing.default);
+				return jQuery.easing[jQuery.easing.def](x, t, b, c, d);
+			},
+			easeInQuad: function (x, t, b, c, d) {
+				return c*(t/=d)*t + b;
+			},
+			easeOutQuad: function (x, t, b, c, d) {
+				return -c *(t/=d)*(t-2) + b;
+			},
+			easeInOutQuad: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t + b;
+				return -c/2 * ((--t)*(t-2) - 1) + b;
+			},
+			easeInCubic: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t + b;
+			},
+			easeOutCubic: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t + 1) + b;
+			},
+			easeInOutCubic: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t + b;
+				return c/2*((t-=2)*t*t + 2) + b;
+			},
+			easeInQuart: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t + b;
+			},
+			easeOutQuart: function (x, t, b, c, d) {
+				return -c * ((t=t/d-1)*t*t*t - 1) + b;
+			},
+			easeInOutQuart: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+				return -c/2 * ((t-=2)*t*t*t - 2) + b;
+			},
+			easeInQuint: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t*t + b;
+			},
+			easeOutQuint: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t*t*t + 1) + b;
+			},
+			easeInOutQuint: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+				return c/2*((t-=2)*t*t*t*t + 2) + b;
+			},
+			easeInSine: function (x, t, b, c, d) {
+				return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+			},
+			easeOutSine: function (x, t, b, c, d) {
+				return c * Math.sin(t/d * (Math.PI/2)) + b;
+			},
+			easeInOutSine: function (x, t, b, c, d) {
+				return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+			},
+			easeInExpo: function (x, t, b, c, d) {
+				return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+			},
+			easeOutExpo: function (x, t, b, c, d) {
+				return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+			},
+			easeInOutExpo: function (x, t, b, c, d) {
+				if (t==0) return b;
+				if (t==d) return b+c;
+				if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+				return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+			},
+			easeInCirc: function (x, t, b, c, d) {
+				return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+			},
+			easeOutCirc: function (x, t, b, c, d) {
+				return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+			},
+			easeInOutCirc: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+				return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+			},
+			easeInElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+			},
+			easeOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+			},
+			easeInOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+				return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+			},
+			easeInBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*(t/=d)*t*((s+1)*t - s) + b;
+			},
+			easeOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+			},
+			easeInOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158; 
+				if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+				return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+			},
+			easeInBounce: function (x, t, b, c, d) {
+				return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+			},
+			easeOutBounce: function (x, t, b, c, d) {
+				if ((t/=d) < (1/2.75)) {
+					return c*(7.5625*t*t) + b;
+				} else if (t < (2/2.75)) {
+					return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+				} else if (t < (2.5/2.75)) {
+					return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+				} else {
+					return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+				}
+			},
+			easeInOutBounce: function (x, t, b, c, d) {
+				if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+				return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+			}
+		});
+	}
+
 })(jQuery, window, document);

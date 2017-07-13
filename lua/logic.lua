@@ -1,7 +1,7 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.1.9 beta
+-- Version: 0.2.0 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
@@ -28,6 +28,7 @@
 -- FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 -- OTHER DEALINGS IN THE SOFTWARE.
 
+local cjson = require "cjson"
 local redis = require "resty.redis"
 local args = ngx.req.get_uri_args()
 local red = redis:new()
@@ -36,12 +37,6 @@ dekko.ngx = {}
 dekko.redis = {}
 dekko.construct = {}
 dekko.redis.timeout = 1000
-
--- local xxh32 = require("luaxxhash")
--- math.randomseed(os.time());
--- host = split_host(rp[math.random(#rp)], ':');
--- local hash = arg.domain .. redis_hash_modules_prefix .. arg.type;
-
 
 dekko.redis.pool = {
 	"127.0.0.1:6379",
@@ -67,21 +62,22 @@ dekko.redis.codes = {
 	[502] = "Data store pool offline",
 }
 
+function dekko.ngx.CORSpolicy()
+	ngx.header["Access-Control-Allow-Origin"] = '*'
+	ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
+	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
+	ngx.header["Access-Control-Allow-Credentials"] = "true"
+end
+
 function dekko.ngx.headers(type)
 	if type == 'json' then
 		ngx.header["Content-Type"] = "application/json"
-		ngx.header["Access-Control-Allow-Origin"] = '*'
-		ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
-		ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
-		ngx.header["Access-Control-Allow-Credentials"] = "true"
+		dekko.ngx.CORSpolicy()
 	end
 
 	if type == 'script' then
 		ngx.header["Content-Type"] = "text/javascript"
-		ngx.header["Access-Control-Allow-Origin"] = '*'
-		ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
-		ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
-		ngx.header["Access-Control-Allow-Credentials"] = "true"
+		dekko.ngx.CORSpolicy()
 	end
 end
 
@@ -105,8 +101,9 @@ end
 
 function dekko.redis.hgetall(hash)
 	
+	local data = {}
 	local hgetall, err = red:hgetall(hash)
-		if not hgetall then
+	if not hgetall then
 		return dekko.ngx.exception(204)
 	end
 
@@ -118,7 +115,6 @@ function dekko.redis.hgetall(hash)
 		return dekko.ngx.exception(400)
 	end
 
-	local data = {};
 	for i, v in pairs(hgetall) do
 		if i % 2 == 1 then
 			n = v
@@ -132,41 +128,88 @@ end
 
 function dekko.redis.hmget(hash, name)
 
-	local hmget, err = red:hmget(hash, name)
-		if not hmget and type(hmget[1]) ~= 'string' then
+	local data, err = red:hmget(hash, name)
+	if not data or type(data[1]) ~= 'string' then
 		return dekko.ngx.exception(204)
 	end
 
-	return hmget
+	return data
 end
 
+-- finally output data
+function dekko.construct.message(o)
+	dekko.ngx.headers(o.header)
+	return ngx.say(o.json)
+end
 
--- get keyhash module settings
-function dekko.construct.settings(obj)
+-- geotargeting by region integer code
+function dekko.geoTargetingByRegionCode(moduleParams)
+	
+	local bool
+	local c = cjson.decode(moduleParams)
+	local clientRegion = ngx.var.region
 
-	dekko.ngx.headers(obj.header)
-
-	local data = {};
-	for i, v in pairs(dekko.redis.hgetall(obj.hash)) do
-		table.insert(data, '{"' .. i .. '":' .. v .. '}')
+	-- check geotargeting option exist and not empty
+	if c.geoTargeting ~= nil and type(c.geoTargeting) == 'table' and #c.geoTargeting > 0 then
+		for i = 1, #c.geoTargeting do
+			if tonumber(c.geoTargeting[i]) ~= nil then
+				-- check client region and geotargeting option
+				if clientRegion == c.geoTargeting[i] then
+					bool = true
+				else
+					bool = false
+				end
+			end
+		end
+	else
+		-- geotargeting not defined by options
+		bool = true
 	end
 
-	return ngx.say(string.format("[%s]", table.concat(data, ',')))
+	return bool
+end
+
+-- get keyhash modules settings
+function dekko.construct.settings(obj)
+
+	local o = {}
+	o.json = {}
+
+
+	for i, s in pairs(dekko.redis.hgetall(obj.hash)) do
+		if type(s) == 'string' then
+			if dekko.geoTargetingByRegionCode(s) == true then
+				table.insert(o.json, '{"' .. i .. '":' .. s .. '}')
+			end
+		end
+	end
+
+	o.header = obj.header
+	o.json = string.format("[%s]", table.concat(o.json, ','))
+
+	return dekko.construct.message(o)
 end
 
 -- get keyhash modules
 function dekko.construct.modules(obj)
-	local data = {}, n;
-	dekko.ngx.headers(obj.header)
-	local hmget = dekko.redis.hmget(obj.hash, obj.module);
-	return ngx.say(hmget)
+
+	local o = {}
+	o.header = obj.header
+	o.json = dekko.redis.hmget(obj.hash, obj.module)
+
+	-- if not o.json then
+		-- return dekko.ngx.exception(401)
+	-- end
+
+	-- dekko.ngx.headers(obj.header)
+	-- return ngx.print(type(o.json[1]), ' 23')
+
+	return dekko.construct.message(o)
 end
 
 function dekko.construct.counter(obj)
-	dekko.ngx.headers(obj.header)
 
 	red:init_pipeline()
-	
 	red:hincrby(obj.hash.counter, obj.module, 1)
 	red:hmset(obj.hash.hosts, obj.hash.hostkey, obj.module)
 
@@ -175,7 +218,7 @@ function dekko.construct.counter(obj)
 		return dekko.ngx.exception(400)
 	end
 
-	return dekko.ngx.exception(200)
+	return dekko.ngx.exception(204)
 end
 
 -- route objects
@@ -225,7 +268,7 @@ function dekko.connect(obj)
 	-- red:close();
 end
 
-function dekko.init()
+function dekko.route()
 	local obj = {}
 	
 	-- args:
@@ -288,5 +331,5 @@ function dekko.init()
 	return dekko.connect(obj)
 end
 
--- initial
-dekko.init()
+-- route by args
+dekko.route()
