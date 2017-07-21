@@ -2,11 +2,12 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.2.0 beta
+ * Version: 0.2.0.1 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
  * Copyright (c) 2016 Dekko Pavel Pronskiy
+ * Last update: 21.07.2017
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,15 +33,15 @@
  *
  **/
  
-;(function ($, window, document) {
+(function ($, w, doc) {
 
 	$.fn.dekko = function(url, options) {
 
 		// capsule
-		window.dekkoModule = function(o) {};
+		w.dekkoModule = function(o) {};
 
 		var settings = {},
-			constructor,
+			dekkoConstructor,
 			$this = this;
 
 		// default settings
@@ -52,7 +53,7 @@
 			modules				: [],					// (required if modulesUrl not defined)
 			adType				: '',					// (module advert type)
 			rotate				: false,				// (optional)
-			path				: '/media/dekko/modules'
+			path				: ''
 		};
 
 		// default ajax settings
@@ -79,11 +80,11 @@
 		};
 
 		// chains
-		constructor = {
+		dekkoConstructor = {
 			
 			// verbose options
 			console: {
-				timeModule 		: 'Loaded dekko module: ',
+				timeModule 		: 'module: ',
 				timeSeconds		: ', execution time',
 				totalTime 		: 'Total time load '
 			},
@@ -92,13 +93,11 @@
 			storePoint: {
 				name 			: 'dekko:',
 				closed 			: ':closed:',
-				options 		: 'options:',
 				module 			: ':module:',
-				modules 		: ':modules:',
 				prev 			: ':rotate:',
 				rev 			: ':r',
 				p 				: ':',
-				slash			: '/'
+				s				: '/'
 			},
 			advertType: [
 				'banner', 'branding', 'popup', 'bar'
@@ -111,46 +110,45 @@
 				d = d.getTime() / 1000;
 				return (d) ? d : false;
 			},
-			base64encode: function(s) {
-				// first we use encodeURIComponent to get percent-encoded UTF-8,
-				// then we convert the percent encodings into raw bytes which
-				// can be fed into btoa.
-				return btoa(encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, function toSolidBytes(match, p1) {
-					return String.fromCharCode('0x' + p1);
-				}));
-			},
-			base64decode: function(s) {
-				// Going backwards: from bytestream, to percent-encoding, to original string.
-				return decodeURIComponent(atob(s).split('').map(function(c) {
-					return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-				}).join(''));
-			},
 			setStore: function(n, o) {
-				return window.localStorage.setItem(n, JSON.stringify(o));
+				return w.localStorage.setItem(n, JSON.stringify(o));
 			},
 			getStore: function(o) {
-				var x = window.localStorage.getItem(o);
+				var x = w.localStorage.getItem(o);
 				return (x !== null && typeof x !== 'undefined')
 					? JSON.parse(x)
 					: false;
 			},
 			delStore: function(o) { // deprecated
-				return window.localStorage.removeItem(o);
+				return w.localStorage.removeItem(o);
 			},
 			setCookie: function(key, value) {
-				var expires = new Date(), b64value;
+				var expires = new Date(); // b64value
 				expires.setTime(expires.getTime() + (value * 24 * 60 * 60 * 1000));
-				b64value = this.base64encode(JSON.stringify(value));
-				document.cookie = key + '=' + b64value + ';expires=' + expires.toUTCString();
+				document.cookie = key + '=' + JSON.stringify(value) + ';expires=' + expires.toUTCString();
 			},
 			getCookie: function(key) {
-				var keyValue = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
-				return keyValue
-					? JSON.parse(this.base64decode(keyValue[2]))
-					: null;
+				var mc = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
+				return mc
+					? mc[2]
+					: false;
+			},
+			decodeHex: function(o) {
+			    var s = ''
+			    for (var i = 0; i < o.length; i+=2) {
+			        s += String.fromCharCode(parseInt(o.substr(i, 2), 16))
+			    }
+			    return decodeURIComponent(escape(s))
+			},
+			encodeHex: function(o) {
+				var h = '';
+				for(var i=0; i<o.length; i++) {
+					h += ''+o.charCodeAt(i).toString(16);
+				}
+				return h;
 			},
 			isMobile: function() {
-				return (/Mobi/.test(window.navigator.userAgent))
+				return (/Mobi/.test(w.navigator.userAgent))
 					? true
 					: false;
 			},
@@ -175,22 +173,22 @@
 				}
 			},
 			map: function(obj, iterator, context) {
-				var results = [],
+				var results = [], self = this,
 				nativeMap = Array.prototype.map;
 				if (obj == null) return results;
 				if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
-				this.each(obj, function(value, index, list) {
+				self.each(obj, function(value, index, list) {
 				results[results.length] = iterator.call(context, value, index, list);
 				});
 				return results;
 			},
 			gEval: function(xhr, o) {
 
-				(window.execScript)
-					? window.execScript(xhr)
+				(w.execScript)
+					? w.execScript(xhr)
 					: (new Function(xhr))(); // execute module
 				
-				return window.dekkoModule.call(this, o); // put options module and start rendering 
+				return w.dekkoModule.call(this, o); // put options module and start rendering 
 			},
 			// callback final
 			render: function(o) {
@@ -214,8 +212,8 @@
 					: false;
 			},
 			expire: function(o) {
-				var a,b;
-				a = this.getStore(o.closePoint);
+				var a, b, self = this;
+				a = self.getStore(o.closePoint);
 
 				if (a === false)
 					return false;
@@ -225,7 +223,7 @@
 					: false; // minutes ago
 
 				return (b && b > o.date.close)
-					? this.delStore(o.closePoint)
+					? self.delStore(o.closePoint)
 					: true;
 			},
 			
@@ -382,13 +380,13 @@
 												object.revision,
 
 							path			: o.path +
-												self.storePoint.slash +
+												self.storePoint.s +
 												keyName,
 
 							url				: o.path +
-												self.storePoint.slash +
+												self.storePoint.s +
 												keyName +
-												self.storePoint.slash +
+												self.storePoint.s +
 												o.templateName,
 
 							delay			: object.delay,
@@ -417,7 +415,7 @@
 												? object.excludes
 												: [],
 
-							domain			: window.location.hostname || window.location.host,
+							domain			: w.location.hostname || w.location.host,
 
 							mobile			: typeof object.mobile == 'object'
 												? object.mobile
@@ -462,7 +460,7 @@
 				ajax.cache 				= o.cache;
 				ajax.context 			= self;
 				ajax.data 				= {};
-				ajax.data.d		 		= window.location.hostname || window.location.host;
+				ajax.data.d		 		= w.location.hostname || w.location.host;
 				ajax.data.t 			= o.type;
 				ajax.data.f 			= o.fingerPrint;
 				ajax.crossDomain 		= false;
@@ -471,29 +469,26 @@
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
 				ajax.success = function(d) {
-
-					// if (self.serverExceptions(settings.verbose, d, ajax))
-						// return false;
 			
 					data.modules 		= d;
 					data.ajaxUrl 		= ajax.url;
 					data.type 			= o.type;
 					data.fingerPrint 	= o.fingerPrint;
 
-					return self.modulesConstructor(e, data);
+					return self.modulesdekkoConstructor(e, data);
 				};
 
-				return this.ajax(ajax);
+				return self.ajax(ajax);
 			},
 			serverExceptions: function(v, o, a) {
-				var message;
+				var message, self = this;
 				
 				if (typeof o === 'undefined') {
 					return true;
 				}
 
 				if (typeof settings.ajax.status[o.status] !== 'undefined') {
-					this.time(null, a.url);
+					self.time(null, a.url);
 
 					message = (o.message)
 						? o.message
@@ -501,23 +496,23 @@
 
 					console.error('status: ' + o.status + ', message: ' + message);
 					if (v) console.warn(a);
-					this.timeEnd(null, a.url);
+					self.timeEnd(null, a.url);
 					return true;
 				}
 				
 				if (typeof o == 'undefined') {
-					this.time(null, a.url);
+					self.time(null, a.url);
 					console.error('Module cannot load: ' + a.url + ' incorrect results');
 					if (v) console.warn(a);
-					this.timeEnd(null, a.url);
+					self.timeEnd(null, a.url);
 					return true;
 				}
 
 				if (o.length === 0) {
-					this.time(null, a.url);
+					self.time(null, a.url);
 					console.error('Modules empty: ' + a.url);
 					if (v) console.warn(a);
-					this.timeEnd(null, a.url);
+					self.timeEnd(null, a.url);
 					return true;
 				}
 
@@ -539,7 +534,7 @@
 					? console.groupEnd(g)
 					: console.timeEnd(o);
 			},
-			modulesConstructor: function (e, opts) {
+			modulesdekkoConstructor: function (e, opts) {
 				var self = this, c, point, o = {}, optRev;
 
 				if (typeof opts.modules == 'string')
@@ -552,18 +547,27 @@
 				o = $.extend(settings.app, opts);
 				o.element = e;
 				
+
+
 				point = (o.ajaxUrl)
 					? o.ajaxUrl.replace(settings.regex.remote, '')
 					: typeof o.modules == 'string'
 						? o.modules.replace(settings.regex.remote, '')
 						: e.selector.replace(/(\.|\-)/gi, '');
 				
-				optRev = (typeof opts.revision == 'number')
+				optRev = (typeof o.revision == 'number')
 						? self.storePoint.rev + o.revision
 						: '';
 					
-				o.spm = self.storePoint.name + o.fingerPrint + self.storePoint.p + o.type + self.storePoint.p + point + optRev;
-				o.ppm = self.storePoint.name + o.fingerPrint + self.storePoint.p + o.type + self.storePoint.p + self.storePoint.prev + point + optRev;
+				o.spm = self.storePoint.name +
+						o.fingerPrint +
+						self.storePoint.p +
+						o.type;
+
+				o.ppm = self.storePoint.name +
+						o.fingerPrint +
+						self.storePoint.prev +
+						o.type;
 
 				c = (typeof o.modules == 'string')
 					? self.getModules(e, o)
@@ -577,17 +581,16 @@
 			// for module clients click
 			clickAdvert: function(o) {
 				var	self = this, ajax = settings.ajax;
-				
+
 				ajax.url			= o.ajaxUrl;
 				ajax.cache			= true;
 				ajax.context		= self;
 				ajax.data 			= {
 					c: o.date.now(),
-					d: window.location.hostname || window.location.host,
+					d: w.location.hostname || w.location.host,
 					m: o.name,
 					f: o.fingerPrint
 				};
-
 
 				ajax.error = function(a,b,c) {
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
@@ -596,10 +599,7 @@
 					return data;
 				};
 				
-				return this.ajax(ajax);
-			},
-			setClose: function(o) {
-				return this.setStore(o, [true, this.dateNow()]);
+				return self.ajax(ajax);
 			},
 			parseUrl: function(u) {
 				var a = $('<a>', { href: u });
@@ -653,43 +653,40 @@
 				return h1 >>> 0;
 			},
 			fingerPrint: function() {
-				var k = [
-					window.navigator.userAgent,
-					window.navigator.language,
+				var self = this, k = [
+					w.navigator.userAgent,
+					w.navigator.language,
 					screen.colorDepth,
-					(screen.height > screen.width) ? [screen.height, screen.width] : [screen.width, screen.height],
+					(screen.height > screen.width)
+						? [screen.height, screen.width]
+						: [screen.width, screen.height],
+
 					new Date().getTimezoneOffset(),
-					!!window.sessionStorage,
-					!!window.localStorage,
-					!!window.indexedDB,
-					typeof(window.openDatabase),
-					window.navigator.cpuClass,
-					window.navigator.platform,
-					window.navigator.doNotTrack,
-					this.map(window.navigator.plugins, function (p) {
-						var mimeTypes = this.map(p, function(mt) {
+					!!w.sessionStorage,
+					!!w.localStorage,
+					!!w.indexedDB,
+					typeof(w.openDatabase),
+					w.navigator.cpuClass,
+					w.navigator.platform,
+					w.navigator.doNotTrack,
+					self.map(w.navigator.plugins, function (p) {
+						var mimeTypes = self.map(p, function(mt) {
 							return [mt.type, mt.suffixes].join('~');
 						}).join(',');
 						return [p.name, p.description, mimeTypes].join('::');
 					}, this).join(';')
-				];
-
-				return this.murmurhash3_32_gc(k.join('###'), 31);
-			},
-			checkjQueryEasing: function() {
-				if (!$.easing.def)
-					return $.getScript(settings.app.jQueryEasingUrl);
-				else
-					return false;
+				],
+				hash = self.murmurhash3_32_gc(k.join('###'), 31);
+				return hash;
 			}
 		};
 
 		try {
 
-			if (typeof window.navigator === 'undefined')
+			if (typeof w.navigator === 'undefined')
 				throw new Error('Browser not support variable navigator');
 
-			if (typeof window.localStorage == 'undefined')
+			if (typeof w.localStorage == 'undefined')
 				throw new Error('Browser not support localStorage');
 
 			if (typeof url == 'string')
@@ -704,10 +701,10 @@
 			if (Object.keys(options).length === 0 || options.modules === '')
 				return false;
 
-			options.fingerPrint 	= constructor.fingerPrint();
+			options.fingerPrint 	= dekkoConstructor.fingerPrint();
 			options.local 			= (typeof options.modules == 'object') ? true : false;
 
-			return constructor.modulesConstructor($this, options);
+			return dekkoConstructor.modulesdekkoConstructor($this, options);
 
 		} catch (e) {
 			return console.error(e);
@@ -716,13 +713,13 @@
 
 	// easing
 	if (!$.easing.def) {
-		jQuery.easing['jswing'] = jQuery.easing['swing'];
-		jQuery.extend( jQuery.easing,
+		$.easing['jswing'] = $.easing['swing'];
+		$.extend( $.easing,
 		{
 			def: 'easeOutQuad',
 			swing: function (x, t, b, c, d) {
 				//alert(jQuery.easing.default);
-				return jQuery.easing[jQuery.easing.def](x, t, b, c, d);
+				return $.easing[$.easing.def](x, t, b, c, d);
 			},
 			easeInQuad: function (x, t, b, c, d) {
 				return c*(t/=d)*t + b;
@@ -831,7 +828,7 @@
 				return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
 			},
 			easeInBounce: function (x, t, b, c, d) {
-				return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+				return c - $.easing.easeOutBounce (x, d-t, 0, c, d) + b;
 			},
 			easeOutBounce: function (x, t, b, c, d) {
 				if ((t/=d) < (1/2.75)) {
@@ -845,8 +842,8 @@
 				}
 			},
 			easeInOutBounce: function (x, t, b, c, d) {
-				if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
-				return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+				if (t < d/2) return $.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+				return $.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
 			}
 		});
 	}

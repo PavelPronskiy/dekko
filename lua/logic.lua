@@ -1,7 +1,7 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.2.0 beta
+-- Version: 0.2.0.1 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
@@ -64,12 +64,13 @@ dekko.redis.codes = {
 
 function dekko.ngx.CORSpolicy()
 	ngx.header["Access-Control-Allow-Origin"] = '*'
-	ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, DELETE, PUT"
+	ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
 	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
 	ngx.header["Access-Control-Allow-Credentials"] = "true"
 end
 
 function dekko.ngx.headers(type)
+
 	if type == 'json' then
 		ngx.header["Content-Type"] = "application/json"
 		dekko.ngx.CORSpolicy()
@@ -104,11 +105,11 @@ function dekko.redis.hgetall(hash)
 	local data = {}
 	local hgetall, err = red:hgetall(hash)
 	if not hgetall then
-		return dekko.ngx.exception(204)
+		return dekko.ngx.exception(200)
 	end
 
 	if #hgetall == 0 then
-		return dekko.ngx.exception(204)
+		return dekko.ngx.exception(200)
 	end
 
 	if type(hgetall) ~= "table" then
@@ -130,7 +131,7 @@ function dekko.redis.hmget(hash, name)
 
 	local data, err = red:hmget(hash, name)
 	if not data or type(data[1]) ~= 'string' then
-		return dekko.ngx.exception(204)
+		return dekko.ngx.exception(200)
 	end
 
 	return data
@@ -197,28 +198,20 @@ function dekko.construct.modules(obj)
 	o.header = obj.header
 	o.json = dekko.redis.hmget(obj.hash, obj.module)
 
-	-- if not o.json then
-		-- return dekko.ngx.exception(401)
-	-- end
-
-	-- dekko.ngx.headers(obj.header)
-	-- return ngx.print(type(o.json[1]), ' 23')
-
 	return dekko.construct.message(o)
 end
 
 function dekko.construct.counter(obj)
 
-	red:init_pipeline()
-	red:hincrby(obj.hash.counter, obj.module, 1)
-	red:hmset(obj.hash.hosts, obj.hash.hostkey, obj.module)
-
-	local results, err = red:commit_pipeline()
-	if not results then
+	local o = {}
+	o.name = obj.module
+	
+	local res, err = red:hmset(obj.hash.hosts, obj.hash.hostkey, o.name)
+	if not res then
 		return dekko.ngx.exception(400)
 	end
 
-	return dekko.ngx.exception(204)
+	return dekko.ngx.exception(200)
 end
 
 -- route objects
@@ -263,14 +256,14 @@ function dekko.connect(obj)
 		return dekko.ngx.exception(502)
 	end
 
-	red:set_keepalive(10000, 100)
-
-	-- red:close();
+	-- red:set_keepalive(10000, 100)
+	red:close();
 end
 
 function dekko.route()
 	local obj = {}
-	
+
+
 	-- args:
 	-- t -> type (method: settings,modules)
 	-- c -> timestamp (click counter)
@@ -324,7 +317,7 @@ function dekko.route()
 	
 	-- exception bad request
 	else
-		return dekko.ngx.exception(204)
+		return dekko.ngx.exception(200)
 	end
 	
 	-- pool connect
