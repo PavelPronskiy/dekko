@@ -129,7 +129,7 @@ server {
 
 - Param: `object.append` need to bind html element
 - New stack error handler `xpcall` in logic.lua
-- cjson error
+- cjson error pcall
 - Added multilang library lang.lua
 - Refactoring logic.lua code and dekko.js 
 
