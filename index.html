@@ -1,215 +1,224 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
+
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
+
+
+    <!-- Bootstrap Core CSS -->
+    <link href="/examples/page/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="/examples/page/css/heroic-features.css" rel="stylesheet">
+
     <title>Dekko examples</title>
 
-    
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
     <style>
 			
 	body
 	{
-	    background: #4f4358 url('/examples/page/bg.png') repeat left top;
-		box-shadow: 10px 0px 110px rgba(0, 0, 0, 1);
+	    /*background: #4f4358 url('/examples/page/bg.png') repeat left top;*/
+		/*box-shadow: 10px 0px 110px rgba(0, 0, 0, 1);*/
 	}
 
     </style>
 
+	<script>
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+	ga('create', 'UA-3820926-13', 'auto');
+	ga('send', 'pageview');
+
+	</script>
+
+	<!-- Yandex.Metrika counter -->
+	<script type="text/javascript" >
+	    (function (d, w, c) {
+	        (w[c] = w[c] || []).push(function() {
+	            try {
+	                w.yaCounter45322887 = new Ya.Metrika({
+	                    id:45322887,
+	                    clickmap:true,
+	                    trackLinks:true,
+	                    accurateTrackBounce:true,
+	                    webvisor:true
+	                });
+	            } catch(e) { }
+	        });
+
+	        var n = d.getElementsByTagName("script")[0],
+	            s = d.createElement("script"),
+	            f = function () { n.parentNode.insertBefore(s, n); };
+	        s.type = "text/javascript";
+	        s.async = true;
+	        s.src = "https://mc.yandex.ru/metrika/watch.js";
+
+	        if (w.opera == "[object Opera]") {
+	            d.addEventListener("DOMContentLoaded", f, false);
+	        } else { f(); }
+	    })(document, window, "yandex_metrika_callbacks");
+	</script>
+	<noscript><div><img src="https://mc.yandex.ru/watch/45322887" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+	<!-- /Yandex.Metrika counter -->
+
+	<script src="/dist/jquery.min.js"></script>
 
 </head>
 
 <body>
 
-	<div class="example-728x90"></div>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script> -->
-	<script async src="/dekko/dekko.js?v1" type="text/javascript"></script>
-	<script type="text/javascript">
+    <!-- Navigation -->
+    <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+        <div class="container">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Start Bootstrap</a>
+            </div>
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav">
+                    <li>
+                        <a href="#">About</a>
+                    </li>
+                    <li>
+                        <a href="#">Services</a>
+                    </li>
+                    <li>
+                        <a href="#">Contact</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
 
-    /*
-	 * examples 
-	*/
+    <!-- Page Content -->
+    <div class="container">
 
-	// get settings and modules
-	
-/*	types:
-		popup
-		banner
-		bar
-		branding
-*/	
-	
+        <!-- Jumbotron Header -->
+        <header class="jumbotron hero-spacer">
+            <h1>A Warm Welcome!</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ipsa, ipsam, eligendi, in quo sunt possimus non incidunt odit vero aliquid similique quaerat nam nobis illo aspernatur vitae fugiat numquam repellat.</p>
+            <p><a class="btn btn-primary btn-large">Call to action!</a>
+            </p>
+        </header>
 
-/*	$('div.container').dekko({
-		cache: false, // cache requests and save browser localStorage (optional)
-		path: '/assets/dekko/modules', // relative path to element modules (required)
-		modules: [ // require minimum one array element
-			{
-				'branding-page' : {
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: 'http://ya.ru', // click wrap element (optional)
-					delay: 0, // wait before show (optional)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2016-07-01 23:59:59' // element not started after this date (required)
-					}
-				}
-			}
-		]
-	});
-*/
-    
-    // load settings and modules
-/*	$('body').dekko('/sa', {
-		cache: true,
-		type: 'popup',
-        verbose: true,
-        rotate: false
-	});
-*/	
+		<div id="banner-left-side"></div>
 
-	var dekkoCounter = 0,
-		dekkoLoader = setInterval(function() {
-		if (typeof jQuery.fn.dekko === 'function') {
-			jQuery('body').dekko('/sa', {
-				type: 'popup',
-				cache: true,
-				verbose: true
-			});
+        <hr>
 
-			/*jQuery('.example-728x90').dekko('/sa', {
-				type: 'banner',
-				cache: true,
-				verbose: true
-			});*/
+        <!-- Title -->
+        <div class="row">
+            <div class="col-lg-12">
+                <h3>Latest Features</h3>
+            </div>
+        </div>
+        <!-- /.row -->
 
-			clearInterval(dekkoLoader);
-		} else {
-			if (dekkoCounter > 10)
-				clearInterval(dekkoLoader);
-			
-			dekkoCounter++;
-		}
-	}, 200);
+        <!-- Page Features -->
+        <div class="row text-center">
+
+            <div class="col-md-3 col-sm-6 hero-feature">
+                <div class="thumbnail">
+                    <img src="/examples/page/img/800x500.png" alt="">
+                    <div class="caption">
+                        <h3>Feature Label</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                        <p>
+                            <a href="#" class="btn btn-primary">Buy Now!</a> <a href="#" class="btn btn-default">More Info</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 hero-feature">
+                <div class="thumbnail">
+                    <img src="/examples/page/img/800x500.png" alt="">
+                    <div class="caption">
+                        <h3>Feature Label</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                        <p>
+                            <a href="#" class="btn btn-primary">Buy Now!</a> <a href="#" class="btn btn-default">More Info</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 hero-feature">
+                <div class="thumbnail">
+                    <img src="/examples/page/img/800x500.png" alt="">
+                    <div class="caption">
+                        <h3>Feature Label</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                        <p>
+                            <a href="#" class="btn btn-primary">Buy Now!</a> <a href="#" class="btn btn-default">More Info</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3 col-sm-6 hero-feature">
+                <div class="thumbnail">
+                    <img src="/examples/page/img/800x500.png" alt="">
+                    <div class="caption">
+                        <h3>Feature Label</h3>
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
+                        <p>
+                            <a href="#" class="btn btn-primary">Buy Now!</a> <a href="#" class="btn btn-default">More Info</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.row -->
+
+        <hr>
+
+        <!-- Footer -->
+        <footer>
+            <div class="row">
+                <div class="col-lg-12">
+                    <p>Copyright &copy; Your Website 2014</p>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+    <!-- /.container -->
 
 
-/*	$('body').dekko({
-		revision: 9, // enable rotate elements on refresh page
-		cache: false, // cache requests and save browser localStorage (optional)
-		rotate: true, // enable rotate elements on refresh page
-		path: '/dekko/modules', // relative path to element modules (required)
-		modules: '/examples/json/banners.json'
-	});
-*/
-/*	$('body').dekko({
-	    type: 'popup',
-		revision: 14, // enable rotate elements on refresh page
-		cache: false, // cache requests and save browser localStorage (optional)
-		// path: 'http://dekko.pronskiy.ru/dekko/modules', // relative path to element modules (required)
-		path: '/dekko/modules', // relative path to element modules (required)
-		// modules: '/examples/json/popups.json' // ?type=popup&domain=targetdomain.tld
-		modules: 
-		[
-			{
-				'popup-example1' : {
-					mobile: false,
-					geoTargeting: ['Moscow', 'Saint-Peterburg', 'Omsk'], // by server side param
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: 'http://ya.ru', // click wrap element (optional)
-					delay: 1000, // wait before show (optional)
-					closeExpire: 2, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2020-04-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 1000 // easing duration (optional)
-					},
-					position: {
-						left: '15px', // horizontal position (required)
-						top: '15px' // vertical position (required)
-					}
-				}
-			},
-			{
-				'popup-example2' : {
-					mobile: {
-						type: ''
-					}, // bool or object // default without param - false
-					geoTargeting: ['Saint-Peterburg', 'Moscow', 'Omsk'],
-					context: 'попап', // html data (optional)
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: '/3321/12321.html', // click wrap element (optional)
-					delay: 5000, // wait before show (optional)
-					closeExpire: 2, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2020-04-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 700 // easing duration (optional)
-					},
-					position: {
-						left: '15px', // horizontal position (required)
-						bottom: '15px' // vertical position (required)
-					}
-				}
-			},
-			{
-				'popup-example3' : {
-					context: 'весна', // html data (optional)
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: '/3321/12321.html', // click wrap element (optional)
-					delay: 2000, // wait before show (optional)
-					closeExpire: 2, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2020-04-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 2000 // easing duration (optional)
-					},
-					position: {
-						right: '15px', // horizontal position (required)
-						bottom: '15px' // vertical position (required)
-					}
-				}
-			},
-			{
-				'popup-example4' : {
-					context: 'девид', // html data (optional)
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: 'http://google.ru', // click wrap element (optional)
-					delay: 1000, // wait before show (optional)
-					closeExpire: 2, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2020-04-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 2000 // easing duration (optional)
-					},
-					position: {
-						right: '15px', // horizontal position (required)
-						top: '15px' // vertical position (required)
-					}
-				}
-			}
-		]	
-	});*/
+    <!-- Bootstrap Core JavaScript -->
+    <!-- <script src="/examples/page/js/bootstrap.min.js"></script> -->
 
-        	  
-
-        </script>
+	<!-- dekko advertized platform -->
+	<script src="https://dekko.pronskiy.ru/dekko.js" async data-verbose="true" data-cache="false"></script>
+	<!--// dekko advertized platform -->
 
 </body>
 </html>

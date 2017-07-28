@@ -1,162 +1,144 @@
-# dekko is advert modules loader 
+# Dekko is advertized platform
 
-### basic features
-  - lua router
+
+#### basic features
+  - minimal software requirements
+  - fastable asynchronous work and minimal server resources yet
+  - exceptions handler
   - module templates structure
-  - caching advertised modules in to localStorage
+  - caching revision advertised modules in to localStorage 
+  - last-modified and etag on settings and modules
   - fast loading advert elements
   - start and stop at specific date defines
   - position loading and animation
 
 
-### load methods
+#### code integration
+
+```html
+
+    <!-- dekko advertized platform -->
+    <script src="https://dekko.pronskiy.ru/dekko.js" async data-verbose="true" data-cache="false"></script>
+    <!--// dekko advertized platform -->
 
 ```
-modules: [ modules array ]
-modules: /relative/path/to/modules.json
-modules: http://domain.tld/path/to/modules.json
+
+## Module advertuzed types ##
+
+ * popup
+ * banner
+ * bar
+
+## Depends
+```
+    cjson
+    resty/redis
+    nginx+luajit
+    redis
 ```
 
-### modules structure 	&#128690;	&#128690;	&#128690;
-![dekko](https://cloud.githubusercontent.com/assets/2042729/13509896/73c77c8c-e1a7-11e5-948c-13083e3c0b31.jpg)
 
-  
-### examples
+### Module structure example ##
+
+**options example**
+```json
+// version: 0.3
+// type: popup
+{
+  "geoTargeting":[88,77,32,50,333,334],
+  "append": "body",
+  "rotate": "true",
+  "type": "popup",
+  "revision": 109,
+  "images": {
+    "background": "/examples/images/popup-timer/popup-1.gif",
+    "button": "/examples/images/popup-timer/button.png",
+    "buttonHover": "/examples/images/popup-timer/button-hover.png",
+    "close": "base64 data image",
+    "closeHover": "/examples/images/popup-timer/close-hover.png",
+    "timer": "/examples/images/popup-timer/timer.png"
+  },
+  "mobile": {
+    "css": {
+      "param": "value"
+    }
+  },
+  "url": "http://google.com",
+  "delay":                          500,
+  "closeExpire":                          2,
+  "date": {
+    "start": "2017-05-29T12:00:00.000000+04:00",
+    "end": "2020-01-01T00:00:00.000000+04:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInOutElastic",
+      "easeOutElastic"
+    ],
+    "duration":                          1000
+  },
+  "position": {
+    "left": "15px",
+    "bottom": "15px"
+  }
+}
+```
+
+**module function**
 ```js
-    // lua redis support
-	var dekkoCounter = 0,
-		dekkoLoader = setInterval(function() {
-		if (typeof jQuery.fn.dekko === 'function') {
-			jQuery('body').dekko('/sa', {
-				type: 'popup',
-				cache: true,
-				verbose: true
-			});
-
-			jQuery('.example-728x90').dekko('/sa', {
-				type: 'banner',
-				cache: true,
-				verbose: true
-			});
-
-			clearInterval(dekkoLoader);
-		} else {
-			if (dekkoCounter > 10)
-				clearInterval(dekkoLoader);
-			
-			dekkoCounter++;
-		}
-	}, 200);
-
-    // or static modules
-	$('body').dekko({
-		cache: true, // cache requests and save browser localStorage (optional)
-		rotate: false,
-		verbose: true,
-		type: 'popup',
-		revision: 1,
-		path: '/assets/dekko/modules', // relative path to element modules (required)
-		modules: '/example-data.json',
-		[ // require minimum one array element
-			{
-				'popup-example1' : {
-				    mobile: false, // default false (disable view to mobile devices) // false by default
-					context: 'магия', // html data (optional)
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: 'http://ya.ru', // click wrap element (optional)
-					delay: 1000, // wait before show (optional)
-					closeExpire: 120, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2016-04-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 1000 // easing duration (optional)
-					},
-					position: {
-						left: '15px', // horizontal position (required)
-						top: '15px' // vertical position (required)
-					}
-				}
-			},
-			{
-				'popup-example2' : {
-				    mobile: {
-				        // params css etc..
-				    },
-					geoTargeting: [77, 56, 99], // geo targeting by region code support (maxmind database)
-					revision: 102, // cache versioning incremental option (required if cache enabled)
-					url: 'http://ya.ru', // click wrap element (optional)
-					delay: 1000, // wait before show (optional)
-					closeExpire: 120, // closable element option, specific counting by minutes (required)
-					date: {
-						start: '2016-02-26 10:00:00', // element more start at (required)
-						end: '2017-12-01 23:59:59' // element not started after this date (required)
-					},
-					effects: {
-						easing: ['easeInOutElastic', 'easeOutElastic'], // easing (optional)
-						duration: 1000 // easing duration (optional)
-					},
-					position: {
-						right: '15px', // horizontal position (required)
-						top: '15px' // vertical position (required)
-					}
-				}
-			}
-
-		]
-	});
-
+(function ($) {
+    window.dekkoModule = function (object) {
+        ...
+    };
+}(jQuery));
 ```
 
-## nginx configuration
+### nginx configuration
 ```
-lua_package_path "/path/to/lua/5.1/resty/redis.lua;;";
+lua_package_path "/home/dekko/lua/modules/?.lua;;";
+lua_shared_dict lastmodified 10m;
+lua_shared_dict redisPool 64k;
+
+geo $remote_addr $region {
+    ranges;
+    default 0;
+    include /usr/share/ip2geo/region.txt;
+}
+
+geo $remote_addr $countryCode {
+    ranges;
+    default 0;
+    include /usr/share/ip2geo/region.txt;
+}
+
+geoip_country /usr/share/GeoIP/GeoIP.dat;
+
 
 server {
-
-	location / {
-	    if ($request_method = OPTIONS) {
-        	add_header 'Access-Control-Allow-Origin' '*';
-        	add_header 'Access-Control-Allow-Credentials' 'true';
-        	add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        	add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-        	add_header Content-Length 0;
-        	add_header Content-Type text/plain;
-        	return 204;
-        }
-	}
-
-	location = /sa {
-	    if ($request_method = OPTIONS) {
-        	add_header 'Access-Control-Allow-Origin' '*';
-        	add_header 'Access-Control-Allow-Credentials' 'true';
-        	add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-        	add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-        	add_header Content-Length 0;
-        	add_header Content-Type text/plain;
-        	return 204;
-        }
+	location = /dekko.json {
 		content_by_lua_file '/path/to/dekko.lua';
 	}
 }
 
 ```
-## redis configuration
-```
-cluster redis
 
-```
-## Software deps
-```
-nginx (geo, lua)
-lua-cjson >=2.1.0
-redis 3
-```
 ### Changelog
-    0.2.0 beta - Geotargeting by region support
-    0.1.8 beta - Added new param mobile view adv
+## [0.2.1](https://github.com/PavelPronskiy/dekko/tree/0.2.1) (2017-07-26)
+
+**New options JSON structure**
+
+- Param: `object.append` need to bind html element
+- New stack error handler `xpcall` in logic.lua
+- cjson error
+- Added multilang library lang.lua
+- Refactoring logic.lua code and dekko.js 
+
+### Old changelog
+
+    0.2.1 beta - Geotargeing by region
+    0.2.0 beta - Refactoring dekko.js
+    0.1.9 beta - Refactoring lua and migrating to luajit
+    0.1.8 beta - Added new param `object.mobile` view adv
     0.1.7 beta - Added geo targeting by geoip-db.com and many fixes
     0.1.6 beta - Bug fixes.
     0.1.5 beta - Bug fixes.

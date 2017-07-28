@@ -29,139 +29,177 @@
 -- OTHER DEALINGS IN THE SOFTWARE.
 
 local cjson = require "cjson"
-local redis = require "resty.redis"
+local lang = require "lang"
+local redis = require "redis"
 local args = ngx.req.get_uri_args()
 local red = redis:new()
 local dekko = {}
 dekko.ngx = {}
+dekko.ngx.lm = ngx.shared.lastmodified
+dekko.ngx.rp = ngx.shared.redisPool
+dekko.debug = {}
+dekko.debug.stackTrace = true
 dekko.redis = {}
 dekko.construct = {}
+dekko.exception = {}
+dekko.protected = {}
 dekko.redis.timeout = 1000
 
-dekko.redis.pool = {
-	"127.0.0.1:6379",
-	-- "127.0.0.2:6379:passwd",
-	-- "127.0.0.3:6379",
-	-- "127.0.0.4:6379",
+dekko.redis.mapPool = {
+	["127.0.0.1"] = 6379,
+	["127.0.0.2"] = 6379,
+	["127.0.0.3"] = 6379,
+	["127.0.0.4"] = 6379,
+	["127.0.0.5"] = 6379,
+	["127.0.0.7"] = 6379,
+	["127.0.0.8"] = 6379
 }
 
 dekko.redis.prefix = {
+	["redispool"] = "redispool",
 	["settings"] = "ss",
+	["lastModified"] = ":lastmodified",
+	["ETag"] = ":etag",
 	["modules"] = "ms",
 	["clicks"] = "cs",
 	["counter"] = "cr",
 	["hosts"] = "hs",
+	["rev"] = "r",
 }
 
-dekko.redis.codes = {
-	[200] = "OK",
-	[204] = "Nothing else",
-	[403] = "Auth failed",
-	[404] = "Not found",
-	[400] = "Bad request",
-	[502] = "Data store pool offline",
-}
-
-function dekko.ngx.CORSpolicy()
-	ngx.header["Access-Control-Allow-Origin"] = '*'
-	ngx.header["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token"
+function dekko.ngx.PolicyHeaders(object)
+	ngx.header["Access-Control-Allow-Origin"] = object.schemeDomain
+	ngx.header["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token, If-None-Match, If-Modified-Since, Cache-Control"
 	ngx.header["Access-Control-Allow-Credentials"] = "true"
+	ngx.header["Access-Control-Max-Age"] = 864000
 end
 
-function dekko.ngx.headers(type)
+function dekko.ngx.headers(object)
 
-	if type == 'json' then
-		ngx.header["Content-Type"] = "application/json"
-		dekko.ngx.CORSpolicy()
+	local policy = {}
+	local k = {}
+	ngx.status = ngx.HTTP_OK
+
+	    if object.mhash ~= nil
+	  then k.et = dekko.cacheBrowser('etag', object.mhash .. dekko.redis.prefix.ETag)
+		   k.lm = dekko.cacheBrowser('lastmodified', object.mhash .. dekko.redis.prefix.lastModified)
+		   ngx.header["ETag"] = k.et
+	       ngx.header["last-modified"] = k.lm
+	   end
+
+	    if object.type == 'script'
+	  then ngx.header["Content-Type"] = "text/javascript"
+	elseif object.type == 'json'
+	  then ngx.header["Content-Type"] = "application/json"
+	  else ngx.header["Content-Type"] = "application/json"
+	   end
+
+	  if ngx.var.http_x_forwarded_proto ~= nil
+	then policy.schemeDomain = ngx.var.http_x_forwarded_proto .. '://' .. object.domain
+	else policy.schemeDomain = 'http://' .. object.domain
 	end
 
-	if type == 'script' then
-		ngx.header["Content-Type"] = "text/javascript"
-		dekko.ngx.CORSpolicy()
-	end
+	ngx.header["Cache-Control"] = "public"
+	return dekko.ngx.PolicyHeaders(policy)
 end
 
-function dekko.ngx.exception(c)
-	ngx.status = c
-	header = 'json'
-	dekko.ngx.headers(header)
-	ngx.say('{ "status": ' .. c .. ', "message": "' .. dekko.redis.codes[c] .. '" }')
-	return ngx.exit(c)
-end
-
-function dekko.splitHost(s,d)
+-- split string 127.0.0.1:1234
+function dekko.splitHost(s)
 
 	local result = {};
-	for match in (s..d):gmatch("(.-)"..d) do
+	for match in (s..":"):gmatch("(.-)"..":") do
 		table.insert(result, match)
 	end
-
 	return result
 end
 
-function dekko.redis.hgetall(hash)
-	
+function dekko.redis.hgetall(object)
 	local data = {}
-	local hgetall, err = red:hgetall(hash)
-	if not hgetall then
-		return dekko.ngx.exception(200)
+	local hgetall, err = red:hgetall(object.hash)
+	  if not hgetall
+	then dekko.exception.throw({
+			code = 109,
+			message = err
+		 })
+	 end
+
+	  if #hgetall == 0
+	then dekko.exception.throw({
+			code = 115
+		 })
 	end
 
-	if #hgetall == 0 then
-		return dekko.ngx.exception(200)
+	  if type(hgetall) ~= "table"
+	then dekko.exception.throw({
+			code = 114
+		 })
+	 end
+
+	for i, v in pairs(hgetall)
+	do if i % 2 == 1
+	 then n = v
+	 else data[n] = v
+	  end
 	end
 
-	if type(hgetall) ~= "table" then
-		return dekko.ngx.exception(400)
-	end
-
-	for i, v in pairs(hgetall) do
-		if i % 2 == 1 then
-			n = v
-		else
-			data[n] = v
-		end
-	end
-
+	-- red:close();
 	return data
 end
 
-function dekko.redis.hmget(hash, name)
+-- return date headers by last-modified and etag
+function dekko.cacheBrowser(type, hash)
 
-	local data, err = red:hmget(hash, name)
-	if not data or type(data[1]) ~= 'string' then
-		return dekko.ngx.exception(200)
+	local b = {}
+
+	if type == 'etag' then
+		b.now = ngx.md5(ngx.time())
+	elseif type == 'lastmodified' then
+		b.now = ngx.time()
 	end
-
-	return data
+	
+	b.last = dekko.ngx.lm:get(hash)
+	b.date = b.now
+	  if b.last == nil
+	then dekko.ngx.lm:set(hash, b.now)
+		 b.date = b.now
+	else b.date = b.last
+	end
+	
+	  if type == 'lastmodified'
+	then b.date = ngx.http_time(b.date)
+	end
+	-- return
+	-- return ngx.http_time(b.date)
+	return b.date
 end
 
 -- finally output data
 function dekko.construct.message(o)
-	dekko.ngx.headers(o.header)
-	return ngx.say(o.json)
+	dekko.ngx.headers(o)
+	return ngx.print(o.json)
 end
 
 -- geotargeting by region integer code
-function dekko.geoTargetingByRegionCode(moduleParams)
+function dekko.geoRegionBoolean(regions)
 	
 	local bool
-	local c = cjson.decode(moduleParams)
 	local clientRegion = tonumber(ngx.var.region)
 
 	-- check geotargeting option exist and not empty
-	if c.geoTargeting ~= nil and type(c.geoTargeting) == 'table' and #c.geoTargeting > 0 then
-		for i = 1, #c.geoTargeting do
-			if tonumber(c.geoTargeting[i]) ~= nil then
+	 if regions ~= nil
+	and type(regions) == 'table'
+	and #regions > 0 then
+		for i = 1, #regions do
+			if tonumber(regions[i]) ~= nil then
 				-- check client region and geotargeting option
-				if clientRegion == c.geoTargeting[i] then
-					return true
-				else
-					bool = false
+				  if clientRegion == regions[i]
+				then return true
+				else bool = false
 				end
 			end
 		end
+
 	else
 		-- geotargeting not defined by options
 		bool = true
@@ -170,159 +208,345 @@ function dekko.geoTargetingByRegionCode(moduleParams)
 	return bool
 end
 
+-- json arrays syntax protected
+function dekko.protected.JSONdecode(o)
+	local success, resource = pcall(cjson.decode, o)
+	if not success
+	then dekko.exception.throw({
+		code = 110
+		})
+	else return resource
+	end
+end
+
+-- json arrays syntax protected
+function dekko.protected.JSONencode(o)
+	local success, resource = pcall(cjson.encode, o)
+	if not success
+	then dekko.exception.throw({
+		code = 111
+		})
+	else return resource
+	end
+end
 -- get keyhash modules settings
-function dekko.construct.settings(obj)
+function dekko.construct.settings(object)
 
 	local o = {}
-	o.json = {}
+	local msg = {}
+	o.opts = {}
+	o.revs = {}
 
+	for i, s in pairs(dekko.redis.hgetall(object))
+	do
+		if   type(s) ~= 'string'
+		then dekko.exception.throw({
+				code = 113
+			})
+		end
 
-	for i, s in pairs(dekko.redis.hgetall(obj.hash)) do
-		if type(s) == 'string' then
-			if dekko.geoTargetingByRegionCode(s) == true then
-				table.insert(o.json, '{"' .. i .. '":' .. s .. '}')
-			end
+		o.decode = dekko.protected.JSONdecode(s)
+		o.continue = false
+		o.decode.images = {}
+
+		if 	 tonumber(o.decode.revision) ~= nil
+		then o.decode.revision = tonumber(o.decode.revision)
+		else o.decode.revision = 1000
+		end
+
+		if 	 o.decode.name ~= nil
+		then o.decode.name = o.decode.name
+		else o.decode.name = i
+		end
+
+		if   o.decode.geoTargeting ~= nil
+		and  dekko.geoRegionBoolean(o.decode.geoTargeting) == true
+		then o.continue = true
+		end
+
+		if   o.decode.geoTargeting == nil
+		then o.continue = true
+		end
+		
+		if   o.continue == true
+		then table.insert(o.opts, o.decode)
+			 table.insert(o.revs, o.decode.revision)
 		end
 	end
 
-	o.header = obj.header
-	o.json = string.format("[%s]", table.concat(o.json, ','))
+	o.revs 		= string.format("%s", table.concat(o.revs, ':'))
+	o.revHash 	= ngx.crc32_short(o.revs)
+	o.json 		= dekko.protected.JSONencode(o.opts)
+	o.header 	= object.header
+	o.domain 	= object.domain
+	o.mhash 	= object.hash .. ':' .. o.revHash
 
 	return dekko.construct.message(o)
 end
 
 -- get keyhash modules
-function dekko.construct.modules(obj)
+function dekko.construct.modules(object)
 
 	local o = {}
-	o.header = obj.header
-	o.json = dekko.redis.hmget(obj.hash, obj.module)
+	local t = {}
+	local status, err = red:hmget(object.hash, object.module)
 
+	t.str = tostring(status[1])
+	t.len = string.len(t.str)
+
+	  if (t.len <= 14) -- length 14 is empty data of redis
+	then dekko.exception.throw({
+			code = 112
+
+		 })
+	end
+
+	o.header = object.header
+	o.domain = object.domain
+	o.json = t.str
+
+	-- red:close();
 	return dekko.construct.message(o)
 end
 
-function dekko.construct.counter(obj)
+function dekko.construct.counter(object)
+	local msg = {}
+	msg.header = object.header
+	msg.json = '{}'
+	msg.mhash = nil
 
-	local o = {}
-	o.name = obj.module
-	
-	local res, err = red:hmset(obj.hash.hosts, obj.hash.hostkey, o.name)
-	if not res then
-		return dekko.ngx.exception(400)
+	local res, err = red:hmset(object.hash.hosts, object.hash.hostkey, object.module)
+	if not res
+	then dekko.exception.throw({
+			code = 109
+		})
 	end
 
-	return dekko.ngx.exception(200)
+	-- red:close();
+	return dekko.construct.message(msg)
 end
 
 -- route objects
-function dekko.router(obj)
+function dekko.router(object)
 
-	if obj.route == 'settings' then
-		return dekko.construct.settings(obj)
+	if object.route == 'settings' then
+		return dekko.construct.settings(object)
 	end
 
-	if obj.route == 'modules' then
-		return dekko.construct.modules(obj)
+	if object.route == 'modules' then
+		return dekko.construct.modules(object)
 	end
 
-	if obj.route == 'counter' then
-		return dekko.construct.counter(obj)
+	if object.route == 'counter' then
+		return dekko.construct.counter(object)
 	end
 end
 
 -- redis connect
-function dekko.connect(obj)
-	local target = false;
+function dekko.combine(o)
+	local target = false
+	local msg = {}
+	local rs = {}
+
+	rs.ord = {}
+	rs.hp = {}
+	rs.lastRedisHost = dekko.ngx.rp:get(dekko.redis.prefix.redispool)
 
 	red:set_timeout(dekko.redis.timeout)
 
-	-- check ip port
-	for i, host in pairs(dekko.redis.pool) do
-		local s = dekko.splitHost(host, ':')
-		local con, err = red:connect(s[1], s[2])
-			if con then target = true;
-			if s[3] then
-				local res, err = red:auth(s[3])
-				if not res then
-					return dekko.ngx.exception(403)
-				end
-			end
-			return dekko.router(obj)
-		end
+	 for host, port in pairs(dekko.redis.mapPool)
+	  do table.insert(rs.ord, host)
+	 end
+
+	  if #rs.ord == 0
+	then dekko.exception.throw({
+			code = 116
+		 })
 	end
 
-	-- host not online
-	if not target then
-		return dekko.ngx.exception(502)
+	  if rs.lastRedisHost ~= nil
+	then rs.lastRedisConnection = dekko.splitHost(rs.lastRedisHost)
+		 rs.hp.host = rs.lastRedisConnection[1]
+		 rs.hp.port = rs.lastRedisConnection[2]
+		 local status, err = red:connect(rs.hp.host, rs.hp.port)
+		   if status
+		 then target = true
+		 else target = false
+		  end
 	end
 
-	-- red:set_keepalive(10000, 100)
-	red:close();
+
+	-- ngx.say(target)
+	  if target == false
+	then for host, port in pairs(dekko.redis.mapPool)
+		 do local status, err = red:connect(host, port)
+			   if status
+			 then rs.hostOnline = host .. ':' .. port
+			      target = true
+				  return dekko.ngx.rp:set(dekko.redis.prefix.redispool, rs.hostOnline)
+			  end
+		 end
+	end
+
+	 if target == true
+   then dekko.router(o)
+   else dekko.exception.throw({
+			code = 108
+		})
+	end
+
+	-- return red:close();
 end
 
+function dekko.validateArgs(argument)
+	local r = false
+	  if argument:match('[\";\']') ~= nil
+	then r = true
+	 end
+
+	return r
+
+end
+
+-- route
 function dekko.route()
-	local obj = {}
-
-
-	-- args:
+	local opts = {}
+	local msg = {}
+	local em = {}
+	
 	-- t -> type (method: settings,modules)
 	-- c -> timestamp (click counter)
 	-- d -> domain name (method: settings,modules,counter)
 	-- m -> module name (method: settings,modules,counter)
 	-- f -> fingerprint (method: settings,modules,counter)
 
+		opts.domain = args.d
+		opts.fingerprint = tonumber(args.f)
+		opts.timestamp = tonumber(args.c)
 
-	-- url?t=popup&d=domain.name&f=fingerprint
-	if
-		args.t ~= nil and -- type
-		args.d ~= nil and -- domain
-		args.f ~= nil and -- fingerprint
-		args.m == nil and -- !module
-		args.c == nil 	  -- !click
-	then
-		obj.route = 'settings'
-		obj.header = 'json'
-		obj.hash = args.d .. ':' .. dekko.redis.prefix.settings .. ':' .. args.t
-	
-	-- click counter
-	-- url?c=timestamp&d=domain.name&f=fingerprint&m=module-name
-	elseif
-		args.t == nil and -- !type
-		args.c ~= nil and -- click
-		args.d ~= nil and -- domain
-		args.m ~= nil and -- module
-		args.f ~= nil     -- fingerprint
-	then
-		obj.hash = {}
-		obj.route = 'counter'
-		obj.module = args.m
-		obj.header = 'json'
-		obj.hash.counter = args.d .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.clicks
-		obj.hash.hosts = args.d .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.hosts
-		obj.hash.hostkey = ngx.var.remote_addr .. ':' .. args.f .. ':' .. args.c
-	
-	-- modules scripts widgets
-	-- url?t=popup&d=domain.name&f=fingerprint&m=module-name
-	elseif
-		args.t ~= nil and -- type
-		args.d ~= nil and -- domain
-		args.f ~= nil and -- fingerprint
-		args.c == nil and -- !click
-		args.m ~= nil     -- module
-	then
-		obj.route = 'modules'
-		obj.module = args.m
-		obj.header = 'script'
-		obj.hash = args.d .. ':' .. dekko.redis.prefix.modules .. ':' .. args.t
-	
+	-- route uri pages
+	-- if ngx.var.request_method == 'GET'
+	-- then
+	-- 	return ngx.say('32123')
+	-- end
+
+	 --   if ngx.var.request_method == 'OPTIONS'
+	 -- then dekko.ngx.headers({
+		-- 	domain = ngx.var.host
+		--  	})
+		--   return ngx.exit(204)
+	 --  end
+
+
+	  --   if #args == 0
+	  -- then return dekko.construct.message({
+		 --   		header = 'json',
+		 --   		json = '{}',
+		 --   		mhash = nil
+		 --    })
+	  --  end
+
+	    if type(ngx.var.geoip_country_code) == 'string'
+	  then opts.lang = ngx.var.geoip_country_code
+	  else opts.lang = 'EN'
+	   end
+	   
+	    if opts.fingerprint == nil
+	  then dekko.exception.throw({ code = 107 }) 
+	   end
+
+	    if opts.domain == nil
+	  then dekko.exception.throw({ code = 107 }) 
+	   end
+
+	-- get advert options URI: url?f=fingerprint
+	    if args.d ~= nil -- domain
+	   and args.m == nil -- !module
+	   and args.c == nil -- !click
+	  then opts.route = 'settings'
+		   opts.header = 'json'
+		   opts.hash = opts.domain .. ':' .. dekko.redis.prefix.settings
+
+	-- get modules scripts widgets URI: url?f=fingerprint&m=module-name
+	elseif args.c == nil -- !click
+	   and args.d ~= nil -- domain
+	   and args.m ~= nil -- module
+	  then opts.route = 'modules'
+		   opts.module = args.m
+		   opts.header = 'script'
+		   opts.hash = opts.domain .. ':' .. dekko.redis.prefix.modules
+		   opts.mhash = opts.domain .. ':' .. dekko.redis.prefix.modules .. ':' .. opts.module
+			
+	-- post click counter URI: url?c=timestamp&f=fingerprint&m=module-name
+	elseif opts.timestamp ~= nil -- timestamp click
+	   and args.d ~= nil -- domain
+	   and args.m ~= nil -- module
+	  then opts.hash = {}
+		   opts.route = 'counter'
+		   opts.module = args.m
+		   opts.header = 'json'
+		   opts.hash.counter = opts.domain .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.clicks
+		   opts.hash.hosts = opts.domain .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.hosts
+		   opts.hash.hostkey = ngx.var.remote_addr .. ':' .. opts.fingerprint .. ':' .. opts.timestamp
+
 	-- exception bad request
-	else
-		return dekko.ngx.exception(200)
-	end
-	
+	  else dekko.exception.throw({ code = 107 }) 
+	   end
+
+
 	-- pool connect
-	return dekko.connect(obj)
+	return dekko.combine(opts)
 end
 
--- route by args
-dekko.route()
+function dekko.exception.throw(o)
+	exception = {}
+	exception.status = o.status
+	exception.country = ngx.var.geoip_country_code
+	exception.code = o.code
+	exception.sourceMessage = o.message
+	exception.type = o.type
+	exception.domain = o.domain
+	exception.stacktrace = debug.traceback()
+	exception.langMessage = lang:message(exception)
+	return error()
+end
+
+function dekko.exception.message(object)
+
+	local o = {}
+	local r = {}
+	local t = {}
+
+	  if type(object.status) == 'string'
+	then o.status = object.status
+	else o.status = 'error'
+	 end
+
+	  if object.type == 'script'
+	then r = 'var message = "' .. object.langMessage .. '";'
+	else t.date = ngx.http_time(ngx.time())
+		 t.status = o.status
+		 t.message = object.langMessage
+		 t.country = object.country
+		 t.code = object.code
+
+		  if dekko.debug.stackTrace == true
+		then t.stack = object.stacktrace
+		 end
+
+		r = cjson.encode(t)
+	end
+
+	object.domain = ngx.var.host
+	dekko.ngx.headers(object)
+	ngx.print(r)
+	return ngx.exit(ngx.HTTP_OK)
+end
+
+-- return exception error
+function dekko.exception.catch()
+	return dekko.exception.message(exception)
+end
+
+return xpcall(dekko.route, dekko.exception.catch)
+-- return ngx.say(ngx.var.uri)

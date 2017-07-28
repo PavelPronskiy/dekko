@@ -2,12 +2,12 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.2.0.1 beta
+ * Version: 0.2.1 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
  * Copyright (c) 2016 Dekko Pavel Pronskiy
- * Last update: 21.07.2017
+ * Last update: 24.07.2017
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -32,8 +32,19 @@
  *
  *
  **/
- 
-(function ($, w, doc) {
+(function (w, doc) {
+
+	var $;
+
+	try {
+		if (typeof jQuery === 'undefined') {
+			console.error('Dekko need jQuery library');
+			return false;
+		} else {
+			$ = jQuery;
+		}
+
+	} catch(e) {}
 
 	$.fn.dekko = function(url, options) {
 
@@ -85,14 +96,14 @@
 			// verbose options
 			console: {
 				timeModule 		: 'module: ',
-				timeSeconds		: ', execution time',
+				timeSeconds		: ', time',
 				totalTime 		: 'Total time load '
 			},
 			
 			// static prefix points
 			storePoint: {
 				name 			: 'dekko:',
-				closed 			: ':closed:',
+				closed 			: ':closed',
 				module 			: ':module:',
 				prev 			: ':rotate:',
 				rev 			: ':r',
@@ -134,11 +145,11 @@
 					: false;
 			},
 			decodeHex: function(o) {
-			    var s = ''
+			    var s = '';
 			    for (var i = 0; i < o.length; i+=2) {
-			        s += String.fromCharCode(parseInt(o.substr(i, 2), 16))
+			        s += String.fromCharCode(parseInt(o.substr(i, 2), 16));
 			    }
-			    return decodeURIComponent(escape(s))
+			    return decodeURIComponent(escape(s));
 			},
 			encodeHex: function(o) {
 				var h = '';
@@ -175,35 +186,22 @@
 			map: function(obj, iterator, context) {
 				var results = [], self = this,
 				nativeMap = Array.prototype.map;
-				if (obj == null) return results;
+				if (obj === null) return results;
 				if (nativeMap && obj.map === nativeMap) return obj.map(iterator, context);
 				self.each(obj, function(value, index, list) {
-				results[results.length] = iterator.call(context, value, index, list);
+					results[results.length] = iterator.call(context, value, index, list);
 				});
 				return results;
 			},
-			gEval: function(xhr, o) {
-
-				(w.execScript)
-					? w.execScript(xhr)
-					: (new Function(xhr))(); // execute module
-				
-				return w.dekkoModule.call(this, o); // put options module and start rendering 
-			},
 			// callback final
-			render: function(o) {
-				
-				var stored = this.getStore(o.storeName),
-				xhr = (o.cache && stored !== false)
-					? stored
-					: (o.xhr)
-						? o.xhr
-						: false;
-					
-				if (xhr !== false)
-					return this.gEval(xhr, o);
-				
-				return false;
+			render: function(s, o) {
+				// initialise dekkoModule function
+				(w.execScript)
+					? w.execScript(s)
+					: (new Function(s))();
+
+				// put json options to module and start rendering
+				return w.dekkoModule.call(this, o);
 			},
 			// request module callback
 			notice: function(o) {
@@ -212,8 +210,8 @@
 					: false;
 			},
 			expire: function(o) {
-				var a, b, self = this;
-				a = self.getStore(o.closePoint);
+				var a, b;
+				a = this.getStore(o.closePoint);
 
 				if (a === false)
 					return false;
@@ -223,16 +221,14 @@
 					: false; // minutes ago
 
 				return (b && b > o.date.close)
-					? self.delStore(o.closePoint)
+					? this.delStore(o.closePoint)
 					: true;
 			},
 			
 			// check options and switch request to render
-			route: function(m, o) {
-
+			getModules: function(m, o) {
 				var self = this,
 					ajax = settings.ajax;
-
 				self.each(m, function(e, i) {
 
 					// check false
@@ -252,22 +248,23 @@
 						return false;
 
 					// check store and return render
-					if (e.cache && self.getStore(e.storeName))
-						return self.render(e);
+					var localStore = self.getStore(e.storeName);
+					if (e.cache && localStore !== false)
+						return self.render(localStore, e);
 
 					ajax.url = (e.dataStore)
 						? e.ajaxUrl
 						: e.url;
 
 					ajax.crossDomain 		= false; // needed to jquery ajax crossDomain absolute path
-					ajax.cache				= true;
 					ajax.crossOrigin		= true;
+					ajax.cache				= true;
 					ajax.dataType			= 'script';
 
 					if (e.dataStore)
 						ajax.data = {
 							d: e.domain,
-							t: e.type,
+							// t: e.type,
 							m: e.name,
 							f: e.fingerPrint
 						};
@@ -275,49 +272,163 @@
 					ajax.error = function(a) {
 						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 					};
-					ajax.success = function(xhr) {
+					ajax.success = function(script,status,xhr) {
 
-						// check data
-						if (self.serverExceptions(e.verbose, xhr, ajax))
+						// check response mimetype
+						if (xhr.getResponseHeader('Content-Type') !== 'text/javascript')
 							return false;
-						
-						e.xhr = xhr;
-						// self.delStore(null, self.storePoint.module + e.name);
-						self.setStore(e.storeName, e.xhr);
 
-						return self.render(e);
+
+						// self.delStore(null, self.storePoint.module + e.name);
+						if (self.getStore(e.storeName) === false)
+							self.setStore(e.storeName, script);
+
+						return self.render(script, e);
 					};
 
 					// return console.log(ajax);
 					return self.ajax(ajax);
 				});
 			},
+			// object params build
+			constructParams: function(o) {
+				var self = this,
+					module = {},
+					modules = [],
+					rotateModules = [],
+					routeModules,
+					ms = {},	
 			
+					object = (o.modules && o.modules.length > 0)
+						? o.modules
+						: false;
+	
+					
+				if (object === false)
+					return false;
+
+				if (o.verbose)
+					self.time(null, o.spm);
+
+				ms.rotates = [];
+				ms.defaults = [];
+				self.each(object, function(e, i) {
+
+					module = {
+						item			: e,
+						name			: e.name,
+						delay			: e.delay,
+						cache			: o.cache,
+						verbose			: o.verbose,
+						rotate			: typeof e.rotate === 'string'
+											? JSON.parse(e.rotate)
+											: false,
+						storeName		: self.storePoint.name +
+											o.fingerPrint +
+											self.storePoint.p +
+											e.type +
+											self.storePoint.p +
+											e.name +
+											self.storePoint.rev +
+											e.revision,
+
+						timePoint		: self.console.timeModule +
+											e.name +
+											self.console.timeSeconds,
+
+						append			: typeof e.append !== 'undefined'
+											? typeof e.append === 'string'
+												? jQuery(e.append)
+												: e.append
+											: jQuery('body'),
+
+						dataStore		: o.dataStore,
+						spm				: o.spm,
+						
+						ajaxUrl			: typeof o.ajaxUrl == 'undefined'
+											? null
+											: o.ajaxUrl,
+
+						fingerPrint		: o.fingerPrint,
+
+						images			: typeof e.images == 'object'
+											? e.images
+											: [],
+
+						excludes		: typeof e.excludes == 'object'
+											? e.excludes
+											: [],
+
+						domain			: w.location.hostname || w.location.host,
+
+						mobile			: typeof e.mobile == 'object'
+											? e.mobile
+											: typeof e.mobile == 'boolean'
+												? e.mobile
+												: false,
+
+						type			: e.type,
+						date: {
+							now			: self.dateNow,
+							end			: self.dateToUnixTimeStamp(e.date.end),
+							start		: self.dateToUnixTimeStamp(e.date.start),
+							close		: e.closeExpire
+						}
+					};
+
+					module.closePoint = module.storeName +
+										self.storePoint.closed;
+
+					if (o.verbose)
+						self.time(module.timePoint, null);
+
+
+					if (module.rotate === true) {
+						ms.rotates.push(module);
+					
+					} else {
+						ms.defaults.push(module);
+					}
+
+						
+				});
+
+				ms.randomize = self.rotateModules(ms.rotates, o);
+				ms.uniq = (ms.randomize.length > 0) ?
+					ms.defaults.concat(ms.randomize).filter(
+						function(item, index, array) {
+							// console.log(item);
+							return array.map(function(m){
+								return m['name'];
+							}).indexOf(item['name']) === index;
+				}) : ms.defaults;
+
+				// console.log(ms.uniq);
+				return self.getModules(ms.uniq, o);
+			},
 			// get random object
-			randModule: function(o, m) {
+			randModule: function(options, modules) {
 				var r, c, j,
+					skey = options.ppm +
+						modules[0].append.selector,
+
 					i = 0,
 					t = true,
 					self = this;
 
-				if (self.getStore(o.ppm) === false)
-					self.setStore(o.ppm, -1);
-
-				c = self.getStore(o.ppm);
-				
 				while (t) {
 
-					r = parseInt(Math.floor(Math.random() * m.length), 10);
-					
-					j = (typeof self.getStore(m[r].closePoint)[0] !== 'undefined')
-						? self.getStore(m[r].closePoint)[0]
+					c = self.getStore(skey) ? self.getStore(skey) : 0;
+					r = parseInt(Math.floor(Math.random() * modules.length), 10);
+					j = (typeof self.getStore(modules[r].closePoint)[0] !== 'undefined')
+						? self.getStore(modules[r].closePoint)[0]
 						: false;
 
 					t = (r !== c && j !== true)
 						? false
 						: true;
 
-					if (i > m.length * 2) {
+					if (i > modules.length * 2) {
 						r = c;
 						t = false;
 					}
@@ -325,198 +436,106 @@
 					i++;
 				}
 				
-				self.setStore(o.ppm, r);
-				return m[r];
+				self.setStore(skey, r);
+				return modules[r];
 			},
-			
-			// objects params build
-			constructParams: function(o) {
-				var obj = [],
-					modules = [],
-					self = this,
-					keyName,
-					object,
-					type,
-					routeModules;
+			rotateModules: function(modules, options) {
+				var self = this,
+					c = {},
+					i = 0,
+					l = [],
+					rl = [];
 	
-				try {
+				self.each(modules, function(a,i) {
+					c[a.append.selector] = (c[a.append.selector]||0)+1;
+				});
 				
-					obj = (o.modules && o.modules.length > 0)
-						? o.modules
-						: false;
-	
-					if (obj === false)
-						return false;
-	
-					if (o.verbose)
-						self.time(null, o.spm);
-	
-					type = (o.type)
-						? o.type
-						: '';
-					
-					self.each(obj, function(e, i) {
-						keyName = Object.keys(e)[0];
-						object = e[keyName];
-
-						modules.push({
-							name			: keyName,
-							storeName		: self.storePoint.name +
-												o.fingerPrint +
-												self.storePoint.p +
-												type +
-												self.storePoint.p +
-												keyName +
-												self.storePoint.rev +
-												object.revision,
-
-							closePoint		: self.storePoint.name +
-												o.fingerPrint +
-												self.storePoint.p +
-												type +
-												self.storePoint.closed +
-												keyName +
-												self.storePoint.rev +
-												object.revision,
-
-							path			: o.path +
-												self.storePoint.s +
-												keyName,
-
-							url				: o.path +
-												self.storePoint.s +
-												keyName +
-												self.storePoint.s +
-												o.templateName,
-
-							delay			: object.delay,
-							item			: object,
-							cache			: o.cache,
-							verbose			: o.verbose,
-							timePoint		: self.console.timeModule +
-												keyName +
-												self.console.timeSeconds,
-
-							append			: o.element,
-							dataStore		: o.dataStore,
-							spm				: o.spm,
-							
-							ajaxUrl			: typeof o.ajaxUrl == 'undefined'
-												? null
-												: o.ajaxUrl,
-
-							fingerPrint		: o.fingerPrint,
-
-							images			: typeof object.images == 'object'
-												? object.images
-												: [],
-
-							excludes		: typeof object.excludes == 'object'
-												? object.excludes
-												: [],
-
-							domain			: w.location.hostname || w.location.host,
-
-							mobile			: typeof object.mobile == 'object'
-												? object.mobile
-												: typeof object.mobile == 'boolean'
-													? object.mobile
-													: false,
-
-							type			: o.type,
-							date: {
-								now			: function() {
-												return Math.round(new Date().getTime() / 1000);
-											},
-
-								end			: self.dateToUnixTimeStamp(object.date.end),
-								start		: self.dateToUnixTimeStamp(object.date.start),
-								close		: object.closeExpire
-							}
-						});
-
-						if (o.verbose)
-							self.time(modules[i].timePoint);
-							
+				self.each(c, function(p,e) {
+					l[i] = [];
+					self.each(modules, function(m,k) {
+						if (e === m.append.selector)
+							l[i].push(m);
 					});
+						
+					i++;
+				});
 
-					routeModules = (o.rotate)
-						? [self.randModule(o, modules)]
-						: modules;
+				self.each(l, function(z,x) {
+					return rl.push(self.randModule(options, z));
+				});
 
-					return self.route(routeModules, o);
-					
-
-				} catch (e) {
-					return console.error(e);
-				}
+				return rl;
 			},
-			
-			// get object settings and array modules
-			getModules: function(e, o) {
-				var	self = this, ajax = settings.ajax, data = {};
+			err: function(o) {
+				console.log('err');
+			},
+			// get object options
+			getOptions: function(e, o) {
+				var	self = this,
+					ajax = settings.ajax,
+					data = {};
 			
 				ajax.url 				= o.modules;
 				ajax.cache 				= o.cache;
 				ajax.context 			= self;
 				ajax.data 				= {};
 				ajax.data.d		 		= w.location.hostname || w.location.host;
-				ajax.data.t 			= o.type;
+				// ajax.data.t 			= o.type;
 				ajax.data.f 			= o.fingerPrint;
 				ajax.crossDomain 		= false;
 
+
 				ajax.error = function(a,b,c) {
+
 					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
-				ajax.success = function(d) {
-			
-					data.modules 		= d;
-					data.ajaxUrl 		= ajax.url;
-					data.type 			= o.type;
-					data.fingerPrint 	= o.fingerPrint;
+				ajax.success = function(objects,status,xhr) {
 
+
+					if (self.exceptionsHandler(objects) === true)
+						return self.exceptionsMessage(objects)
+
+
+					data.modules 		= objects;
+					data.ajaxUrl 		= ajax.url;
+					// data.type 		= o.type;
+					data.fingerPrint 	= o.fingerPrint;
 					return self.modulesdekkoConstructor(e, data);
 				};
 
 				return self.ajax(ajax);
 			},
-			serverExceptions: function(v, o, a) {
-				var message, self = this;
+			exceptionsMessage: function(o) {
+				var message = '[' + o.date + '] ' + this.storePoint.name + ' ' + o.message;
 				
-				if (typeof o === 'undefined') {
-					return true;
+				switch (o.status) {
+					case 'error':
+						console.group(message);
+						console.log(o.stack);
+					break;
+					default:
+					break;
+				}
+				return console.groupEnd(message);
+
+			},
+			exceptionsHandler: function(o) {
+				var res = false;
+
+
+				if (typeof o.status === 'undefined')
+					res = false;
+
+				switch (o.status) {
+					case 'error':
+						res = true;
+					break;
+					default:
+						res = false;
+					break;
 				}
 
-				if (typeof settings.ajax.status[o.status] !== 'undefined') {
-					self.time(null, a.url);
-
-					message = (o.message)
-						? o.message
-						: settings.ajax.status[o.status];
-
-					console.error('status: ' + o.status + ', message: ' + message);
-					if (v) console.warn(a);
-					self.timeEnd(null, a.url);
-					return true;
-				}
-				
-				if (typeof o == 'undefined') {
-					self.time(null, a.url);
-					console.error('Module cannot load: ' + a.url + ' incorrect results');
-					if (v) console.warn(a);
-					self.timeEnd(null, a.url);
-					return true;
-				}
-
-				if (o.length === 0) {
-					self.time(null, a.url);
-					console.error('Modules empty: ' + a.url);
-					if (v) console.warn(a);
-					self.timeEnd(null, a.url);
-					return true;
-				}
-
-				return false;
+				return res;
 			},
 			ajaxErrors: function(msg) {
 				throw new Error(msg);
@@ -535,7 +554,11 @@
 					: console.timeEnd(o);
 			},
 			modulesdekkoConstructor: function (e, opts) {
-				var self = this, c, point, o = {}, optRev;
+				var self = this,
+					c,
+					point,
+					o = {},
+					optRev;
 
 				if (typeof opts.modules == 'string')
 					settings.app.path = self.parseUrl(opts.modules).prop('origin') + settings.app.path;
@@ -545,10 +568,8 @@
 					: false;
 
 				o = $.extend(settings.app, opts);
-				o.element = e;
+				// o.element = e;
 				
-
-
 				point = (o.ajaxUrl)
 					? o.ajaxUrl.replace(settings.regex.remote, '')
 					: typeof o.modules == 'string'
@@ -560,23 +581,17 @@
 						: '';
 					
 				o.spm = self.storePoint.name +
-						o.fingerPrint +
-						self.storePoint.p +
-						o.type;
+						o.fingerPrint;
 
 				o.ppm = self.storePoint.name +
 						o.fingerPrint +
-						self.storePoint.prev +
-						o.type;
+						self.storePoint.prev;
 
-				c = (typeof o.modules == 'string')
-					? self.getModules(e, o)
+
+				return (typeof o.modules == 'string')
+					? self.getOptions(e, o)
 					: self.constructParams(o);
-
-				return $.when(c).done(function() {
-						self.timeEnd(null, o.spm);
-					}
-				);
+			
 			},
 			// for module clients click
 			clickAdvert: function(o) {
@@ -587,7 +602,7 @@
 				ajax.context		= self;
 				ajax.data 			= {
 					c: o.date.now(),
-					d: w.location.hostname || w.location.host,
+					// d: w.location.hostname || w.location.host,
 					m: o.name,
 					f: o.fingerPrint
 				};
@@ -678,6 +693,10 @@
 				],
 				hash = self.murmurhash3_32_gc(k.join('###'), 31);
 				return hash;
+			},
+			log: function(e) {
+				console.info(e);
+				console.info('123');
 			}
 		};
 
@@ -707,11 +726,10 @@
 			return dekkoConstructor.modulesdekkoConstructor($this, options);
 
 		} catch (e) {
-			return console.error(e);
+			return dekkoConstructor.log(e);
 		}
 	};
 
-	// easing
 	if (!$.easing.def) {
 		$.easing['jswing'] = $.easing['swing'];
 		$.extend( $.easing,
@@ -848,4 +866,14 @@
 		});
 	}
 
-})(jQuery, window, document);
+	// initialization and rendering
+	return $.fn.dekko('/sa', {
+		cache: (typeof doc.currentScript.dataset.cache !== 'undefined')
+			? doc.currentScript.dataset.cache
+			: false,
+		verbose: (typeof doc.currentScript.dataset.verbose !== 'undefined')
+			? doc.currentScript.dataset.verbose
+			: false
+	});
+
+})(window, document);
