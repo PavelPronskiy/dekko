@@ -1,12 +1,12 @@
 ## Module structure
 
-![dekko](http://dekko.pronskiy.ru/doc/structures/module-struture.png)
+![dekko](https://github.com/PavelPronskiy/dekko/raw/master/doc/structures/module-struture.png)
 
 ## Redis structure
 
-![dekko](http://dekko.pronskiy.ru/doc/structures/redis-structure.png)
+![dekko](https://raw.githubusercontent.com/PavelPronskiy/dekko/master/doc/structures/redis-structure.png)
 
 ## General connections
 
-![dekko](http://dekko.pronskiy.ru/doc/structures/general-connections-structure.png)
+![dekko](https://github.com/PavelPronskiy/dekko/raw/master/doc/structures/general-connections-structure.png)
 
