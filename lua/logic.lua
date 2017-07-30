@@ -306,7 +306,7 @@ function dekko.construct.modules(object)
 
 	t.hash = ngx.crc32_short(string.len(t.module))
 
-	o.header = object.header
+	o.type = object.header
 	o.domain = object.domain
 	o.json = t.module
 	o.mhash = object.mhash .. ':' .. t.hash
@@ -522,18 +522,5 @@ function dekko.exception.catch()
 	return dekko.exception.message(exception)
 end
 
--- local xx = {}
--- local xt = {}
--- xx.a = 1
--- xx.b = 'fdsdf'
-
--- xt.a = cjson.encode(xx)
-
--- dekko.ngx.rp:set('dekko:test', xt.a)
-
--- xt.b = dekko.ngx.rp:get('dekko:test')
-
--- return ngx.say(xt.a)
-
 return xpcall(dekko.route, dekko.exception.catch)
--- return ngx.say(ngx.var.uri)
+
