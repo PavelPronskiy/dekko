@@ -269,8 +269,9 @@
 							f: e.fingerPrint
 						};
 
-					ajax.error = function(a) {
-						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					ajax.error = function(o, a, c) {
+						console.log(c)
+						// return self.exceptionsMessage(o);
 					};
 					ajax.success = function(script,status,xhr) {
 
@@ -868,11 +869,13 @@
 
 	// initialization and rendering
 	return $.fn.dekko('/sa', {
-		cache: (typeof doc.currentScript.dataset.cache !== 'undefined')
-			? doc.currentScript.dataset.cache
+		cache: (typeof doc.currentScript.dataset.cache !== 'undefined' && doc.currentScript.dataset.cache === "true")
+			? true
 			: false,
-		verbose: (typeof doc.currentScript.dataset.verbose !== 'undefined')
-			? doc.currentScript.dataset.verbose
+		verbose: (typeof doc.currentScript.dataset.verbose !== 'undefined' && doc.currentScript.dataset.verbose === 'string')
+			? (doc.currentScript.dataset.verbose === "true")
+				? true
+				: false
 			: false
 	});
 

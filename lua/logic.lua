@@ -37,6 +37,7 @@ local dekko = {}
 dekko.ngx = {}
 dekko.ngx.lm = ngx.shared.lastmodified
 dekko.ngx.rp = ngx.shared.redisPool
+dekko.ngx.modules = ngx.shared.dekkoModules
 dekko.debug = {}
 dekko.debug.stackTrace = true
 dekko.redis = {}
@@ -85,7 +86,7 @@ function dekko.ngx.headers(object)
 	  then k.et = dekko.cacheBrowser('etag', object.mhash .. dekko.redis.prefix.ETag)
 		   k.lm = dekko.cacheBrowser('lastmodified', object.mhash .. dekko.redis.prefix.lastModified)
 		   ngx.header["ETag"] = k.et
-	       ngx.header["last-modified"] = k.lm
+	       ngx.header["Last-modified"] = k.lm
 	   end
 
 	    if object.type == 'script'
@@ -289,23 +290,26 @@ function dekko.construct.modules(object)
 
 	local o = {}
 	local t = {}
-	local status, err = red:hmget(object.hash, object.module)
+	
+	t.module, err = red:hmget(object.hash, object.module)
+	t.module = t.module[1]
+	t.module = tostring(t.module)
 
-	t.str = tostring(status[1])
-	t.len = string.len(t.str)
 
-	  if (t.len <= 14) -- length 14 is empty data of redis
+	  if (string.len(t.module) <= 14) -- length 14 is empty data of redis
 	then dekko.exception.throw({
-			code = 112
+			code = 112,
+			type = 'script'
 
 		 })
 	end
 
+	t.hash = ngx.crc32_short(string.len(t.module))
+
 	o.header = object.header
 	o.domain = object.domain
-	o.json = t.str
-
-	-- red:close();
+	o.json = t.module
+	o.mhash = object.mhash .. ':' .. t.hash
 	return dekko.construct.message(o)
 end
 
@@ -379,12 +383,12 @@ function dekko.combine(o)
 	-- ngx.say(target)
 	  if target == false
 	then for host, port in pairs(dekko.redis.mapPool)
-		 do local status, err = red:connect(host, port)
-			   if status
-			 then rs.hostOnline = host .. ':' .. port
-			      target = true
-				  return dekko.ngx.rp:set(dekko.redis.prefix.redispool, rs.hostOnline)
-			  end
+		  do local status, err = red:connect(host, port)
+		   		if status
+			  then rs.hostOnline = host .. ':' .. port
+			       target = true
+				   return dekko.ngx.rp:set(dekko.redis.prefix.redispool, rs.hostOnline)
+			   end
 		 end
 	end
 
@@ -411,40 +415,10 @@ end
 -- route
 function dekko.route()
 	local opts = {}
-	local msg = {}
-	local em = {}
 	
-	-- t -> type (method: settings,modules)
-	-- c -> timestamp (click counter)
-	-- d -> domain name (method: settings,modules,counter)
-	-- m -> module name (method: settings,modules,counter)
-	-- f -> fingerprint (method: settings,modules,counter)
-
-		opts.domain = args.d
-		opts.fingerprint = tonumber(args.f)
-		opts.timestamp = tonumber(args.c)
-
-	-- route uri pages
-	-- if ngx.var.request_method == 'GET'
-	-- then
-	-- 	return ngx.say('32123')
-	-- end
-
-	 --   if ngx.var.request_method == 'OPTIONS'
-	 -- then dekko.ngx.headers({
-		-- 	domain = ngx.var.host
-		--  	})
-		--   return ngx.exit(204)
-	 --  end
-
-
-	  --   if #args == 0
-	  -- then return dekko.construct.message({
-		 --   		header = 'json',
-		 --   		json = '{}',
-		 --   		mhash = nil
-		 --    })
-	  --  end
+	opts.domain = args.d
+	opts.fingerprint = tonumber(args.f)
+	opts.timestamp = tonumber(args.c)
 
 	    if type(ngx.var.geoip_country_code) == 'string'
 	  then opts.lang = ngx.var.geoip_country_code
@@ -547,6 +521,19 @@ end
 function dekko.exception.catch()
 	return dekko.exception.message(exception)
 end
+
+-- local xx = {}
+-- local xt = {}
+-- xx.a = 1
+-- xx.b = 'fdsdf'
+
+-- xt.a = cjson.encode(xx)
+
+-- dekko.ngx.rp:set('dekko:test', xt.a)
+
+-- xt.b = dekko.ngx.rp:get('dekko:test')
+
+-- return ngx.say(xt.a)
 
 return xpcall(dekko.route, dekko.exception.catch)
 -- return ngx.say(ngx.var.uri)
