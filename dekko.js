@@ -2,7 +2,7 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.2.1 beta
+ * Version: 0.2.2 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -44,6 +44,13 @@
 			$ = jQuery;
 		}
 
+		var dcs = {};
+		dcs.uri = '/sa';
+		dcs.arr = doc.currentScript.src.split('/');
+		dcs.path = typeof dcs.arr[2] == 'string'
+			? dcs.arr[0] + '//' + dcs.arr[2] + dcs.uri
+			: dcs.uri;
+
 	} catch(e) {}
 
 	$.fn.dekko = function(url, options) {
@@ -60,9 +67,7 @@
 			revision			: 0, 					// this opt require incremental number and cache true (required if cache enabled)
 			cache				: true, 				// (optional)
 			verbose				: true, 				// (optional)
-			templateName		: 'default.js',			// (required)
 			modules				: [],					// (required if modulesUrl not defined)
-			adType				: '',					// (module advert type)
 			rotate				: false,				// (optional)
 			path				: ''
 		};
@@ -603,7 +608,7 @@
 				ajax.context		= self;
 				ajax.data 			= {
 					c: o.date.now(),
-					// d: w.location.hostname || w.location.host,
+					d: w.location.hostname || w.location.host,
 					m: o.name,
 					f: o.fingerPrint
 				};
@@ -697,7 +702,6 @@
 			},
 			log: function(e) {
 				console.info(e);
-				console.info('123');
 			}
 		};
 
@@ -867,8 +871,11 @@
 		});
 	}
 
+
+
+
 	// initialization and rendering
-	return $.fn.dekko('/sa', {
+	return $.fn.dekko(dcs.path, {
 		cache: (typeof doc.currentScript.dataset.cache !== 'undefined' && doc.currentScript.dataset.cache === "true")
 			? true
 			: false,

@@ -1,7 +1,7 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.2.0.1 beta
+-- Version: 0.2.2 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
@@ -315,11 +315,19 @@ end
 
 function dekko.construct.counter(object)
 	local msg = {}
+	local t = {}
 	msg.header = object.header
 	msg.json = '{}'
 	msg.mhash = nil
 
-	local res, err = red:hmset(object.hash.hosts, object.hash.hostkey, object.module)
+	t.name = object.module
+	t.geo = {}
+	t.geo.country = {}
+	t.geo.country.code = object.lang
+	t.geo.region = tonumber(ngx.var.region)
+	t.geo.clientIP = ngx.var.remote_addr
+
+	local res, err = red:hmset(object.hash.hosts, object.hash.hostkey, cjson.encode(t))
 	if not res
 	then dekko.exception.throw({
 			code = 109
@@ -379,8 +387,6 @@ function dekko.combine(o)
 		  end
 	end
 
-
-	-- ngx.say(target)
 	  if target == false
 	then for host, port in pairs(dekko.redis.mapPool)
 		  do local status, err = red:connect(host, port)
@@ -434,17 +440,17 @@ function dekko.route()
 	   end
 
 	-- get advert options URI: url?f=fingerprint
-	    if args.d ~= nil -- domain
-	   and args.m == nil -- !module
-	   and args.c == nil -- !click
+	    if args.d ~= nil 		-- domain
+	   and args.m == nil 		-- !module
+	   and args.c == nil 		-- !click
 	  then opts.route = 'settings'
 		   opts.header = 'json'
 		   opts.hash = opts.domain .. ':' .. dekko.redis.prefix.settings
 
 	-- get modules scripts widgets URI: url?f=fingerprint&m=module-name
-	elseif args.c == nil -- !click
-	   and args.d ~= nil -- domain
-	   and args.m ~= nil -- module
+	elseif args.c == nil 		-- !click
+	   and args.d ~= nil 		-- domain
+	   and args.m ~= nil 		-- module
 	  then opts.route = 'modules'
 		   opts.module = args.m
 		   opts.header = 'script'
@@ -453,15 +459,15 @@ function dekko.route()
 			
 	-- post click counter URI: url?c=timestamp&f=fingerprint&m=module-name
 	elseif opts.timestamp ~= nil -- timestamp click
-	   and args.d ~= nil -- domain
-	   and args.m ~= nil -- module
+	   and args.d ~= nil 		 -- domain
+	   and args.m ~= nil 		 -- module
 	  then opts.hash = {}
 		   opts.route = 'counter'
 		   opts.module = args.m
 		   opts.header = 'json'
 		   opts.hash.counter = opts.domain .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.clicks
-		   opts.hash.hosts = opts.domain .. ':' .. dekko.redis.prefix.counter .. ':' .. dekko.redis.prefix.hosts
-		   opts.hash.hostkey = ngx.var.remote_addr .. ':' .. opts.fingerprint .. ':' .. opts.timestamp
+		   opts.hash.hosts = opts.domain .. ':' .. dekko.redis.prefix.counter
+		   opts.hash.hostkey = opts.fingerprint .. ':' .. opts.timestamp
 
 	-- exception bad request
 	  else dekko.exception.throw({ code = 107 }) 
@@ -508,7 +514,7 @@ function dekko.exception.message(object)
 		then t.stack = object.stacktrace
 		 end
 
-		r = cjson.encode(t)
+		 r = cjson.encode(t)
 	end
 
 	object.domain = ngx.var.host
@@ -523,4 +529,3 @@ function dekko.exception.catch()
 end
 
 return xpcall(dekko.route, dekko.exception.catch)
-

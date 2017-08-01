@@ -115,14 +115,18 @@ geoip_country /usr/share/GeoIP/GeoIP.dat;
 
 
 server {
-	location = /dekko.json {
-		content_by_lua_file '/path/to/dekko.lua';
-	}
+    location = /dekko.json {
+        content_by_lua_file '/path/to/dekko.lua';
+    }
 }
 
 ```
 
 ### Changelog
+## [0.2.2](https://github.com/PavelPronskiy/dekko/tree/0.2.2) (2017-08-01)
+
+- fix bug uri '/sa'
+
 ## [0.2.1](https://github.com/PavelPronskiy/dekko/tree/0.2.1) (2017-07-26)
 
 **New options JSON structure**
@@ -151,5 +155,3 @@ server {
     0.0.8 beta - Added modulesUrl, removed required $.easing() plugin. Changed module template.
     0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
     0.0.6 beta - init version
-
-
