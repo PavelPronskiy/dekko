@@ -85,27 +85,21 @@
 			}
 		};
 
-		settings.fp = {
-			excludeFlashFonts: true
-		};
-
-		settings.regex = {
-			remote 				: /(^(https?|\/\/)|(\/|\.|\:))/gi,
-			host 				: /^(https?|\/\/)/,
-			dkm 				: /dekkoModule/
-		};
-
 		// chains
 		dekkoConstructor = {
-			
 			// verbose options
 			console: {
 				timeModule 		: 'module: ',
-				timeSeconds		: ', time',
+				timeSeconds		: ', load time',
 				totalTime 		: 'Total time load '
 			},
 			
-			// static prefix points
+			css: {
+					good: 'color:#fff;font-weight:normal;background-color: #066500;',
+					warning: 'color:#fff;font-weight:normal;background-color: #f60;',
+					error: 'color:#fff;font-weight:normal;background-color: #ba002b;',
+					clear: 'background-color: transparent;'
+			},			// static prefix points
 			storePoint: {
 				name 			: 'dekko:',
 				closed 			: ':closed',
@@ -115,11 +109,12 @@
 				p 				: ':',
 				s				: '/'
 			},
-			advertType: [
-				'banner', 'branding', 'popup', 'bar'
-			],
 			dateNow: function() {
 				return Math.round(new Date().getTime() / 1000);
+			},
+			dateNowISO: function() {
+				var date = new Date(this.dateNow()*1000);
+				return date.toISOString().match(/(\d{2}:\d{2}:\d{2})/);
 			},
 			dateToUnixTimeStamp: function(o) {
 				var d = new Date(o.split(' ').join('T'));
@@ -137,31 +132,6 @@
 			},
 			delStore: function(o) { // deprecated
 				return w.localStorage.removeItem(o);
-			},
-			setCookie: function(key, value) {
-				var expires = new Date(); // b64value
-				expires.setTime(expires.getTime() + (value * 24 * 60 * 60 * 1000));
-				document.cookie = key + '=' + JSON.stringify(value) + ';expires=' + expires.toUTCString();
-			},
-			getCookie: function(key) {
-				var mc = document.cookie.match('(^|;) ?' + key + '=([^;]*)(;|$)');
-				return mc
-					? mc[2]
-					: false;
-			},
-			decodeHex: function(o) {
-			    var s = '';
-			    for (var i = 0; i < o.length; i+=2) {
-			        s += String.fromCharCode(parseInt(o.substr(i, 2), 16));
-			    }
-			    return decodeURIComponent(escape(s));
-			},
-			encodeHex: function(o) {
-				var h = '';
-				for(var i=0; i<o.length; i++) {
-					h += ''+o.charCodeAt(i).toString(16);
-				}
-				return h;
 			},
 			isMobile: function() {
 				return (/Mobi/.test(w.navigator.userAgent))
@@ -230,72 +200,7 @@
 					: true;
 			},
 			
-			// check options and switch request to render
-			getModules: function(m, o) {
-				var self = this,
-					ajax = settings.ajax;
-				self.each(m, function(e, i) {
 
-					// check false
-					if (e === false)
-						return false;
-
-					// check time expire
-					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
-						return false;
-
-					// check mobile device and mobile params
-					if (self.isMobile() === true && e.mobile === false)
-						return false;
-						
-					// check closed
-					if (self.expire(e) === true)
-						return false;
-
-					// check store and return render
-					var localStore = self.getStore(e.storeName);
-					if (e.cache && localStore !== false)
-						return self.render(localStore, e);
-
-					ajax.url = (e.dataStore)
-						? e.ajaxUrl
-						: e.url;
-
-					ajax.crossDomain 		= false; // needed to jquery ajax crossDomain absolute path
-					ajax.crossOrigin		= true;
-					ajax.cache				= true;
-					ajax.dataType			= 'script';
-
-					if (e.dataStore)
-						ajax.data = {
-							d: e.domain,
-							// t: e.type,
-							m: e.name,
-							f: e.fingerPrint
-						};
-
-					ajax.error = function(o, a, c) {
-						console.log(c)
-						// return self.exceptionsMessage(o);
-					};
-					ajax.success = function(script,status,xhr) {
-
-						// check response mimetype
-						if (xhr.getResponseHeader('Content-Type') !== 'text/javascript')
-							return false;
-
-
-						// self.delStore(null, self.storePoint.module + e.name);
-						if (self.getStore(e.storeName) === false)
-							self.setStore(e.storeName, script);
-
-						return self.render(script, e);
-					};
-
-					// return console.log(ajax);
-					return self.ajax(ajax);
-				});
-			},
 			// object params build
 			constructParams: function(o) {
 				var self = this,
@@ -303,21 +208,20 @@
 					modules = [],
 					rotateModules = [],
 					routeModules,
-					ms = {},	
+					ms = {
+						rotates: [],
+						defaults: []
+					},
 			
 					object = (o.modules && o.modules.length > 0)
 						? o.modules
 						: false;
 	
-					
 				if (object === false)
 					return false;
 
-				if (o.verbose)
-					self.time(null, o.spm);
-
-				ms.rotates = [];
-				ms.defaults = [];
+/*				if (o.verbose)
+					self.time(null, o.spm);*/
 				self.each(object, function(e, i) {
 
 					module = {
@@ -338,8 +242,7 @@
 											self.storePoint.rev +
 											e.revision,
 
-						timePoint		: self.console.timeModule +
-											e.name +
+						timePoint		: e.name +
 											self.console.timeSeconds,
 
 						append			: typeof e.append !== 'undefined'
@@ -348,7 +251,6 @@
 												: e.append
 											: jQuery('body'),
 
-						dataStore		: o.dataStore,
 						spm				: o.spm,
 						
 						ajaxUrl			: typeof o.ajaxUrl == 'undefined'
@@ -365,7 +267,7 @@
 											? e.excludes
 											: [],
 
-						domain			: w.location.hostname || w.location.host,
+						domain			: o.domain,
 
 						mobile			: typeof e.mobile == 'object'
 											? e.mobile
@@ -385,32 +287,26 @@
 					module.closePoint = module.storeName +
 										self.storePoint.closed;
 
-					if (o.verbose)
-						self.time(module.timePoint, null);
-
-
-					if (module.rotate === true) {
+					if (module.rotate === true)
 						ms.rotates.push(module);
-					
-					} else {
+					else
 						ms.defaults.push(module);
-					}
-
 						
 				});
 
-				ms.randomize = self.rotateModules(ms.rotates, o);
-				ms.uniq = (ms.randomize.length > 0) ?
-					ms.defaults.concat(ms.randomize).filter(
-						function(item, index, array) {
-							// console.log(item);
-							return array.map(function(m){
-								return m['name'];
-							}).indexOf(item['name']) === index;
-				}) : ms.defaults;
 
-				// console.log(ms.uniq);
-				return self.getModules(ms.uniq, o);
+				if (ms.rotates > 0) {
+					ms.randomize = self.rotateModules(ms.rotates, o);
+					ms.modules = ms.defaults.concat(ms.randomize).filter(function(item, index, array) {
+						return array.map(function(m){
+							return m['name'];
+						}).indexOf(item['name']) === index;
+					});
+				} else {
+					ms.modules = ms.defaults;
+				}
+
+				return self.getModules(ms.modules, o);
 			},
 			// get random object
 			randModule: function(options, modules) {
@@ -472,62 +368,135 @@
 
 				return rl;
 			},
-			err: function(o) {
-				console.log('err');
-			},
 			// get object options
-			getOptions: function(e, o) {
+			getOptions: function(o) {
 				var	self = this,
 					ajax = settings.ajax,
-					data = {};
+					data = o;
 			
-				ajax.url 				= o.modules;
+				ajax.url 				= o.url;
 				ajax.cache 				= o.cache;
 				ajax.context 			= self;
 				ajax.data 				= {};
-				ajax.data.d		 		= w.location.hostname || w.location.host;
-				// ajax.data.t 			= o.type;
+				ajax.data.d		 		= o.domain;
 				ajax.data.f 			= o.fingerPrint;
 				ajax.crossDomain 		= false;
 
-
 				ajax.error = function(a,b,c) {
-
-					return console.warn(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
 				ajax.success = function(objects,status,xhr) {
 
-
 					if (self.exceptionsHandler(objects) === true)
-						return self.exceptionsMessage(objects)
+						return self.exceptionsMessage(objects);
 
 
 					data.modules 		= objects;
 					data.ajaxUrl 		= ajax.url;
-					// data.type 		= o.type;
 					data.fingerPrint 	= o.fingerPrint;
-					return self.modulesdekkoConstructor(e, data);
+					return self.constructParams(data);
 				};
 
 				return self.ajax(ajax);
 			},
+			// check options and switch request to render
+			getModules: function(m, o) {
+				var self = this,
+					ajax = settings.ajax;
+					ajax.crossDomain 		= false; // needed to jquery ajax crossDomain absolute path
+					ajax.crossOrigin		= true;
+					ajax.dataType			= 'script';
+
+				self.each(m, function(e, i) {
+
+					ajax.cache				= o.cache;
+					ajax.url = e.ajaxUrl;
+					ajax.data = {
+						d: e.domain,
+						m: e.name,
+						f: e.fingerPrint
+					};
+
+					// check false
+					if (e === false)
+						return false;
+
+					// check time expire
+					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
+						return false;
+
+					// check mobile device and mobile params
+					if (self.isMobile() === true && e.mobile === false)
+						return false;
+						
+					// check closed
+					if (self.expire(e) === true)
+						return false;
+
+					// check store and return render
+					if (e.cache && self.getStore(e.storeName) !== false)
+						return self.render(self.getStore(e.storeName), e);
+
+					if (e.verbose)
+						self.time(e.timePoint);
+
+					ajax.error = function(o, a, c) {
+						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
+					};
+					ajax.success = function(script,status,xhr) {
+						var exception = {};
+
+						// check response mimetype
+						if (xhr.getResponseHeader('Content-Type') !== 'text/javascript')
+							return false;
+
+						// check module length
+						if (script.length < 50) {
+							eval(script);
+
+							exception.message = message + ': ' + e.name;
+							exception.status = 'warning';
+							exception.date = self.dateNowISO();
+
+							return self.exceptionsMessage(exception);
+						}
+
+						if (e.cache && self.getStore(e.storeName) === false)
+							self.setStore(e.storeName, script);
+
+						return self.render(script, e);
+					};
+
+					// return console.log(ajax);
+					return self.ajax(ajax);
+				});
+			},
 			exceptionsMessage: function(o) {
-				var message = '[' + o.date + '] ' + this.storePoint.name + ' ' + o.message;
-				
+				// var message = '[' + o.date + '] ' + this.storePoint.name + ' ' + o.message + ', status: ' + o.status;
 				switch (o.status) {
 					case 'error':
-						console.group(message);
-						console.log(o.stack);
+						style = this.css.error;
+					break;
+					case 'warning':
+						style = this.css.warning;
 					break;
 					default:
+						style = this.css.warning;
 					break;
 				}
-				return console.groupEnd(message);
+
+
+				if (typeof o.stack === 'undefined') {
+					console.log('%c dekko.js %c ' + o.message, style, this.css.clear);
+				} else {
+					console.group('%c dekko.js %c ' + o.message, style, this.css.clear);
+					console.warn(o.stack);
+					console.groupEnd();
+				}
 
 			},
 			exceptionsHandler: function(o) {
 				var res = false;
-
 
 				if (typeof o.status === 'undefined')
 					res = false;
@@ -549,43 +518,19 @@
 			ajax: function(o) {
 				return $.ajax(o);
 			},
-			time: function(o, g) {
-				return (g)
-					? console.group(g)
-					: console.time(o);
+			time: function(o) {
+				var d = new Date();
+				this.n = d.getMilliseconds();
 			},
-			timeEnd: function(o, g) {
-				return (g)
-					? console.groupEnd(g)
-					: console.timeEnd(o);
+			timeEnd: function(o) {
+				return console.log('%c dekko.js %c ' + o + ': ' + this.n + 'ms', this.css.good, this.css.clear);
 			},
-			modulesdekkoConstructor: function (e, opts) {
+			modulesdekkoConstructor: function (opts) {
 				var self = this,
-					c,
-					point,
-					o = {},
-					optRev;
-
-				if (typeof opts.modules == 'string')
-					settings.app.path = self.parseUrl(opts.modules).prop('origin') + settings.app.path;
- 
-				opts.dataStore = (typeof url == 'string' && typeof opts == 'object')
-					? true
-					: false;
+					c, o = {};
 
 				o = $.extend(settings.app, opts);
-				// o.element = e;
-				
-				point = (o.ajaxUrl)
-					? o.ajaxUrl.replace(settings.regex.remote, '')
-					: typeof o.modules == 'string'
-						? o.modules.replace(settings.regex.remote, '')
-						: e.selector.replace(/(\.|\-)/gi, '');
-				
-				optRev = (typeof o.revision == 'number')
-						? self.storePoint.rev + o.revision
-						: '';
-					
+
 				o.spm = self.storePoint.name +
 						o.fingerPrint;
 
@@ -593,11 +538,7 @@
 						o.fingerPrint +
 						self.storePoint.prev;
 
-
-				return (typeof o.modules == 'string')
-					? self.getOptions(e, o)
-					: self.constructParams(o);
-			
+				return self.getOptions(o);
 			},
 			// for module clients click
 			clickAdvert: function(o) {
@@ -608,7 +549,7 @@
 				ajax.context		= self;
 				ajax.data 			= {
 					c: o.date.now(),
-					d: w.location.hostname || w.location.host,
+					d: o.domain,
 					m: o.name,
 					f: o.fingerPrint
 				};
@@ -674,6 +615,7 @@
 				return h1 >>> 0;
 			},
 			fingerPrint: function() {
+    
 				var self = this, k = [
 					w.navigator.userAgent,
 					w.navigator.language,
@@ -696,42 +638,25 @@
 						}).join(',');
 						return [p.name, p.description, mimeTypes].join('::');
 					}, this).join(';')
-				],
-				hash = self.murmurhash3_32_gc(k.join('###'), 31);
+				];
+
+				var hash = self.murmurhash3_32_gc(k.join('###'), 31);
 				return hash;
-			},
-			log: function(e) {
-				console.info(e);
 			}
 		};
 
 		try {
 
-			if (typeof w.navigator === 'undefined')
-				throw new Error('Browser not support variable navigator');
-
-			if (typeof w.localStorage == 'undefined')
-				throw new Error('Browser not support localStorage');
-
-			if (typeof url == 'string')
-				options.modules = url;
-
-			if (typeof url == 'object')
-				options = url;
-
 			if (typeof options !== 'object' && typeof options !== 'string')
 				return false;
 
-			if (Object.keys(options).length === 0 || options.modules === '')
-				return false;
-
+			options.url 			= url;
+			options.domain 			= w.location.hostname || w.location.host;
 			options.fingerPrint 	= dekkoConstructor.fingerPrint();
-			options.local 			= (typeof options.modules == 'object') ? true : false;
-
-			return dekkoConstructor.modulesdekkoConstructor($this, options);
+			return dekkoConstructor.modulesdekkoConstructor(options);
 
 		} catch (e) {
-			return dekkoConstructor.log(e);
+			return console.log(e);
 		}
 	};
 
@@ -871,19 +796,19 @@
 		});
 	}
 
-
-
-
 	// initialization and rendering
 	return $.fn.dekko(dcs.path, {
-		cache: (typeof doc.currentScript.dataset.cache !== 'undefined' && doc.currentScript.dataset.cache === "true")
-			? true
-			: false,
-		verbose: (typeof doc.currentScript.dataset.verbose !== 'undefined' && doc.currentScript.dataset.verbose === 'string')
-			? (doc.currentScript.dataset.verbose === "true")
-				? true
-				: false
-			: false
+		// Ajax cache and storageCache enabled by default.
+		// if you need to disable caching, please set data-cache="false" on script tag
+		cache: (doc.currentScript.dataset.cache === "false")
+			? false
+			: true,
+				
+		// Verbose messages on console is enabled by default.
+		// If you need to disable verbose messages, please set data-verbose="false" on script tag
+		verbose: (doc.currentScript.dataset.verbose === "false")
+			? false
+			: true
 	});
 
 })(window, document);

@@ -1,11 +1,11 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.2.2 beta
+-- Version: 0.2.3 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
--- Copyright (c) 2016 Dekko Pavel Pronskiy
+-- Copyright (c) 2016-2017 Dekko Pavel Pronskiy
 
 -- Permission is hereby granted, free of charge, to any person
 -- obtaining a copy of this software and associated documentation
@@ -45,6 +45,7 @@ dekko.construct = {}
 dekko.exception = {}
 dekko.protected = {}
 dekko.redis.timeout = 1000
+dekko.cacheBrowserAge = 86400
 
 dekko.redis.mapPool = {
 	["127.0.0.1"] = 6379,
@@ -65,29 +66,24 @@ dekko.redis.prefix = {
 	["clicks"] = "cs",
 	["counter"] = "cr",
 	["hosts"] = "hs",
-	["rev"] = "r",
+	["rev"] = "r"
 }
 
-function dekko.ngx.PolicyHeaders(object)
-	ngx.header["Access-Control-Allow-Origin"] = object.schemeDomain
+function dekko.ngx.accessControlHeader()
+	-- ngx.header["Access-Control-Allow-Origin"] = object.schemeDomain
+	ngx.header["Access-Control-Allow-Origin"] = '*'
 	ngx.header["Access-Control-Allow-Methods"] = "GET, OPTIONS"
 	ngx.header["Access-Control-Allow-Headers"] = "x-requested-with, Content-Type, origin, authorization, accept, client-security-token, If-None-Match, If-Modified-Since, Cache-Control"
 	ngx.header["Access-Control-Allow-Credentials"] = "true"
-	ngx.header["Access-Control-Max-Age"] = 864000
+	ngx.header["Access-Control-Max-Age"] = dekko.cacheBrowserAge
 end
 
 function dekko.ngx.headers(object)
 
 	local policy = {}
 	local k = {}
-	ngx.status = ngx.HTTP_OK
 
-	    if object.mhash ~= nil
-	  then k.et = dekko.cacheBrowser('etag', object.mhash .. dekko.redis.prefix.ETag)
-		   k.lm = dekko.cacheBrowser('lastmodified', object.mhash .. dekko.redis.prefix.lastModified)
-		   ngx.header["ETag"] = k.et
-	       ngx.header["Last-modified"] = k.lm
-	   end
+
 
 	    if object.type == 'script'
 	  then ngx.header["Content-Type"] = "text/javascript"
@@ -96,13 +92,23 @@ function dekko.ngx.headers(object)
 	  else ngx.header["Content-Type"] = "application/json"
 	   end
 
-	  if ngx.var.http_x_forwarded_proto ~= nil
-	then policy.schemeDomain = ngx.var.http_x_forwarded_proto .. '://' .. object.domain
-	else policy.schemeDomain = 'http://' .. object.domain
-	end
 
+
+	    if object.mhash ~= nil
+	  then k.et = dekko.cacheBrowser('etag', object.mhash .. dekko.redis.prefix.ETag)
+		   k.lm = dekko.cacheBrowser('lastmodified', object.mhash .. dekko.redis.prefix.lastModified)
+		   ngx.header["ETag"] = k.et
+	       ngx.header["Last-modified"] = k.lm
+	   end
+	--   if ngx.var.http_x_forwarded_proto ~= nil
+	-- then policy.schemeDomain = ngx.var.http_x_forwarded_proto .. '://' .. object.domain
+	-- else policy.schemeDomain = 'http://' .. object.domain
+	-- end
+
+
+	ngx.status = ngx.HTTP_OK
 	ngx.header["Cache-Control"] = "public"
-	return dekko.ngx.PolicyHeaders(policy)
+	return dekko.ngx.accessControlHeader()
 end
 
 -- split string 127.0.0.1:1234
@@ -321,6 +327,17 @@ function dekko.construct.counter(object)
 	msg.mhash = nil
 
 	t.name = object.module
+
+	  if (type(ngx.var.http_referer) ~= nil)
+	then t.referer = ngx.var.http_referer
+	else t.referer = ''
+	end
+
+	  if (type(ngx.var.http_user_agent) ~= nil)
+	then t.userAgent = ngx.var.http_user_agent
+	else t.userAgent = ''
+	end
+
 	t.geo = {}
 	t.geo.country = {}
 	t.geo.country.code = object.lang
@@ -528,4 +545,5 @@ function dekko.exception.catch()
 	return dekko.exception.message(exception)
 end
 
+-- return ngx.say(ngx.var.http_user_agent)
 return xpcall(dekko.route, dekko.exception.catch)

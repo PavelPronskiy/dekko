@@ -123,9 +123,16 @@ server {
 ```
 
 ### Changelog
+## [0.2.3](https://github.com/PavelPronskiy/dekko/tree/0.2.3) (2017-08-08)
+
+- bugfix infinite loop on
+- removed deprecated sources and over on dekko.js
+- optimizing dekko.js logic
+- new style and syntax console.log
+
 ## [0.2.2](https://github.com/PavelPronskiy/dekko/tree/0.2.2) (2017-08-01)
 
-- fix bug uri '/sa'
+- bugfix bug uri '/sa'
 
 ## [0.2.1](https://github.com/PavelPronskiy/dekko/tree/0.2.1) (2017-07-26)
 
