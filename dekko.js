@@ -295,9 +295,10 @@
 				});
 
 
-				if (ms.rotates > 0) {
+				if (ms.rotates.length > 0) {
 					ms.randomize = self.rotateModules(ms.rotates, o);
 					ms.modules = ms.defaults.concat(ms.randomize).filter(function(item, index, array) {
+						// console.log(item);
 						return array.map(function(m){
 							return m['name'];
 						}).indexOf(item['name']) === index;
