@@ -125,7 +125,7 @@ server {
 ### Changelog
 ## [0.2.3](https://github.com/PavelPronskiy/dekko/tree/0.2.3) (2017-08-08)
 
-- bugfix infinite loop on
+- bugfix infinite loop if server returned error. This bug fully fixed.
 - removed deprecated sources and over on dekko.js
 - optimizing dekko.js logic
 - new style and syntax console.log
