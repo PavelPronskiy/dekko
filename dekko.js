@@ -434,12 +434,12 @@
 					if (self.expire(e) === true)
 						return false;
 
+					if (e.verbose)
+						self.time(e.timePoint);
+
 					// check store and return render
 					if (e.cache && self.getStore(e.storeName) !== false)
 						return self.render(self.getStore(e.storeName), e);
-
-					if (e.verbose)
-						self.time(e.timePoint);
 
 					ajax.error = function(o, a, c) {
 						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
