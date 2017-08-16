@@ -32,6 +32,7 @@
  *
  *
  **/
+
 (function (w, doc) {
 
 	var $;
@@ -181,6 +182,48 @@
 
 		}
 
+		// additional support for older internet explorer browser versions
+		if ( window.XDomainRequest ) {
+			jQuery.ajaxTransport(function( s ) {
+				if ( s.crossDomain && s.async ) {
+					if ( s.timeout ) {
+						s.xdrTimeout = s.timeout;
+						delete s.timeout;
+					}
+					var xdr;
+					return {
+						send: function( _, complete ) {
+							function callback( status, statusText, responses, responseHeaders ) {
+								xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
+								xdr = undefined;
+								complete( status, statusText, responses, responseHeaders );
+							}
+							xdr = new XDomainRequest();
+							xdr.onload = function() {
+								callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
+							};
+							xdr.onerror = function() {
+								callback( 404, "Not Found" );
+							};
+							xdr.onprogress = jQuery.noop;
+							xdr.ontimeout = function() {
+								callback( 0, "timeout" );
+							};
+							xdr.timeout = s.xdrTimeout || Number.MAX_VALUE;
+							xdr.open( s.type, s.url );
+							xdr.send( ( s.hasContent && s.data ) || null );
+						},
+						abort: function() {
+							if ( xdr ) {
+								xdr.onerror = jQuery.noop;
+								xdr.abort();
+							}
+						}
+					};
+				}
+			});
+		}
+
 	} catch(e) {}
 
 
@@ -228,7 +271,9 @@
 				totalTime 		: 'Total time load '
 			},
 			regex: {
-				iso8601: /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d+)?([+-]\d{2})\:(\d{2})$/
+				iso8601: /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d+)?([+-]\d{2})\:(\d{2})$/,
+				ie: /Edge|MSIE|Trident/i,
+				mobile: /Mobi/
 			},
 			
 			css: {
@@ -257,10 +302,8 @@
 				var t = {};
 				t.p = new Date(o.replace(this.regex.iso8601, '$1'));
 				t.d = t.p.getTime() / 1000;
-
-
 				// var d = new Date(o.split(' ').join('T'));
-					// d = d.getTime() / 1000;
+				// d = d.getTime() / 1000;
 				return (t.d) ? t.d : false;
 			},
 			setStore: function(n, o) {
@@ -276,16 +319,14 @@
 				return w.localStorage.removeItem(o);
 			},
 			isMobile: function() {
-				return (/Mobi/.test(w.navigator.userAgent))
+				return (this.regex.mobile.test(w.navigator.userAgent))
 					? true
 					: false;
 			},
 			checkIE: function() {
-				var t = {
-					ua: w.navigator.userAgent,
-					regex: /Edge|MSIE|Trident/i
-				};
-				return t.regex.test(t.ua);
+				return (this.regex.ie.test(w.navigator.userAgent))
+					? true
+					: false;
 			},
 			each: function (obj, iterator, context) {
 				var nativeForEach = Array.prototype.forEach;
@@ -442,7 +483,6 @@
 						ms.defaults.push(module);
 
 
-
 				});
 
 
@@ -533,7 +573,9 @@
 				ajax.data 				= {};
 				ajax.data.d		 		= o.domain;
 				ajax.data.f 			= o.fingerPrint;
-				ajax.crossDomain 		= false;
+				ajax.crossDomain 		= true;
+				ajax.crossOrigin		= true;
+
 
 				ajax.error = function(a,b,c) {
 					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
@@ -556,9 +598,10 @@
 			getModules: function(m, o) {
 				var self = this,
 					ajax = settings.ajax;
-					ajax.crossDomain 		= false; // needed to jquery ajax crossDomain absolute path
+					ajax.crossDomain 		= true; // needed to jquery ajax crossDomain absolute path
 					ajax.crossOrigin		= true;
-					ajax.dataType			= 'script';
+					ajax.dataType			= (this.checkIE()) ? 'text' : 'script';
+					ajax.contentType 		= "text/javascript",
 
 				self.each(m, function(e, i) {
 					ajax.cache				= o.cache;
