@@ -115,14 +115,43 @@ geoip_country /usr/share/GeoIP/GeoIP.dat;
 
 
 server {
-    location = /dekko.json {
-        content_by_lua_file '/path/to/dekko.lua';
-    }
+
+  location / {
+  	if ($request_method = OPTIONS) {
+  		add_header 'Access-Control-Allow-Origin' '*';
+  		add_header 'Access-Control-Allow-Credentials' 'true';
+  		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+  		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+  		add_header 'Access-Control-Max-Age' '864000';
+  		add_header Content-Length 0;
+  		add_header Content-Type text/plain;
+  		return 204;
+  	}
+  	expires max;
+  }
+
+  location = /sa {
+  	if ($request_method = OPTIONS) {
+  		add_header 'Access-Control-Allow-Origin' '*';
+  		add_header 'Access-Control-Allow-Credentials' 'true';
+  		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+  		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+  		add_header 'Access-Control-Max-Age' '864000';
+  		add_header Content-Length 0;
+  		add_header Content-Type text/plain;
+  		return 204;
+  	}
+    content_by_lua_file '/path/to/dekko.lua';
+  }
 }
 
 ```
 
 ### Changelog
+## [0.2.4](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-16)
+
+- Support compatible Internet Explorer >=8
+
 ## [0.2.3](https://github.com/PavelPronskiy/dekko/tree/0.2.3) (2017-08-08)
 
 - bugfix infinite loop if server returned error. This bug fully fixed.
