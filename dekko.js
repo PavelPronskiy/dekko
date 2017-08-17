@@ -828,7 +828,12 @@
 					o = {};
 
 				t.s = doc.getElementsByTagName('script');
-				t.d = t.s[t.s.length - 1];
+				// t.d = t.s[t.s.length - 1]; <-- bug found
+
+				for (var i = 0;i < t.s.length;i++)
+					if (/dekko\.(min\.)?js$/i.test(t.s[i].src))
+						t.d = t.s[i];
+				
 
 				// Ajax cache and storageCache enabled by default.
 				// if you need to disable caching, please set data-cache="false" on script tag
