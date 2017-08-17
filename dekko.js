@@ -35,194 +35,192 @@
 
 (function (w, doc) {
 
-	var $;
-
 	try {
 		if (typeof jQuery === 'undefined') {
 			console.error('Dekko need jQuery library');
 			return false;
-		} else {
-			$ = jQuery;
-
-			if (!$.easing.def) {
-				$.easing['jswing'] = $.easing['swing'];
-				$.extend( $.easing,
-				{
-					def: 'easeOutQuad',
-					swing: function (x, t, b, c, d) {
-						//alert(jQuery.easing.default);
-						return $.easing[$.easing.def](x, t, b, c, d);
-					},
-					easeInQuad: function (x, t, b, c, d) {
-						return c*(t/=d)*t + b;
-					},
-					easeOutQuad: function (x, t, b, c, d) {
-						return -c *(t/=d)*(t-2) + b;
-					},
-					easeInOutQuad: function (x, t, b, c, d) {
-						if ((t/=d/2) < 1) return c/2*t*t + b;
-						return -c/2 * ((--t)*(t-2) - 1) + b;
-					},
-					easeInCubic: function (x, t, b, c, d) {
-						return c*(t/=d)*t*t + b;
-					},
-					easeOutCubic: function (x, t, b, c, d) {
-						return c*((t=t/d-1)*t*t + 1) + b;
-					},
-					easeInOutCubic: function (x, t, b, c, d) {
-						if ((t/=d/2) < 1) return c/2*t*t*t + b;
-						return c/2*((t-=2)*t*t + 2) + b;
-					},
-					easeInQuart: function (x, t, b, c, d) {
-						return c*(t/=d)*t*t*t + b;
-					},
-					easeOutQuart: function (x, t, b, c, d) {
-						return -c * ((t=t/d-1)*t*t*t - 1) + b;
-					},
-					easeInOutQuart: function (x, t, b, c, d) {
-						if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
-						return -c/2 * ((t-=2)*t*t*t - 2) + b;
-					},
-					easeInQuint: function (x, t, b, c, d) {
-						return c*(t/=d)*t*t*t*t + b;
-					},
-					easeOutQuint: function (x, t, b, c, d) {
-						return c*((t=t/d-1)*t*t*t*t + 1) + b;
-					},
-					easeInOutQuint: function (x, t, b, c, d) {
-						if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
-						return c/2*((t-=2)*t*t*t*t + 2) + b;
-					},
-					easeInSine: function (x, t, b, c, d) {
-						return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
-					},
-					easeOutSine: function (x, t, b, c, d) {
-						return c * Math.sin(t/d * (Math.PI/2)) + b;
-					},
-					easeInOutSine: function (x, t, b, c, d) {
-						return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
-					},
-					easeInExpo: function (x, t, b, c, d) {
-						return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
-					},
-					easeOutExpo: function (x, t, b, c, d) {
-						return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
-					},
-					easeInOutExpo: function (x, t, b, c, d) {
-						if (t==0) return b;
-						if (t==d) return b+c;
-						if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
-						return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
-					},
-					easeInCirc: function (x, t, b, c, d) {
-						return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
-					},
-					easeOutCirc: function (x, t, b, c, d) {
-						return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
-					},
-					easeInOutCirc: function (x, t, b, c, d) {
-						if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
-						return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
-					},
-					easeInElastic: function (x, t, b, c, d) {
-						var s=1.70158;var p=0;var a=c;
-						if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-						if (a < Math.abs(c)) { a=c; var s=p/4; }
-						else var s = p/(2*Math.PI) * Math.asin (c/a);
-						return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-					},
-					easeOutElastic: function (x, t, b, c, d) {
-						var s=1.70158;var p=0;var a=c;
-						if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-						if (a < Math.abs(c)) { a=c; var s=p/4; }
-						else var s = p/(2*Math.PI) * Math.asin (c/a);
-						return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
-					},
-					easeInOutElastic: function (x, t, b, c, d) {
-						var s=1.70158;var p=0;var a=c;
-						if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
-						if (a < Math.abs(c)) { a=c; var s=p/4; }
-						else var s = p/(2*Math.PI) * Math.asin (c/a);
-						if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-						return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
-					},
-					easeInBack: function (x, t, b, c, d, s) {
-						if (s == undefined) s = 1.70158;
-						return c*(t/=d)*t*((s+1)*t - s) + b;
-					},
-					easeOutBack: function (x, t, b, c, d, s) {
-						if (s == undefined) s = 1.70158;
-						return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
-					},
-					easeInOutBack: function (x, t, b, c, d, s) {
-						if (s == undefined) s = 1.70158; 
-						if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
-						return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
-					},
-					easeInBounce: function (x, t, b, c, d) {
-						return c - $.easing.easeOutBounce (x, d-t, 0, c, d) + b;
-					},
-					easeOutBounce: function (x, t, b, c, d) {
-						if ((t/=d) < (1/2.75)) {
-							return c*(7.5625*t*t) + b;
-						} else if (t < (2/2.75)) {
-							return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
-						} else if (t < (2.5/2.75)) {
-							return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
-						} else {
-							return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
-						}
-					},
-					easeInOutBounce: function (x, t, b, c, d) {
-						if (t < d/2) return $.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
-						return $.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
-					}
-				});
-			}
-
 		}
 
-		// additional support for older internet explorer browser versions
-		if ( window.XDomainRequest ) {
-			jQuery.ajaxTransport(function( s ) {
-				if ( s.crossDomain && s.async ) {
-					if ( s.timeout ) {
-						s.xdrTimeout = s.timeout;
-						delete s.timeout;
+		var $ = jQuery;
+
+		if (!jQuery.easing.def) {
+			jQuery.easing['jswing'] = jQuery.easing['swing'];
+			jQuery.extend( jQuery.easing,
+			{
+				def: 'easeOutQuad',
+				swing: function (x, t, b, c, d) {
+					//alert(jQuery.easing.default);
+					return jQuery.easing[jQuery.easing.def](x, t, b, c, d);
+				},
+				easeInQuad: function (x, t, b, c, d) {
+					return c*(t/=d)*t + b;
+				},
+				easeOutQuad: function (x, t, b, c, d) {
+					return -c *(t/=d)*(t-2) + b;
+				},
+				easeInOutQuad: function (x, t, b, c, d) {
+					if ((t/=d/2) < 1) return c/2*t*t + b;
+					return -c/2 * ((--t)*(t-2) - 1) + b;
+				},
+				easeInCubic: function (x, t, b, c, d) {
+					return c*(t/=d)*t*t + b;
+				},
+				easeOutCubic: function (x, t, b, c, d) {
+					return c*((t=t/d-1)*t*t + 1) + b;
+				},
+				easeInOutCubic: function (x, t, b, c, d) {
+					if ((t/=d/2) < 1) return c/2*t*t*t + b;
+					return c/2*((t-=2)*t*t + 2) + b;
+				},
+				easeInQuart: function (x, t, b, c, d) {
+					return c*(t/=d)*t*t*t + b;
+				},
+				easeOutQuart: function (x, t, b, c, d) {
+					return -c * ((t=t/d-1)*t*t*t - 1) + b;
+				},
+				easeInOutQuart: function (x, t, b, c, d) {
+					if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+					return -c/2 * ((t-=2)*t*t*t - 2) + b;
+				},
+				easeInQuint: function (x, t, b, c, d) {
+					return c*(t/=d)*t*t*t*t + b;
+				},
+				easeOutQuint: function (x, t, b, c, d) {
+					return c*((t=t/d-1)*t*t*t*t + 1) + b;
+				},
+				easeInOutQuint: function (x, t, b, c, d) {
+					if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+					return c/2*((t-=2)*t*t*t*t + 2) + b;
+				},
+				easeInSine: function (x, t, b, c, d) {
+					return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+				},
+				easeOutSine: function (x, t, b, c, d) {
+					return c * Math.sin(t/d * (Math.PI/2)) + b;
+				},
+				easeInOutSine: function (x, t, b, c, d) {
+					return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+				},
+				easeInExpo: function (x, t, b, c, d) {
+					return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+				},
+				easeOutExpo: function (x, t, b, c, d) {
+					return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+				},
+				easeInOutExpo: function (x, t, b, c, d) {
+					if (t==0) return b;
+					if (t==d) return b+c;
+					if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+					return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+				},
+				easeInCirc: function (x, t, b, c, d) {
+					return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+				},
+				easeOutCirc: function (x, t, b, c, d) {
+					return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+				},
+				easeInOutCirc: function (x, t, b, c, d) {
+					if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+					return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+				},
+				easeInElastic: function (x, t, b, c, d) {
+					var s=1.70158;var p=0;var a=c;
+					if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+					if (a < Math.abs(c)) { a=c; var s=p/4; }
+					else var s = p/(2*Math.PI) * Math.asin (c/a);
+					return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+				},
+				easeOutElastic: function (x, t, b, c, d) {
+					var s=1.70158;var p=0;var a=c;
+					if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+					if (a < Math.abs(c)) { a=c; var s=p/4; }
+					else var s = p/(2*Math.PI) * Math.asin (c/a);
+					return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+				},
+				easeInOutElastic: function (x, t, b, c, d) {
+					var s=1.70158;var p=0;var a=c;
+					if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+					if (a < Math.abs(c)) { a=c; var s=p/4; }
+					else var s = p/(2*Math.PI) * Math.asin (c/a);
+					if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+					return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+				},
+				easeInBack: function (x, t, b, c, d, s) {
+					if (s == undefined) s = 1.70158;
+					return c*(t/=d)*t*((s+1)*t - s) + b;
+				},
+				easeOutBack: function (x, t, b, c, d, s) {
+					if (s == undefined) s = 1.70158;
+					return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+				},
+				easeInOutBack: function (x, t, b, c, d, s) {
+					if (s == undefined) s = 1.70158; 
+					if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+					return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+				},
+				easeInBounce: function (x, t, b, c, d) {
+					return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+				},
+				easeOutBounce: function (x, t, b, c, d) {
+					if ((t/=d) < (1/2.75)) {
+						return c*(7.5625*t*t) + b;
+					} else if (t < (2/2.75)) {
+						return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+					} else if (t < (2.5/2.75)) {
+						return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+					} else {
+						return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
 					}
-					var xdr;
-					return {
-						send: function( _, complete ) {
-							function callback( status, statusText, responses, responseHeaders ) {
-								xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
-								xdr = undefined;
-								complete( status, statusText, responses, responseHeaders );
-							}
-							xdr = new XDomainRequest();
-							xdr.onload = function() {
-								callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
-							};
-							xdr.onerror = function() {
-								callback( 404, "Not Found" );
-							};
-							xdr.onprogress = jQuery.noop;
-							xdr.ontimeout = function() {
-								callback( 0, "timeout" );
-							};
-							xdr.timeout = s.xdrTimeout || Number.MAX_VALUE;
-							xdr.open( s.type, s.url );
-							xdr.send( ( s.hasContent && s.data ) || null );
-						},
-						abort: function() {
-							if ( xdr ) {
-								xdr.onerror = jQuery.noop;
-								xdr.abort();
-							}
-						}
-					};
+				},
+				easeInOutBounce: function (x, t, b, c, d) {
+					if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+					return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
 				}
 			});
 		}
+
+
+	// additional support for older internet explorer browser versions
+	if ( window.XDomainRequest ) {
+		jQuery.ajaxTransport(function( s ) {
+			if ( s.crossDomain && s.async ) {
+				if ( s.timeout ) {
+					s.xdrTimeout = s.timeout;
+					delete s.timeout;
+				}
+				var xdr;
+				return {
+					send: function( _, complete ) {
+						function callback( status, statusText, responses, responseHeaders ) {
+							xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
+							xdr = undefined;
+							complete( status, statusText, responses, responseHeaders );
+						}
+						xdr = new XDomainRequest();
+						xdr.onload = function() {
+							callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
+						};
+						xdr.onerror = function() {
+							callback( 404, "Not Found" );
+						};
+						xdr.onprogress = jQuery.noop;
+						xdr.ontimeout = function() {
+							callback( 0, "timeout" );
+						};
+						xdr.timeout = s.xdrTimeout || Number.MAX_VALUE;
+						xdr.open( s.type, s.url );
+						xdr.send( ( s.hasContent && s.data ) || null );
+					},
+					abort: function() {
+						if ( xdr ) {
+							xdr.onerror = jQuery.noop;
+							xdr.abort();
+						}
+					}
+				};
+			}
+		});
+	}
 
 	} catch(e) {}
 
@@ -323,11 +321,7 @@
 					? true
 					: false;
 			},
-			checkIE: function() {
-				return (this.regex.ie.test(w.navigator.userAgent))
-					? true
-					: false;
-			},
+			
 			each: function (obj, iterator, context) {
 				var nativeForEach = Array.prototype.forEach;
 				
@@ -357,6 +351,11 @@
 					results[results.length] = iterator.call(context, value, index, list);
 				});
 				return results;
+			},
+			mergeOptions: function(destination,source) {
+				for (var property in source)
+					destination[property] = source[property];
+				return destination;
 			},
 			// callback final
 			render: function(s, o) {
@@ -406,11 +405,9 @@
 					object = (o.modules && o.modules.length > 0)
 						? o.modules
 						: false;
-	
 
 				if (object === false)
 					return false;
-
 
 				self.each(object, function(e, i) {
 
@@ -562,10 +559,14 @@
 				return rl;
 			},
 			// get object options
-			getOptions: function(o) {
+			getOptions: function() {
 				var	self = this,
-					ajax = settings.ajax,
-					data = o;
+					ajax = settings.ajax;
+
+				var c 	= this.getDekkoParams();
+				var o 	= this.mergeOptions(settings.app, c);
+				o.spm 	= this.storePoint.name + o.fingerPrint;
+				o.ppm 	= this.storePoint.name + o.fingerPrint + this.storePoint.prev;
 			
 				ajax.url 				= o.url;
 				ajax.cache 				= o.cache;
@@ -576,17 +577,16 @@
 				ajax.crossDomain 		= true;
 				ajax.crossOrigin		= true;
 
-
 				ajax.error = function(a,b,c) {
 					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 				};
-				ajax.success = function(objects,status,xhr) {
+				ajax.success = function(json,status,xhr) {
 
-					if (self.exceptionsHandler(objects) === true)
-						return self.exceptionsMessage(objects);
+					if (self.exceptionsHandler(json) === true)
+						return self.exceptionsMessage(json);
 
-
-					data.modules 		= objects;
+					var data 			= o;
+					data.modules 		= json;
 					data.ajaxUrl 		= ajax.url;
 					data.fingerPrint 	= o.fingerPrint;
 					return self.constructParams(data);
@@ -598,9 +598,9 @@
 			getModules: function(m, o) {
 				var self = this,
 					ajax = settings.ajax;
-					ajax.crossDomain 		= true; // needed to jquery ajax crossDomain absolute path
+					ajax.crossDomain 		= (this.detectIEBrowser) ? true : false; // needed to jquery ajax crossDomain absolute path
 					ajax.crossOrigin		= true;
-					ajax.dataType			= (this.checkIE()) ? 'text' : 'script';
+					ajax.dataType			= (this.detectIEBrowser) ? 'text' : 'script';
 					ajax.contentType 		= "text/javascript",
 
 				self.each(m, function(e, i) {
@@ -620,7 +620,6 @@
 					if (e.date.now() < e.date.start || e.date.now() > e.date.end)
 						return false;
 
-
 					// check mobile device and mobile params
 					if (self.isMobile() === true && e.mobile === false)
 						return false;
@@ -636,6 +635,7 @@
 					if (e.cache && self.getStore(e.storeName) !== false)
 						return self.render(self.getStore(e.storeName), e);
 
+
 					ajax.error = function(o, a, c) {
 						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 					};
@@ -643,14 +643,12 @@
 						var exception = {};
 
 						// check response mimetype
-						if (xhr.getResponseHeader('Content-Type') !== 'text/javascript')
-							return false;
+						// if (xhr.getResponseHeader('Content-Type') !== 'text/javascript')
+							// return false;
 
 						// check module length
 						if (script.length < 50) {
-							eval(script);
-
-							exception.message = message + ': ' + e.name;
+							exception.message = 'Module not found' + ': ' + e.name;
 							exception.status = 'warning';
 							exception.date = self.dateNowISO();
 
@@ -659,6 +657,7 @@
 
 						if (e.cache && self.getStore(e.storeName) === false)
 							self.setStore(e.storeName, script);
+
 
 						return self.render(script, e);
 					};
@@ -677,14 +676,14 @@
 
 				if (typeof o.stack === 'undefined') {
 					
-					if (this.checkIE())
+					if (this.detectIEBrowser)
 						console.log(o.message);
 					else
 						console.log('%c dekko.js %c ' + o.message, style, this.css.clear);
 
 				} else {
 
-					if (this.checkIE()) {
+					if (this.detectIEBrowser) {
 						console.log(o.message);
 						console.log(o.stack);
 					} else {
@@ -715,33 +714,18 @@
 				throw new Error(msg);
 			},
 			ajax: function(o) {
-				return $.ajax(o);
+				return jQuery.ajax(o);
 			},
 			time: function(o) {
 				var d = new Date();
 				this.n = d.getMilliseconds();
 			},
 			timeEnd: function(o) {
-
-				if (this.checkIE())
+				
+				if (this.detectIEBrowser)
 					return console.log(o + ': ' + this.n + 'ms');
 				else
 					return console.log('%c dekko.js %c ' + o + ': ' + this.n + 'ms', this.css.good, this.css.clear);
-			},
-			modulesdekkoConstructor: function (opts) {
-				var self = this,
-					c, o = {};
-
-				o = $.extend(settings.app, opts);
-
-				o.spm = self.storePoint.name +
-						o.fingerPrint;
-
-				o.ppm = self.storePoint.name +
-						o.fingerPrint +
-						self.storePoint.prev;
-
-				return self.getOptions(o);
 			},
 			// for module clients click
 			clickAdvert: function(o) {
@@ -765,10 +749,6 @@
 				};
 				
 				return self.ajax(ajax);
-			},
-			parseUrl: function(u) {
-				var a = $('<a>', { href: u });
-				return a;
 			},
 			murmurhash3_32_gc: function(key, seed) {
 				var remainder, bytes, h1, h1b, c1, c2, k1, i;
@@ -818,8 +798,8 @@
 				return h1 >>> 0;
 			},
 			fingerPrint: function() {
-    
-				var self = this, k = [
+				var self = this;
+				return this.murmurhash3_32_gc([
 					w.navigator.userAgent,
 					w.navigator.language,
 					screen.colorDepth,
@@ -835,16 +815,13 @@
 					w.navigator.cpuClass,
 					w.navigator.platform,
 					w.navigator.doNotTrack,
-					self.map(w.navigator.plugins, function (p) {
+					this.map(w.navigator.plugins, function (p) {
 						var mimeTypes = self.map(p, function(mt) {
 							return [mt.type, mt.suffixes].join('~');
 						}).join(',');
 						return [p.name, p.description, mimeTypes].join('::');
 					}, this).join(';')
-				];
-
-				var hash = self.murmurhash3_32_gc(k.join('###'), 31);
-				return hash;
+				].join('###'), 31);
 			},
 			getDekkoParams: function() {
 				var t = {},
@@ -869,6 +846,8 @@
 
 				o.domain 			= w.location.hostname || w.location.host;
 				o.fingerPrint 		= this.fingerPrint();
+
+				this.detectIEBrowser = this.regex.ie.test(w.navigator.userAgent) ? true : false;
 				return o;
 
 			}
@@ -876,8 +855,7 @@
 
 		try {
 
-			var options = dekkoConstructor.getDekkoParams();
-			return dekkoConstructor.modulesdekkoConstructor(options);
+			return dekkoConstructor.getOptions();
 
 		} catch (e) {
 			return console.log(e);
