@@ -1,14 +1,9 @@
 {
-  "geoTargeting":[88,77,32,50,333,334],
   "type": "banner",
   "rotate": "true",
   "append": "#banner-left-side",
   "revision": 105,
-  "url": "/3321/12321.html",
-  "excludes": [
-    "/your/link-not-viewed.html",
-    "/your/link-not-viewed2.html"
-  ],
+  "url": "/target/click.html",
   "delay": 500,
   "closeExpire": 2,
   "images": {

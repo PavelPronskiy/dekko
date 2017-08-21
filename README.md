@@ -148,6 +148,12 @@ server {
 ```
 
 ### Changelog
+## [0.2.5](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-21)
+
+- Added svg close button
+- Removed old methods in dekko.js
+- Modules popup and banner updates
+
 ## [0.2.4](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-16)
 
 - Support compatible Internet Explorer >=8

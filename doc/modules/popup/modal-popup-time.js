@@ -1,5 +1,5 @@
 /**
- * updated ver 0.19 with countdown
+ * updated ver 0.20 with countdown
  * popup element template
 **/
 (function ($) {
@@ -133,7 +133,7 @@
 				'z-index' 				: '999999',
 				'cursor' 				: 'default',
 				// 'cursor' 				: 'pointer',
-				'background' 			: "url('" + object.images.background + "') no-repeat left top",
+				// 'background' 			: " no-repeat left top",
 				// 'background' 			: 'url(' + object.path + '/bg.gif) no-repeat left top',
 				'-webkit-box-shadow' 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 				'-moz-box-shadow' 		: '0px 0px 10px rgba(50, 50, 50, 0.6)',
@@ -155,12 +155,17 @@
 			body: {
 				'position' 				: 'relative',
 				'width' 				: '100%',
-				'height' 				: '290px',
+				'height' 				: '100%',
+				// 'height' 				: '290px',
 				// 'outline' 				: '1px solid red',
 				'padding'				: '0px',
 				'margin'				: '0',
 				'text-align' 			: 'center',
 				'color' 				: '#fff',
+				'-webkit-perspective' 	: '800px',
+				'-moz-perspective' 		: '800px',
+				'-o-perspective' 		: '800px',
+				'perspective' 			: '800px',
 				'font-size' 			: '12pt'
 
 			},
@@ -275,33 +280,75 @@
 			}
 		};
 
+		self.parse = {
+			px: function(o) {
+				return parseInt(o.replace(/px/gi,''), 10);
+			}
+		};
+
 
 	try {
 
 		// console.log(object.date.end + ' ' + date.now());
 
-		t.widthAnim 			= parseInt(css.wrap.width.replace(/px/gi,''), 10);
-		t.heightAnim 			= parseInt(css.wrap.height.replace(/px/gi,''), 10);
-		t.horizOpts 			= (object.item.position.left) ? parseInt(object.item.position.left.replace(/px/gi,''), 10) : parseInt(object.item.position.right.replace(/px/gi,''), 10);
-		t.vertOpts 				= (object.item.position.bottom) ? parseInt(object.item.position.bottom.replace(/px/gi,''), 10) : parseInt(object.item.position.top.replace(/px/gi,''), 10);
-		t.posWrapHorizStart 	= (object.item.position.left) ? { 'left': '-' + css.wrap.width } : { 'right': '-' + css.wrap.width };
-		t.posWrapVertStart		= (object.item.position.bottom) ? { 'bottom': '-' + css.wrap.height } : { 'top': '-' + css.wrap.height };
-		t.posWrapHorizAnimate 	= (object.item.position.left) ? { 'left': '+=' + ( t.widthAnim + t.horizOpts ) + 'px' } : { 'right': '+=' + ( t.widthAnim + t.horizOpts ) + 'px' };
-		t.posWrapVertAnimate 	= (object.item.position.bottom) ? { 'bottom': '+=' + ( t.heightAnim + t.vertOpts ) + 'px' } : { 'top': '+=' + ( t.heightAnim + t.vertOpts ) + 'px' };
-		t.wrap 					= $('<div/>', { id: object.name + '-wrap' }).css(css.wrap);
-		t.item 					= $('<div/>', { id: object.name + '-item' }).css(css.item);
-		t.head	 				= $('<div/>', { id: object.name + '-head' }).css(css.head);
-		t.body	 				= $('<div/>', { id: object.name + '-body' }).css(css.body); //.html(object.item.context);
+		t.width 				= self.parse.px(css.wrap.width);
+		t.height 				= self.parse.px(css.wrap.height);
 
-		t.link	 				= $('<a/>', { id: object.name + '-link', href: object.item.url, target: '_blank' }).css(css.link.normal);
+		t.horizOpts 			= (object.item.position.left)
+									? self.parse.px(object.item.position.left)
+									: self.parse.px(object.item.position.right);
 
-		t.close		 			= $('<a/>', { id: object.name + '-close' }).css(css.close.normal);
+		t.vertOpts 				= (object.item.position.bottom)
+									? self.parse.px(object.item.position.bottom)
+									: self.parse.px(object.item.position.top);
+
+
+		t.posWrapHorizStart 	= (object.item.position.left)
+									? {
+										'left': '-' + t.width + 'px'
+									}
+									: {
+										'right': '-' + t.width + 'px'
+									};
+
+		t.posWrapVertStart		= (object.item.position.bottom)
+									? {
+										'bottom': '-' + t.height + 'px'
+									}
+									: {
+										'top': '-' + t.height + 'px'
+									};
+
+		t.posWrapHorizAnimate 	= (object.item.position.left)
+									? {
+										'left': '+=' + ( t.widthAnim + t.horizOpts ) + 'px'
+									}
+									: {
+										'right': '+=' + ( t.widthAnim + t.horizOpts ) + 'px'
+									};
+
+		t.posWrapVertAnimate 	= (object.item.position.bottom)
+									? {
+										'bottom': '+=' + ( t.heightAnim + t.vertOpts ) + 'px'
+									}
+									: {
+										'top': '+=' + ( t.heightAnim + t.vertOpts ) + 'px'
+									};
+
 		t.animPosOpts 			= $.extend(t.posWrapVertAnimate, t.posWrapHorizAnimate);
 		t.wrapPosOpts 			= $.extend(t.posWrapVertStart, t.posWrapHorizStart);
+		t.wrapCss				= $.extend(css.wrap, t.wrapPosOpts, {'display': 'block'});
+
+		t.wrap 					= $('<div/>', { 'id': object.name + '-wrap', 'css': t.wrapCss });
+		t.item 					= $('<div/>', { 'id': object.name + '-item', 'css': css.item });
+		t.head	 				= $('<div/>', { 'id': object.name + '-head', 'css': css.head });
+		t.body	 				= $('<div/>', { 'id': object.name + '-body', 'css': css.body }); //.html(object.item.context);
+		t.link	 				= $('<a/>',   { 'id': object.name + '-link', 'href': object.item.url, 'target': '_blank', 'css': css.link.normal });
+		t.close		 			= $('<a/>', { 'id': object.name + '-close', 'css': css.close.normal });
 
 		// timer countdown
-		t.timerBg				= $('<div/>', { id: object.name + '-timer-bg' }).css(css.timer.bg); //.html(object.item.context);
-		t.timerText				= $('<div/>', { id: object.name + '-timer-text' }).css(css.timer.text); //.html(object.item.context);
+		t.timerBg				= $('<div/>', { 'id': object.name + '-timer-bg', 'css': css.timer.bg }); //.html(object.item.context);
+		t.timerText				= $('<div/>', { 'id': object.name + '-timer-text', 'css': css.timer.text }); //.html(object.item.context);
 		t.timerBg.appendTo(t.wrap);
 		t.timerText.appendTo(t.timerBg);
 
@@ -312,24 +359,25 @@
 		// t.item.appendTo(t.wrap);
 
 
-		t.wrap.css(t.wrapPosOpts).delay(object.item.delay).show();
+		// t.wrap.css(t.wrapPosOpts).delay(object.item.delay).show();
 
 
 		t.close.hover(
 			function() { $(this).css(css.close.hover); },
 			function() { $(this).css(css.close.normal); }
 		).click(function() {
-			t.wrap.animate(t.posWrapHorizStart, object.item.effects.duration, object.item.effects.easing[1], function() {
-				self.setStore(object.closePoint, [true, object.date.now()]);
+			t.wrap.animate(t.posWrapHorizStart, (object.item.effects.duration/2), object.item.effects.easing[1], function() {
 				$(this).remove();
 			});
+			return self.setStore(object.closePoint, [true, object.date.now()]);
 		});
 		
 		
-		t.wrap.animate(t.animPosOpts, object.item.effects.duration, object.item.effects.easing[0], function() {
+		t.wrap.delay(object.item.delay).animate(t.animPosOpts, object.item.effects.duration, object.item.effects.easing[0], function() {
 			$(this).css(object.item.position);
 		});
 
+		// t.wrap.delay(object.item.delay).show();
 
 		t.link.on('touchstart click', function() {
 			return self.clickAdvert(object);

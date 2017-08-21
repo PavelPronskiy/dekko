@@ -2,12 +2,12 @@
  *
  * name: Dekko
  * description: advert loader
- * Version: 0.2.4 beta
+ * Version: 0.2.5 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
  * Copyright (c) 2016-2017 Dekko Pavel Pronskiy
- * Last update: 16.08.2017
+ * Last update: 21.08.2017
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -43,190 +43,49 @@
 
 		var $ = jQuery;
 
-		if (!jQuery.easing.def) {
-			jQuery.easing['jswing'] = jQuery.easing['swing'];
-			jQuery.extend( jQuery.easing,
-			{
-				def: 'easeOutQuad',
-				swing: function (x, t, b, c, d) {
-					//alert(jQuery.easing.default);
-					return jQuery.easing[jQuery.easing.def](x, t, b, c, d);
-				},
-				easeInQuad: function (x, t, b, c, d) {
-					return c*(t/=d)*t + b;
-				},
-				easeOutQuad: function (x, t, b, c, d) {
-					return -c *(t/=d)*(t-2) + b;
-				},
-				easeInOutQuad: function (x, t, b, c, d) {
-					if ((t/=d/2) < 1) return c/2*t*t + b;
-					return -c/2 * ((--t)*(t-2) - 1) + b;
-				},
-				easeInCubic: function (x, t, b, c, d) {
-					return c*(t/=d)*t*t + b;
-				},
-				easeOutCubic: function (x, t, b, c, d) {
-					return c*((t=t/d-1)*t*t + 1) + b;
-				},
-				easeInOutCubic: function (x, t, b, c, d) {
-					if ((t/=d/2) < 1) return c/2*t*t*t + b;
-					return c/2*((t-=2)*t*t + 2) + b;
-				},
-				easeInQuart: function (x, t, b, c, d) {
-					return c*(t/=d)*t*t*t + b;
-				},
-				easeOutQuart: function (x, t, b, c, d) {
-					return -c * ((t=t/d-1)*t*t*t - 1) + b;
-				},
-				easeInOutQuart: function (x, t, b, c, d) {
-					if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
-					return -c/2 * ((t-=2)*t*t*t - 2) + b;
-				},
-				easeInQuint: function (x, t, b, c, d) {
-					return c*(t/=d)*t*t*t*t + b;
-				},
-				easeOutQuint: function (x, t, b, c, d) {
-					return c*((t=t/d-1)*t*t*t*t + 1) + b;
-				},
-				easeInOutQuint: function (x, t, b, c, d) {
-					if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
-					return c/2*((t-=2)*t*t*t*t + 2) + b;
-				},
-				easeInSine: function (x, t, b, c, d) {
-					return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
-				},
-				easeOutSine: function (x, t, b, c, d) {
-					return c * Math.sin(t/d * (Math.PI/2)) + b;
-				},
-				easeInOutSine: function (x, t, b, c, d) {
-					return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
-				},
-				easeInExpo: function (x, t, b, c, d) {
-					return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
-				},
-				easeOutExpo: function (x, t, b, c, d) {
-					return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
-				},
-				easeInOutExpo: function (x, t, b, c, d) {
-					if (t==0) return b;
-					if (t==d) return b+c;
-					if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
-					return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
-				},
-				easeInCirc: function (x, t, b, c, d) {
-					return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
-				},
-				easeOutCirc: function (x, t, b, c, d) {
-					return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
-				},
-				easeInOutCirc: function (x, t, b, c, d) {
-					if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
-					return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
-				},
-				easeInElastic: function (x, t, b, c, d) {
-					var s=1.70158;var p=0;var a=c;
-					if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-					if (a < Math.abs(c)) { a=c; var s=p/4; }
-					else var s = p/(2*Math.PI) * Math.asin (c/a);
-					return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-				},
-				easeOutElastic: function (x, t, b, c, d) {
-					var s=1.70158;var p=0;var a=c;
-					if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
-					if (a < Math.abs(c)) { a=c; var s=p/4; }
-					else var s = p/(2*Math.PI) * Math.asin (c/a);
-					return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
-				},
-				easeInOutElastic: function (x, t, b, c, d) {
-					var s=1.70158;var p=0;var a=c;
-					if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
-					if (a < Math.abs(c)) { a=c; var s=p/4; }
-					else var s = p/(2*Math.PI) * Math.asin (c/a);
-					if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
-					return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
-				},
-				easeInBack: function (x, t, b, c, d, s) {
-					if (s == undefined) s = 1.70158;
-					return c*(t/=d)*t*((s+1)*t - s) + b;
-				},
-				easeOutBack: function (x, t, b, c, d, s) {
-					if (s == undefined) s = 1.70158;
-					return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
-				},
-				easeInOutBack: function (x, t, b, c, d, s) {
-					if (s == undefined) s = 1.70158; 
-					if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
-					return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
-				},
-				easeInBounce: function (x, t, b, c, d) {
-					return c - jQuery.easing.easeOutBounce (x, d-t, 0, c, d) + b;
-				},
-				easeOutBounce: function (x, t, b, c, d) {
-					if ((t/=d) < (1/2.75)) {
-						return c*(7.5625*t*t) + b;
-					} else if (t < (2/2.75)) {
-						return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
-					} else if (t < (2.5/2.75)) {
-						return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
-					} else {
-						return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+		// additional support for older internet explorer browser versions
+		if ( w.XDomainRequest ) {
+			$.ajaxTransport(function( s ) {
+				if ( s.crossDomain && s.async ) {
+					if ( s.timeout ) {
+						s.xdrTimeout = s.timeout;
+						delete s.timeout;
 					}
-				},
-				easeInOutBounce: function (x, t, b, c, d) {
-					if (t < d/2) return jQuery.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
-					return jQuery.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+					var xdr;
+					return {
+						send: function( _, complete ) {
+							function callback( status, statusText, responses, responseHeaders ) {
+								xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
+								xdr = undefined;
+								complete( status, statusText, responses, responseHeaders );
+							}
+							xdr = new XDomainRequest();
+							xdr.onload = function() {
+								callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
+							};
+							xdr.onerror = function() {
+								callback( 404, "Not Found" );
+							};
+							xdr.onprogress = jQuery.noop;
+							xdr.ontimeout = function() {
+								callback( 0, "timeout" );
+							};
+							xdr.timeout = s.xdrTimeout || Number.MAX_VALUE;
+							xdr.open( s.type, s.url );
+							xdr.send( ( s.hasContent && s.data ) || null );
+						},
+						abort: function() {
+							if ( xdr ) {
+								xdr.onerror = jQuery.noop;
+								xdr.abort();
+							}
+						}
+					};
 				}
 			});
 		}
 
-
-	// additional support for older internet explorer browser versions
-	if ( window.XDomainRequest ) {
-		jQuery.ajaxTransport(function( s ) {
-			if ( s.crossDomain && s.async ) {
-				if ( s.timeout ) {
-					s.xdrTimeout = s.timeout;
-					delete s.timeout;
-				}
-				var xdr;
-				return {
-					send: function( _, complete ) {
-						function callback( status, statusText, responses, responseHeaders ) {
-							xdr.onload = xdr.onerror = xdr.ontimeout = jQuery.noop;
-							xdr = undefined;
-							complete( status, statusText, responses, responseHeaders );
-						}
-						xdr = new XDomainRequest();
-						xdr.onload = function() {
-							callback( 200, "OK", { text: xdr.responseText }, "Content-Type: " + xdr.contentType );
-						};
-						xdr.onerror = function() {
-							callback( 404, "Not Found" );
-						};
-						xdr.onprogress = jQuery.noop;
-						xdr.ontimeout = function() {
-							callback( 0, "timeout" );
-						};
-						xdr.timeout = s.xdrTimeout || Number.MAX_VALUE;
-						xdr.open( s.type, s.url );
-						xdr.send( ( s.hasContent && s.data ) || null );
-					},
-					abort: function() {
-						if ( xdr ) {
-							xdr.onerror = jQuery.noop;
-							xdr.abort();
-						}
-					}
-				};
-			}
-		});
-	}
-
 	} catch(e) {}
-
-
-
-
 
 	w.dekko = function() {
 
@@ -410,16 +269,25 @@
 					return false;
 
 				self.each(object, function(e, i) {
-
 					module = {
 						item			: e,
+						spm				: o.spm,
 						name			: e.name,
 						delay			: e.delay,
 						cache			: o.cache,
+						domain			: o.domain,
 						verbose			: o.verbose,
-						rotate			: typeof e.rotate === 'string'
-											? JSON.parse(e.rotate)
+						fingerPrint		: o.fingerPrint,
+						timePoint		: e.name + self.console.timeSeconds,
+						
+						mobile			: e.mobile === 'true'
+											? true
 											: false,
+
+						rotate			: e.rotate === "true"
+											? true
+											: false,
+
 						storeName		: self.storePoint.name +
 											o.fingerPrint +
 											self.storePoint.p +
@@ -429,22 +297,15 @@
 											self.storePoint.rev +
 											e.revision,
 
-						timePoint		: e.name +
-											self.console.timeSeconds,
-
 						append			: typeof e.append !== 'undefined'
 											? typeof e.append === 'string'
 												? jQuery(e.append)
 												: e.append
 											: jQuery('body'),
-
-						spm				: o.spm,
 						
 						ajaxUrl			: typeof o.ajaxUrl == 'undefined'
 											? null
 											: o.ajaxUrl,
-
-						fingerPrint		: o.fingerPrint,
 
 						images			: typeof e.images == 'object'
 											? e.images
@@ -453,14 +314,6 @@
 						excludes		: typeof e.excludes == 'object'
 											? e.excludes
 											: [],
-
-						domain			: o.domain,
-
-						mobile			: typeof e.mobile == 'object'
-											? e.mobile
-											: typeof e.mobile == 'boolean'
-												? e.mobile
-												: false,
 
 						type			: e.type,
 						date: {
@@ -560,22 +413,22 @@
 			},
 			// get object options
 			getOptions: function() {
-				var	self = this,
+				var	self = this, d, o,
 					ajax = settings.ajax;
 
-				var c 	= this.getDekkoParams();
-				var o 	= this.mergeOptions(settings.app, c);
-				o.spm 	= this.storePoint.name + o.fingerPrint;
-				o.ppm 	= this.storePoint.name + o.fingerPrint + this.storePoint.prev;
-			
-				ajax.url 				= o.url;
-				ajax.cache 				= o.cache;
-				ajax.context 			= self;
-				ajax.data 				= {};
-				ajax.data.d		 		= o.domain;
-				ajax.data.f 			= o.fingerPrint;
-				ajax.crossDomain 		= true;
-				ajax.crossOrigin		= true;
+				o = this.mergeOptions(settings.app, this.getDekkoParams());
+				o.spm = this.storePoint.name + o.fingerPrint;
+				o.ppm = this.storePoint.name + o.fingerPrint + this.storePoint.prev;
+				o.ajaxUrl = o.url;
+
+				ajax.url = o.url;
+				ajax.cache = o.cache;
+				ajax.context = self;
+				ajax.data = {};
+				ajax.data.d	= o.domain;
+				ajax.data.f = o.fingerPrint;
+				ajax.crossDomain = true;
+				ajax.crossOrigin = true;
 
 				ajax.error = function(a,b,c) {
 					return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
@@ -585,11 +438,9 @@
 					if (self.exceptionsHandler(json) === true)
 						return self.exceptionsMessage(json);
 
-					var data 			= o;
-					data.modules 		= json;
-					data.ajaxUrl 		= ajax.url;
-					data.fingerPrint 	= o.fingerPrint;
-					return self.constructParams(data);
+
+					o.modules = json;
+					return self.constructParams(o);
 				};
 
 				return self.ajax(ajax);
@@ -635,7 +486,6 @@
 					if (e.cache && self.getStore(e.storeName) !== false)
 						return self.render(self.getStore(e.storeName), e);
 
-
 					ajax.error = function(o, a, c) {
 						return self.ajaxErrors(ajax.url + ' ' + a.status + ' ' + a.statusText);
 					};
@@ -651,7 +501,6 @@
 							exception.message = 'Module not found' + ': ' + e.name;
 							exception.status = 'warning';
 							exception.date = self.dateNowISO();
-
 							return self.exceptionsMessage(exception);
 						}
 
@@ -855,7 +704,13 @@
 				this.detectIEBrowser = this.regex.ie.test(w.navigator.userAgent) ? true : false;
 				return o;
 
+			},
+			svg: {
+				close: function(c) {
+					return '<svg width="' + c.width + '" height="' + c.height + '" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd" viewBox="0 0 13547 13547" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><g id="Ebene_x0020_1"><polygon fill="' + c.background + '" points="0,0 13547,0 13547,13547 0,13547 "/><path fill="' + c.color + '" d="M714 12832l12118 0 0 -12117 -12118 0 0 12117zm4188 -2990l1871 -1871 1871 1871 1197 -1197 -1871 -1871 1871 -1871 -1197 -1197 -1871 1871 -1871 -1871 -1197 1197 1871 1871 -1871 1871 1197 1197z"/></g></svg>';
+				}
 			}
+
 		};
 
 		try {
@@ -870,5 +725,141 @@
 
 	return w.dekko();
 
-
 })(window, document);
+
+(function ($) {
+	if (!$.easing.def) {
+		$.easing['jswing'] = $.easing['swing'];
+		$.extend( $.easing,
+		{
+			def: 'easeOutQuad',
+			swing: function (x, t, b, c, d) {
+				return $.easing[$.easing.def](x, t, b, c, d);
+			},
+			easeInQuad: function (x, t, b, c, d) {
+				return c*(t/=d)*t + b;
+			},
+			easeOutQuad: function (x, t, b, c, d) {
+				return -c *(t/=d)*(t-2) + b;
+			},
+			easeInOutQuad: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t + b;
+				return -c/2 * ((--t)*(t-2) - 1) + b;
+			},
+			easeInCubic: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t + b;
+			},
+			easeOutCubic: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t + 1) + b;
+			},
+			easeInOutCubic: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t + b;
+				return c/2*((t-=2)*t*t + 2) + b;
+			},
+			easeInQuart: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t + b;
+			},
+			easeOutQuart: function (x, t, b, c, d) {
+				return -c * ((t=t/d-1)*t*t*t - 1) + b;
+			},
+			easeInOutQuart: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+				return -c/2 * ((t-=2)*t*t*t - 2) + b;
+			},
+			easeInQuint: function (x, t, b, c, d) {
+				return c*(t/=d)*t*t*t*t + b;
+			},
+			easeOutQuint: function (x, t, b, c, d) {
+				return c*((t=t/d-1)*t*t*t*t + 1) + b;
+			},
+			easeInOutQuint: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return c/2*t*t*t*t*t + b;
+				return c/2*((t-=2)*t*t*t*t + 2) + b;
+			},
+			easeInSine: function (x, t, b, c, d) {
+				return -c * Math.cos(t/d * (Math.PI/2)) + c + b;
+			},
+			easeOutSine: function (x, t, b, c, d) {
+				return c * Math.sin(t/d * (Math.PI/2)) + b;
+			},
+			easeInOutSine: function (x, t, b, c, d) {
+				return -c/2 * (Math.cos(Math.PI*t/d) - 1) + b;
+			},
+			easeInExpo: function (x, t, b, c, d) {
+				return (t==0) ? b : c * Math.pow(2, 10 * (t/d - 1)) + b;
+			},
+			easeOutExpo: function (x, t, b, c, d) {
+				return (t==d) ? b+c : c * (-Math.pow(2, -10 * t/d) + 1) + b;
+			},
+			easeInOutExpo: function (x, t, b, c, d) {
+				if (t==0) return b;
+				if (t==d) return b+c;
+				if ((t/=d/2) < 1) return c/2 * Math.pow(2, 10 * (t - 1)) + b;
+				return c/2 * (-Math.pow(2, -10 * --t) + 2) + b;
+			},
+			easeInCirc: function (x, t, b, c, d) {
+				return -c * (Math.sqrt(1 - (t/=d)*t) - 1) + b;
+			},
+			easeOutCirc: function (x, t, b, c, d) {
+				return c * Math.sqrt(1 - (t=t/d-1)*t) + b;
+			},
+			easeInOutCirc: function (x, t, b, c, d) {
+				if ((t/=d/2) < 1) return -c/2 * (Math.sqrt(1 - t*t) - 1) + b;
+				return c/2 * (Math.sqrt(1 - (t-=2)*t) + 1) + b;
+			},
+			easeInElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return -(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+			},
+			easeOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d)==1) return b+c;  if (!p) p=d*.3;
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				return a*Math.pow(2,-10*t) * Math.sin( (t*d-s)*(2*Math.PI)/p ) + c + b;
+			},
+			easeInOutElastic: function (x, t, b, c, d) {
+				var s=1.70158;var p=0;var a=c;
+				if (t==0) return b;  if ((t/=d/2)==2) return b+c;  if (!p) p=d*(.3*1.5);
+				if (a < Math.abs(c)) { a=c; var s=p/4; }
+				else var s = p/(2*Math.PI) * Math.asin (c/a);
+				if (t < 1) return -.5*(a*Math.pow(2,10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )) + b;
+				return a*Math.pow(2,-10*(t-=1)) * Math.sin( (t*d-s)*(2*Math.PI)/p )*.5 + c + b;
+			},
+			easeInBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*(t/=d)*t*((s+1)*t - s) + b;
+			},
+			easeOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158;
+				return c*((t=t/d-1)*t*((s+1)*t + s) + 1) + b;
+			},
+			easeInOutBack: function (x, t, b, c, d, s) {
+				if (s == undefined) s = 1.70158; 
+				if ((t/=d/2) < 1) return c/2*(t*t*(((s*=(1.525))+1)*t - s)) + b;
+				return c/2*((t-=2)*t*(((s*=(1.525))+1)*t + s) + 2) + b;
+			},
+			easeInBounce: function (x, t, b, c, d) {
+				return c - $.easing.easeOutBounce (x, d-t, 0, c, d) + b;
+			},
+			easeOutBounce: function (x, t, b, c, d) {
+				if ((t/=d) < (1/2.75)) {
+					return c*(7.5625*t*t) + b;
+				} else if (t < (2/2.75)) {
+					return c*(7.5625*(t-=(1.5/2.75))*t + .75) + b;
+				} else if (t < (2.5/2.75)) {
+					return c*(7.5625*(t-=(2.25/2.75))*t + .9375) + b;
+				} else {
+					return c*(7.5625*(t-=(2.625/2.75))*t + .984375) + b;
+				}
+			},
+			easeInOutBounce: function (x, t, b, c, d) {
+				if (t < d/2) return $.easing.easeInBounce (x, t*2, 0, c, d) * .5 + b;
+				return $.easing.easeOutBounce (x, t*2-d, 0, c, d) * .5 + c*.5 + b;
+			}
+		});
+	}
+})(jQuery);

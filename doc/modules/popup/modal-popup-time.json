@@ -1,0 +1,29 @@
+{
+  "append": "body",
+  "rotate": "false",
+  "type": "popup",
+  "revision": 109,
+  "mobile": {
+    "css": {
+      "param": "value"
+    }
+  },
+  "url": "http://google.com",
+  "delay":                          500,
+  "closeExpire":                          2,
+  "date": {
+    "start": "2017-05-29T12:00:00.000000+04:00",
+    "end": "2020-01-01T00:00:00.000000+04:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInOutElastic",
+      "easeOutElastic"
+    ],
+    "duration":                          1000
+  },
+  "position": {
+    "right": "15px",
+    "top": "15px"
+  }
+}

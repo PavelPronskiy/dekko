@@ -7,46 +7,46 @@ window.dekkoModule = function (object) {
 
 	var css = {
 		wrap: {
-			'display' 					: 'none',
-			'width' 					: '728px',
-			'height' 					: '90px',
-			// 'background' 			: 'url(' + object.path + '/bg.jpg) no-repeat left top',
+			'display' 			: 'none',
+			'width' 			: '728px',
+			'height' 			: '90px',
+			// 'background' 		: 'url(' + object.path + '/bg.jpg) no-repeat left top',
 			'-webkit-box-shadow'	 	: '0px 0px 10px rgba(50, 50, 50, 0.6)',
-			'-moz-box-shadow' 			: '0px 0px 10px rgba(50, 50, 50, 0.6)',
-			'box-shadow' 				: '0px 0px 10px rgba(50, 50, 50, 0.6)',
+			'-moz-box-shadow' 		: '0px 0px 10px rgba(50, 50, 50, 0.6)',
+			'box-shadow' 			: '0px 0px 10px rgba(50, 50, 50, 0.6)',
 		},
 		item: {
-			'position' 					: 'relative',
-			// 'border'					: '1px solid green',
+			'position' 			: 'relative',
+			// 'border'			: '1px solid green',
 
 		},
 		link: {
-			// 'border'					: '1px solid red',
-			'text-decoration'			: 'none',
-			'display'					: 'inline-block'
+			// 'border'			: '1px solid red',
+			'text-decoration'		: 'none',
+			'display'			: 'inline-block'
 		},
 		img: {
 			
 		},
 		close: {
 			normal: {
-				'border'				: '1px solid #fff',
-				'position' 				: 'absolute',
-				'padding' 				: '0px 0px 0px 0px',
-				'top' 					: '2px',
-				'right' 				: '2px',
-				'z-index' 				: '1px',
-				'text-align' 			: 'center',
-				'line-height' 			: '8px',
-				'height' 				: '11px',
-				'color'					: '#fff',
-				'cursor' 				: 'pointer',
-				'font-family'			: 'verdana, sans-serif',
-				'font-size'				: '12px',
+				'border'		: '1px solid #fff',
+				'position' 		: 'absolute',
+				'padding' 		: '0px 0px 0px 0px',
+				'top' 			: '2px',
+				'right' 		: '2px',
+				'z-index' 		: '1px',
+				'text-align' 		: 'center',
+				'line-height' 		: '8px',
+				'height' 		: '11px',
+				'color'			: '#fff',
+				'cursor' 		: 'pointer',
+				'font-family'		: 'verdana, sans-serif',
+				'font-size'		: '12px',
 			},
 			hover: {
-				'color'					: '#000',
-				'border'				: '1px solid #000'
+				'color'			: '#000',
+				'border'		: '1px solid #000'
 			}
 		}
 	},
