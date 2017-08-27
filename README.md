@@ -142,7 +142,7 @@ server {
 ```
 
 ### Changelog
-## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-21)
+## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-27)
 
 - Added new module options param: `refresh: seconds`
   This parameter provide online refresh modules. Worked only defined two parameters: `refresh: seconds` and `rotate: "true"`
