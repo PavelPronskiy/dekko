@@ -147,6 +147,9 @@ server {
 - Added new module options param: `refresh: seconds`
   This parameter provide online refresh modules. Worked only defined two parameters: `refresh: seconds` and `rotate: "true"`
 
+- Added new module options param: `pages: ["/", "/page2", "/page3", "/etc.."]`
+  This param translate modules only path pages defined in array
+
 - Replaced method jQuery `$.ajax` to XMLHTTPRequest
 - Refactoring code
 - Added new redis incrby: domain.tld:lg 0000-00-00:module-name increment counter
