@@ -34,38 +34,32 @@
     cjson
     resty/redis
     nginx+luajit
-    redis
+    redis3
 ```
 
 
 ### Module structure example ##
 
-**options example**
+**all options example**
 ```json
-// version: 0.3
+// version: 0.4
 // type: popup
 {
   "geoTargeting":[88,77,32,50,333,334],
   "append": "body",
-  "rotate": "true",
   "type": "popup",
   "revision": 109,
-  "images": {
-    "background": "/examples/images/popup-timer/popup-1.gif",
-    "button": "/examples/images/popup-timer/button.png",
-    "buttonHover": "/examples/images/popup-timer/button-hover.png",
-    "close": "base64 data image",
-    "closeHover": "/examples/images/popup-timer/close-hover.png",
-    "timer": "/examples/images/popup-timer/timer.png"
-  },
-  "mobile": {
+  "rotate": "true",
+  "refresh": 10000,
+  "pages": ["/", "/page-1.html", "/page-2.html"],
+    "mobile": {
     "css": {
       "param": "value"
     }
   },
   "url": "http://google.com",
-  "delay":                          500,
-  "closeExpire":                          2,
+  "delay": 500,
+  "closeExpire": 2,
   "date": {
     "start": "2017-05-29T12:00:00.000000+04:00",
     "end": "2020-01-01T00:00:00.000000+04:00"
@@ -75,7 +69,7 @@
       "easeInOutElastic",
       "easeOutElastic"
     ],
-    "duration":                          1000
+    "duration": 1000
   },
   "position": {
     "left": "15px",
@@ -122,7 +116,7 @@ server {
   		add_header 'Access-Control-Allow-Credentials' 'true';
   		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
   		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '864000';
+  		add_header 'Access-Control-Max-Age' '86400';
   		add_header Content-Length 0;
   		add_header Content-Type text/plain;
   		return 204;
@@ -136,7 +130,7 @@ server {
   		add_header 'Access-Control-Allow-Credentials' 'true';
   		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
   		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '864000';
+  		add_header 'Access-Control-Max-Age' '86400';
   		add_header Content-Length 0;
   		add_header Content-Type text/plain;
   		return 204;
@@ -148,6 +142,16 @@ server {
 ```
 
 ### Changelog
+## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-21)
+
+- Added new module options param: `refresh: seconds`
+  This parameter provide online refresh modules. Worked only defined two parameters: `refresh: seconds` and `rotate: "true"`
+
+- Replaced method jQuery `$.ajax` to XMLHTTPRequest
+- Refactoring code
+- Added new redis incrby: domain.tld:lg 0000-00-00:module-name increment counter
+  This parameter count module downloads by day
+
 ## [0.2.5](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-21)
 
 - Added svg close button

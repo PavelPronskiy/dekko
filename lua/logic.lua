@@ -1,11 +1,11 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.2.3 beta
+-- Version: 0.2.2 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
--- Copyright (c) 2016-2017 Dekko Pavel Pronskiy
+-- Copyright (c) 2016 Dekko Pavel Pronskiy
 
 -- Permission is hereby granted, free of charge, to any person
 -- obtaining a copy of this software and associated documentation
@@ -63,6 +63,7 @@ dekko.redis.prefix = {
 	["lastModified"] = ":lastmodified",
 	["ETag"] = ":etag",
 	["modules"] = "ms",
+	["log"] = "lg",
 	["clicks"] = "cs",
 	["counter"] = "cr",
 	["hosts"] = "hs",
@@ -83,8 +84,6 @@ function dekko.ngx.headers(object)
 	local policy = {}
 	local k = {}
 
-
-
 	    if object.type == 'script'
 	  then ngx.header["Content-Type"] = "text/javascript"
 	elseif object.type == 'json'
@@ -92,19 +91,15 @@ function dekko.ngx.headers(object)
 	  else ngx.header["Content-Type"] = "application/json"
 	   end
 
-
-
-	    if object.mhash ~= nil
+	    if object.mhash ~= nil and object.cache == true
 	  then k.et = dekko.cacheBrowser('etag', object.mhash .. dekko.redis.prefix.ETag)
 		   k.lm = dekko.cacheBrowser('lastmodified', object.mhash .. dekko.redis.prefix.lastModified)
 		   ngx.header["ETag"] = k.et
 	       ngx.header["Last-modified"] = k.lm
+	  else ngx.header["Cache-Control"] = "no-cache"
+		   ngx.header["Pragma"] = "no-cache"
+		   ngx.header["Expires"] = "0"
 	   end
-	--   if ngx.var.http_x_forwarded_proto ~= nil
-	-- then policy.schemeDomain = ngx.var.http_x_forwarded_proto .. '://' .. object.domain
-	-- else policy.schemeDomain = 'http://' .. object.domain
-	-- end
-
 
 	ngx.status = ngx.HTTP_OK
 	ngx.header["Cache-Control"] = "public"
@@ -123,6 +118,8 @@ end
 
 function dekko.redis.hgetall(object)
 	local data = {}
+	local o = {}
+
 	local hgetall, err = red:hgetall(object.hash)
 	  if not hgetall
 	then dekko.exception.throw({
@@ -132,9 +129,10 @@ function dekko.redis.hgetall(object)
 	 end
 
 	  if #hgetall == 0
-	then dekko.exception.throw({
-			code = 115
-		 })
+	then o.type = 'json'
+		 dekko.ngx.headers(o)
+		 ngx.say('{}')
+		 return ngx.exit(ngx.HTTP_OK)
 	end
 
 	  if type(hgetall) ~= "table"
@@ -287,10 +285,21 @@ function dekko.construct.settings(object)
 	o.header 	= object.header
 	o.domain 	= object.domain
 	o.mhash 	= object.hash .. ':' .. o.revHash
+	o.cache 	= object.cache
 
 	return dekko.construct.message(o)
 end
+-- 
+function dekko.countViews(object)
 
+	local t = {}
+
+	t.today = ngx.today()
+	t.key = object.domain .. ':' .. dekko.redis.prefix.log
+	t.hey = t.today .. ':' .. object.module
+
+	return red:hincrby(t.key, t.hey, 1)
+end
 -- get keyhash modules
 function dekko.construct.modules(object)
 
@@ -316,6 +325,11 @@ function dekko.construct.modules(object)
 	o.domain = object.domain
 	o.json = t.module
 	o.mhash = object.mhash .. ':' .. t.hash
+	o.module = object.module
+	o.cache = object.cache
+
+	dekko.countViews(o)
+
 	return dekko.construct.message(o)
 end
 
@@ -454,6 +468,11 @@ function dekko.route()
 
 	    if opts.domain == nil
 	  then dekko.exception.throw({ code = 107 }) 
+	   end
+
+	    if args.n == nil
+	  then opts.cache = true
+	  else opts.cache = false
 	   end
 
 	-- get advert options URI: url?f=fingerprint

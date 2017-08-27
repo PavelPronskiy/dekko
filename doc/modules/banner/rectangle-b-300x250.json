@@ -1,0 +1,22 @@
+{
+  "type": "banner",
+  "rotate": "true",
+  "refresh": 5000,
+  "pages": ["/", "/page-1.html", "/page-2.html"],
+  "append": "#banner-rotate-300x250",
+  "revision": 112,
+  "url": "/target/click.html",
+  "delay": 0,
+  "closeExpire": 2,
+  "date": {
+    "start": "2016-03-28T12:00:00.000000+02:00",
+    "end": "2020-01-01T00:00:00.000000+02:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInSine",
+      "easeOutSine"
+    ],
+    "duration": 1000
+  }
+}
