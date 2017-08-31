@@ -33,13 +33,13 @@ case "${METHOD}" in
 				if [[ -n "${hget}" && -n "${output_dir}" && -d "${output_dir}" ]]
 				then
 					echo "Saving module file: ${output_dir}/${name_file}"
-					echo -e "${hget}" > ${output_dir}/${name_file}
+					echo -e "${hget}" | js-beautify > ${output_dir}/${name_file}
 				fi
 
 				if [[ -n "${hget}" && -z "${output_dir}" ]]
 				then
 					echo "Saving module file: ${name_file}"
-					echo -e "${hget}" > ${name_file}
+					echo -e "${hget}" | js-beautify > ${name_file}
 				fi
 
 				((i++))
@@ -86,7 +86,7 @@ case "${METHOD}" in
 					echo "Module settings: ${MODULE} inserted to domain: ${DOMAIN}"
 			;;
 			js)
-				cat ${FILE} | redis-cli \
+				cat ${FILE} | closure-compiler -O WHITESPACE_ONLY | redis-cli \
 					-h ${REDIS_HOST} \
 					-x HSETNX ${KEY_MODULE} ${MODULE} \
 					| grep -q '1' && \

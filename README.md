@@ -108,7 +108,10 @@ geo $remote_addr $countryCode {
 geoip_country /usr/share/GeoIP/GeoIP.dat;
 
 
+
 server {
+
+	set $cors_age 86400;
 
   location / {
   	if ($request_method = OPTIONS) {
@@ -116,11 +119,21 @@ server {
   		add_header 'Access-Control-Allow-Credentials' 'true';
   		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
   		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '86400';
+  		add_header 'Access-Control-Max-Age' '$cors_age';
   		add_header Content-Length 0;
   		add_header Content-Type text/plain;
   		return 204;
   	}
+  
+		if ($request_method = GET) {
+			add_header 'Access-Control-Allow-Origin' '*';
+			add_header 'Access-Control-Allow-Credentials' 'true';
+			add_header 'Access-Control-Allow-Methods' 'GET';
+			add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+			add_header 'Access-Control-Max-Age' '$cors_age';
+		}
+	
+  
   	expires max;
   }
 
@@ -130,7 +143,7 @@ server {
   		add_header 'Access-Control-Allow-Credentials' 'true';
   		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
   		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '86400';
+  		add_header 'Access-Control-Max-Age' '$cors_age';
   		add_header Content-Length 0;
   		add_header Content-Type text/plain;
   		return 204;
@@ -142,7 +155,13 @@ server {
 ```
 
 ### Changelog
-## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-27)
+## [0.2.7](https://github.com/PavelPronskiy/dekko/tree/0.2.7) (2017-08-31)
+
+- Refactoring dekko.js
+- Added fingerprint2.js
+- Added jQuery easing
+
+## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.6) (2017-08-27)
 
 - Added new module options param: `refresh: seconds`
   This parameter provide online refresh modules. Worked only defined two parameters: `refresh: seconds` and `rotate: "true"`
@@ -155,7 +174,7 @@ server {
 - Added new redis incrby: domain.tld:lg 0000-00-00:module-name increment counter
   This parameter count module downloads by day
 
-## [0.2.5](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-21)
+## [0.2.5](https://github.com/PavelPronskiy/dekko/tree/0.2.5) (2017-08-21)
 
 - Added svg close button
 - Removed old methods in dekko.js

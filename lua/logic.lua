@@ -1,7 +1,7 @@
 
 -- Name: Dekko
 -- Description: dekko data logic
--- Version: 0.2.2 beta
+-- Version: 0.2.7 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
@@ -454,7 +454,7 @@ function dekko.route()
 	local opts = {}
 	
 	opts.domain = args.d
-	opts.fingerprint = tonumber(args.f)
+	opts.fingerprint = args.f
 	opts.timestamp = tonumber(args.c)
 
 	    if type(ngx.var.geoip_country_code) == 'string'
