@@ -70,7 +70,10 @@
 			t.wrap.appendTo(object.append);
 
 			t.wrap.delay(object.item.delay)
-				.fadeIn(object.item.effects.duration, object.item.effects.easing[0]);
+				.fadeIn(object.item.effects.duration, object.item.effects.easing[0], function() {
+					$(this).stop(true);
+				});
+
 
 			t.link.mouseover(function() {
 				if (t.close.is(':visible') === false)

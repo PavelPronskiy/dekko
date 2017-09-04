@@ -1,7 +1,7 @@
 {
   "type": "banner",
   "rotate": "true",
-  "refresh": 10000,
+  "refresh": 1000,
   "pages": ["/", "/page-1.html", "/page-2.html"],
   "append": "#banner-skyscraper-rotate",
   "revision": 112,
@@ -17,6 +17,6 @@
       "easeInSine",
       "easeOutSine"
     ],
-    "duration": 1000
+    "duration": 500
   }
 }

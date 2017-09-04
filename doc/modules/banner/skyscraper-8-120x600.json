@@ -1,8 +1,8 @@
 {
   "type": "banner",
   "rotate": "true",
-  "refresh": 8000,
-  "pages": ["/page-1.html", "/page-2.html"],
+  "refresh": 1000,
+  "pages": ["/", "/page-1.html", "/page-2.html"],
   "append": "#banner-skyscraper-rotate",
   "revision": 112,
   "url": "http://google.com",
@@ -17,6 +17,6 @@
       "easeInSine",
       "easeOutSine"
     ],
-    "duration": 1000
+    "duration": 500
   }
 }

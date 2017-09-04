@@ -2,8 +2,10 @@
  * Version 0.18
  * banner element template
 **/
-(function($) {
 	window.dekkoModule = function (object) {
+
+		if (typeof $.easing.def === 'undefined')
+			object.item.effects = ['swing', 'swing']
 
 		var css = {
 			wrap: {
@@ -53,14 +55,13 @@
 				}
 			}
 		},
-		t = {},
-		self = this;
+		t = {};
 
 		try {
 
 			t.wrap 		= $('<div/>', {  'id': object.name + '-wrap', 'css': css.wrap });
 			t.item 		= $('<div/>', { 'css': css.item });
-			t.close 	= $('<div/>', { 'css': css.close.none, 'html': self.svg.close(css.close.none) });
+			t.close 	= $('<div/>', { 'css': css.close.none, 'html': window.dekkoJS.svg.close(css.close.none) });
 			t.link 		= $('<a/>', { href: object.item.url, target: '_blank', 'css': css.link });
 
 			t.item.appendTo(t.wrap);
@@ -69,7 +70,10 @@
 			t.wrap.appendTo(object.append);
 
 			t.wrap.delay(object.item.delay)
-				.fadeIn(object.item.effects.duration, object.item.effects.easing[0]);
+				.fadeIn(object.item.effects.duration, object.item.effects.easing[0], function() {
+					$(this).stop(true);
+				});
+
 
 			t.link.mouseover(function() {
 				if (t.close.is(':visible') === false)
@@ -78,20 +82,19 @@
 
 			t.close.click(function() {
 				t.wrap.fadeOut((object.item.effects.duration/2), object.item.effects.easing[1], function() {
-					self.setStore(object.closePoint, [true, object.date.now()]);
+					window.dekkoJS.setStore(object.closePoint, [true, object.date.now()]);
 					t.wrap.remove();
 				});
 			});
 
-			t.link.on('auxclick touchstart click', function() {
-				return self.clickAdvert(object);
+			t.link.click(function() {
+				return window.dekkoJS.clickAdvert(object);
 			});
 
 		} catch (e) {
 			return console.error(e);
 		} finally {
-			return self.notice(object);
+			return window.dekkoJS.notice(object, t);
 		}
 	};
 
-})(jQuery);

@@ -155,6 +155,11 @@ server {
 ```
 
 ### Changelog
+## [0.2.8](https://github.com/PavelPronskiy/dekko/tree/0.2.8) (2017-09-05)
+
+- Refactoring and optimizing memory on dekko.js
+- Added max refresh option `this.refresh.max: 100`
+
 ## [0.2.7](https://github.com/PavelPronskiy/dekko/tree/0.2.7) (2017-08-31)
 
 - Refactoring dekko.js

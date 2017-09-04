@@ -1,11 +1,12 @@
 
--- Name: Dekko
+-- Name: Dekko client side
 -- Description: dekko data logic
--- Version: 0.2.7 beta
+-- Version: 0.2.8 beta
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
--- Copyright (c) 2016 Dekko Pavel Pronskiy
+-- Copyright (c) 2016-2017 Dekko Pavel Pronskiy
+-- Last update: 05.09.2017
 
 -- Permission is hereby granted, free of charge, to any person
 -- obtaining a copy of this software and associated documentation
@@ -31,7 +32,7 @@
 local cjson = require "cjson"
 local lang = require "lang"
 local redis = require "redis"
-local args = ngx.req.get_uri_args()
+-- local args = ngx.req.get_uri_args()
 local red = redis:new()
 local dekko = {}
 dekko.ngx = {}
@@ -114,6 +115,47 @@ function dekko.splitHost(s)
 		table.insert(result, match)
 	end
 	return result
+end
+
+function dekko.gsplit(str,sep)
+   local ret={}
+   local n=1
+   for w in str:gmatch("([^"..sep.."]*)") do
+      ret[n] = ret[n] or w -- only set once (so the blank after a string is ignored)
+      if w=="" then
+         n = n + 1
+      end -- step forwards on a blank but not a string
+   end
+   return ret
+end
+
+function dekko.getParams(s)
+
+	local result = {};
+	local g = dekko.gsplit(s,'&')
+	for i,v in pairs(g) do
+		t = dekko.gsplit(v,"=")
+		result[t[1]] = t[2]
+	end
+	return result
+end
+
+function dekko.validateArgs(argument)
+	local r = false
+	  if argument:match('[\";\']') ~= nil
+	then r = true
+	 end
+
+	return r
+end
+
+function dekko.decodeParams(str)
+	return (str:gsub('..', function (cc)
+		t = tonumber(cc, 16)
+		if t ~= nil
+		then return string.char(t)
+		end
+	end))
 end
 
 function dekko.redis.hgetall(object)
@@ -439,19 +481,27 @@ function dekko.combine(o)
 	-- return red:close();
 end
 
-function dekko.validateArgs(argument)
-	local r = false
-	  if argument:match('[\";\']') ~= nil
-	then r = true
-	 end
-
-	return r
-
-end
-
 -- route
 function dekko.route()
+
+	   if ngx.var.args == nil
+	 then dekko.exception.throw({
+			code = 103
+		  })
+	  end
+	
+	local ngxargs = ngx.req.get_uri_args()
+
+	if   ngxargs.d ~= nil
+	then args = ngxargs
+	else params = dekko.decodeParams(ngx.var.args)
+		 args = dekko.getParams(params)
+	end
+
 	local opts = {}
+	-- local params = dekko.decodeParams(ngx.var.args)
+	-- local args = dekko.getParams(params)
+
 	
 	opts.domain = args.d
 	opts.fingerprint = args.f
@@ -564,5 +614,4 @@ function dekko.exception.catch()
 	return dekko.exception.message(exception)
 end
 
--- return ngx.say(ngx.var.http_user_agent)
 return xpcall(dekko.route, dekko.exception.catch)
