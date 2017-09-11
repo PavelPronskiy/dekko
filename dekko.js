@@ -85,7 +85,7 @@
 			totalTime 			: 'Total time load '
 		};
 		this.regex = {
-			iso8601: /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(\.\d+)?([+-]\d{2})\:(\d{2})$/,
+			toLocalDate: /^(\d{4}\-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}).*/,
 			ie: /Edge|MSIE|Trident/i,
 			mobile: /Mobi/
 		};
@@ -105,24 +105,11 @@
 		this.domain = window.location.hostname || window.location.host;
 		this.isMobile = this.regex.mobile.test(window.navigator.userAgent) ? true : false;
 		this.detectIEBrowser = this.regex.ie.test(window.navigator.userAgent) ? true : false;
-		this.XMLHttpRequest = ("onload" in new XMLHttpRequest()) ? XMLHttpRequest : XDomainRequest;
-		this.XMLHttpRequest = new this.XMLHttpRequest();
+		this.XMLHttpRequest = ("onload" in new XMLHttpRequest()) ? new XMLHttpRequest : new XDomainRequest;
+		this.refreshModules = [];
 	};
 
 	dekkoJS.prototype = {
-		dateNow: function() {
-			return Math.round(new Date().getTime() / 1000);
-		},
-		dateNowISO: function() {
-			var date = new Date(this.dateNow()*1000);
-			return date.toISOString().match(/(\d{2}:\d{2}:\d{2})/);
-		},
-		dateToUnixTimeStamp: function(o) {
-			var t = {};
-			t.p = new Date(o.replace(this.regex.iso8601, '$1'));
-			t.d = t.p.getTime() / 1000;
-			return (t.d) ? t.d : false;
-		},
 		setStore: function(n, o) {
 			return window.localStorage.setItem(n, JSON.stringify(o));
 		},
@@ -145,9 +132,11 @@
 				destination[property] = source[property];
 			return destination;
 		},
+		toLocalDateTime: function(o) {
+			return new Date(o.replace(this.regex.toLocalDate, '$1')).getTime();
+		},
 		// callback final
 		render: function(s, o) {
-
 			// capsule
 			window.dekkoModule = function(o) {};
 			// initialise dekkoModule function
@@ -157,7 +146,6 @@
 		},
 		// request module callback
 		notice: function(o, s) {
-
 			if (typeof o.item.refresh === 'number' && o.rotate === true)
 				this.refreshOnModules(o, s);
 
@@ -166,13 +154,12 @@
 				false;
 		},
 		expire: function(o) {
-			var a, b;
-			a = this.getStore(o.closePoint);
+			var a = this.getStore(o.closePoint);
 
 			if (a === false)
 				return false;
 
-			b = (a[0] === true) ? Math.floor((o.date.now() - a[1]) / 60) : false; // minutes ago
+			var b = (a[0] === true) ? Math.floor((o.date.now() - a[1]) / 60) : false; // minutes ago
 			return (b && b > o.date.close) ?
 				this.delStore(o.closePoint) :
 				true;
@@ -187,7 +174,6 @@
 		},
 
 		xhr: function(o, m) {
-
 			o.cache = (typeof o.cache == 'boolean') ? o.cache : this.defaults.cache;
 			var url = (o.cache === false) ? o.url + '&n=' + new Date().getTime() : o.url;
 			var xhr = this.XMLHttpRequest;
@@ -196,7 +182,6 @@
 			xhr.onload = o.success;
 			xhr.send(null);
 			xhr = null;
-
 		},
 		ajax: function(o) {
 			return this.xhr(o);
@@ -238,34 +223,42 @@
 			if (o.modules.length === 0)
 				return false;
 
-			// self.each(o.modules, function(e, i) {
 			for (var i = 0, l = o.modules.length; i < l; i++) {
+
 				module = {
-					item			: o.modules[i],
 					spm				: o.spm,
+					cache			: o.cache,
+					verbose			: o.verbose,
+					domain			: this.domain,
+					item			: o.modules[i],
+					fingerPrint		: o.fingerPrint,
 					type			: o.modules[i].type,
 					name			: o.modules[i].name,
 					delay			: o.modules[i].delay,
-					cache			: o.cache,
-					domain			: this.domain,
-					verbose			: o.verbose,
-					fingerPrint		: o.fingerPrint,
-					url				: o.url + '?' + 'd=' + this.domain + '&m=' + o.modules[i].name + '&f=' + o.fingerPrint,
-					mobile			: o.modules[i].mobile === 'true' ? true : false,
-					rotate			: o.modules[i].rotate === "true" ? true : false,
-					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
 					append			: o.modules[i].append,
+					mobile			: o.modules[i].mobile === 'true' ? true : false,
+					rotate			: o.modules[i].rotate === 'true' ? true : false,
 					ppm 			: this.storePoint.name + o.fingerPrint + this.storePoint.prev,
-					timePoint		: this.console.timeModule + o.modules[i].name + this.console.timeSeconds,
-					storeName		: this.storePoint.name + o.fingerPrint + this.storePoint.p + o.modules[i].type +
-									  this.storePoint.p + o.modules[i].name + this.storePoint.rev + o.modules[i].revision,
+					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
+					timePoint		: this.console.timeModule +
+									  o.modules[i].name +
+									  this.console.timeSeconds,
+					url				: o.url + '?' + 'd=' +
+									  this.domain + '&m=' +
+									  o.modules[i].name + '&f=' +
+									  o.fingerPrint,
+					storeName		: this.storePoint.name + o.fingerPrint +
+									  this.storePoint.p + o.modules[i].type +
+									  this.storePoint.p + o.modules[i].name +
+									  this.storePoint.rev + o.modules[i].revision,
 					date: {
-						now			: this.dateNow,
-						end			: this.dateToUnixTimeStamp(o.modules[i].date.end),
-						start		: this.dateToUnixTimeStamp(o.modules[i].date.start),
+						now 		: function() { return new Date().getTime(); },
+						end			: this.toLocalDateTime(o.modules[i].date.end),
+						start		: this.toLocalDateTime(o.modules[i].date.start),
 						close		: o.modules[i].closeExpire
 					}
 				};
+
 
 				module.closePoint = module.storeName + this.storePoint.closed;
 
@@ -297,7 +290,7 @@
 
 			}
 
-			ms.modules = (ms.rotates.length > 1) ?
+			ms.modules = (ms.rotates.length > 0) ?
 				this.filterModules(ms.rotates, ms.defaults, o) :
 				ms.defaults;
 
@@ -306,6 +299,7 @@
 
 			return this.getModules(ms.modules);
 		},
+		// refresh module without page reload
 		refreshOnModules: function(module, s) {
 			var t = {};
 			t.refresh = '';
@@ -324,10 +318,9 @@
 				t.el.fadeOut((module.item.effects.duration/2), module.item.effects.easing[1], function() {
 					jQuery(this).clearQueue().stop(true).remove();
 					window.dekkoJS.getModules([t.ref[t.rand]]);
-
 				});
 			};
-
+			
 			if (this.refreshModules.length > 1) {
 				if (this.refresh.counter <= this.refresh.max) {
 					t.refresh = setTimeout(t.fn, module.item.refresh);
@@ -424,7 +417,7 @@
 					return window.dekkoJS.exceptionsMessage({
 						message: window.dekkoJS.console.ctErr,
 						status: 'error',
-						date: window.dekkoJS.dateNowISO()
+						date: new Date().toISOString()
 					});
 
 				if (window.dekkoJS.exceptionsHandler(o.modules) === true)
@@ -441,9 +434,6 @@
 			var ajax = {};
 
 			ajax.success = function(s) {
-
-				// return console.log(this.module);
-
 				if (this.module.cache && window.dekkoJS.getStore(this.module.storeName) === false)
 					window.dekkoJS.setStore(this.module.storeName, this.responseText);
 
@@ -451,11 +441,8 @@
 					return window.dekkoJS.exceptionsMessage({
 						message: window.dekkoJS.console.moduleNotFound + this.module.name,
 						status: 'warning',
-						date: window.dekkoJS.dateNowISO()
+						date: new Date().toISOString()
 					});
-
-
-				// console.log(this.onreadystatechange);
 
 				return window.dekkoJS.render(this.responseText, this.module);
 			};
@@ -577,8 +564,7 @@
 				o = this.getScriptTagParams();
 
 			ajax.cache = true;
-			ajax.url = o.dekkoURL +
-						this.defaults.libs.easingjQuery.path;
+			ajax.url = o.dekkoURL + this.defaults.libs.easingjQuery.path;
 
 			ajax.success = function(status) {
 				window.dekkoJS.exec(this.responseText);
@@ -608,7 +594,6 @@
 			ajax.url = o.dekkoURL +
 						this.defaults.libs.jQuery.path;
 
-
 			ajax.success = function(status) {
 				window.dekkoJS.exec(this.responseText);
 
@@ -633,22 +618,6 @@
 					   '<path fill="' + c.color + '" d="M714 12832l12118 0 0 -12117 -12118 0 0 12117zm4188 -2990l1871 -1871 1871 1871 1197 -1197 -1871 -1871 1871 -1871 -1197 -1197 -1871 1871 -1871 -1871 -1197 1197 1871 1871 -1871 1871 1197 1197z"/>' +
 					   '</g></svg>';
 			}
-		},
-		ehex: function(s) {
-			var s = unescape(encodeURIComponent(s)), h = '', t = '';
-			for (var i = 0; i < s.length; i++) {
-				t = s.charCodeAt(i);
-				h += t.toString(16);
-			}
-			
-			return h
-		},
-		dhex: function(h) {
-			var s = '';
-			for (var i = 0; i < h.length; i+=2)
-				s += String.fromCharCode(parseInt(h.substr(i, 2), 16))
-			
-			return decodeURIComponent(escape(s))
 		}
 	};
 
@@ -667,5 +636,4 @@
 	} catch (e) {
 		return console.log(e);
 	}
-
 });
