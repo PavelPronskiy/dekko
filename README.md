@@ -11,6 +11,7 @@
   - fast loading advert elements
   - start and stop at specific date defines
   - position loading and animation
+  - ads invisible to adblock
 
 
 #### code integration
@@ -28,6 +29,7 @@
  * popup
  * banner
  * bar
+ * video
 
 ## Depends
 ```
@@ -42,49 +44,48 @@
 
 **all options example**
 ```json
-// version: 0.4
-// type: popup
-{
-  "geoTargeting":[88,77,32,50,333,334],
-  "append": "body",
-  "type": "popup",
-  "revision": 109,
-  "rotate": "true",
-  "refresh": 10000,
-  "pages": ["/", "/page-1.html", "/page-2.html"],
-    "mobile": {
-    "css": {
+[{
+  "geoTargeting":[88,77,32,50,333,334],           // geo regions (only Russian Federation support)
+  "append": "body",                               // append to html element 
+  "type": "popup",                                // type of module ad
+  "revision": 109,                                // cache revision
+  "rotate": "true",                               // rotate ads
+  "refresh": 10000,                               // refresh ads
+  "videoFile": "//dekko.pronskiy.ru/doc/modules/video/video-banner.mp4", // for video ads
+  "videoPoster": "//dekko.pronskiy.ru/doc/modules/video/video-banner.jpg", // for video ads
+  "scroll": "fixed",                              // scrolling ads with position fixed
+  "pages": ["/", "/page-1.html", "/page-2.html"], // only view ads on this urls
+  "mobile": {                                     // mobile view
+    "css": {                                      // mobile css
       "param": "value"
     }
   },
-  "url": "http://google.com",
-  "delay": 500,
-  "closeExpire": 2,
+  "url": "http://google.com",                     // target click url
+  "delay": 500, // wait to view ad module
+  "closeExpire": 2, // click close ad module minutes number
   "date": {
-    "start": "2017-05-29T12:00:00.000000+04:00",
-    "end": "2020-01-01T00:00:00.000000+04:00"
+    "start": "2017-05-29T12:00:00.000000+04:00",  // date start view ad module
+    "end": "2020-01-01T00:00:00.000000+04:00"     // date stop view ad module
   },
   "effects": {
     "easing": [
-      "easeInOutElastic",
-      "easeOutElastic"
+      "easeInOutElastic",                         // easing start
+      "easeOutElastic"                            // easing close
     ],
-    "duration": 1000
+    "duration": 1000                              // easing time
   },
-  "position": {
+  "position": {                                   // position of popup ad module
     "left": "15px",
     "bottom": "15px"
   }
-}
+}]
 ```
 
 **module function**
 ```js
-(function ($) {
     window.dekkoModule = function (object) {
         ...
     };
-}(jQuery));
 ```
 
 ### nginx configuration
@@ -155,6 +156,11 @@ server {
 ```
 
 ### Changelog
+## [0.2.9](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-05)
+
+- Added new options: `videoFile`, `videoPoster`, `scroll`
+- Added max refresh option `this.refresh.max: 100`
+
 ## [0.2.8](https://github.com/PavelPronskiy/dekko/tree/0.2.8) (2017-09-05)
 
 - Refactoring and optimizing memory on dekko.js

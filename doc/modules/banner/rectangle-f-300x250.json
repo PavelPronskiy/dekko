@@ -1,8 +1,6 @@
 {
   "type": "banner",
   "rotate": "true",
-  "refresh": 10000,
-  "pages": ["/", "/page-1.html", "/page-2.html"],
   "append": "#banner-aside-rotate-300x250",
   "revision": 112,
   "url": "/target/click.html",

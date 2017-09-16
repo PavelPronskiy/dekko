@@ -1,11 +1,10 @@
 {
   "type": "banner",
-  "rotate": "true",
-  "refresh": 1000,
-  "append": "#banner-skyscraper-rotate",
+  "append": "#banner-scroll-300x250",
   "revision": 112,
-  "url": "http://google.com",
-  "delay": 0,
+  "scroll": "fixed",
+  "url": "https://google.com",
+  "delay": 300,
   "closeExpire": 2,
   "date": {
     "start": "2016-03-28T12:00:00.000000+02:00",
@@ -16,6 +15,6 @@
       "easeInSine",
       "easeOutSine"
     ],
-    "duration": 500
+    "duration": 1000
   }
 }

@@ -1,0 +1,22 @@
+{
+  "type": "video",
+  "rotate": "false",
+  "append": "#video-banner",
+  "revision": 132,
+  "url": "http://google.com",
+  "delay": 600,
+  "closeExpire": 2,
+  "videoFile": "//dekko.pronskiy.ru/doc/modules/video/video-banner.mp4",
+  "videoPoster": "//dekko.pronskiy.ru/doc/modules/video/video-banner.jpg",
+  "date": {
+    "start": "2017-09-11T01:40:00.000000+04:00",
+    "end": "2020-09-11T01:42:00.000000+04:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInSine",
+      "easeOutSine"
+    ],
+    "duration": 300
+  }
+}

@@ -1,7 +1,7 @@
 {
   "type": "banner",
   "rotate": "true",
-  "refresh": 1000,
+  "refresh": 2000,
   "pages": ["/", "/page-1.html", "/page-2.html"],
   "append": "#banner-skyscraper-rotate",
   "revision": 112,

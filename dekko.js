@@ -2,7 +2,7 @@
  *
  * name: Dekko server side
  * description: advertized platform
- * Version: 0.2.8 beta
+ * Version: 0.2.9 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
@@ -48,18 +48,15 @@
 		this.defaults = {
 			// 3rd-party libraries
 			libs: {
-				// fingerprint2 client identification
+				jQuery: {
+					path: '/dist/jquery.min.js'
+				},
 				fingerprint: {
 					path: '/dist/fingerprint2.min.js',
 					options: {
 						excludeUserAgent: true
 					}
 				},
-				// fingerprint2 client identification
-				jQuery: {
-					path: '/dist/jquery.min.js'
-				},
-				// easing jquery
 				easingjQuery: {
 					path: '/dist/jquery.easing.min.js'
 				}
@@ -94,7 +91,7 @@
 			name 				: 'dekko:',
 			closed 				: ':closed',
 			module 				: ':module:',
-			prev 				: ':rotate:',
+			prev 				: 'rotate:',
 			easing 				: 'easing',
 			options 			: 'options',
 			rev 				: ':r',
@@ -105,11 +102,13 @@
 		this.domain = window.location.hostname || window.location.host;
 		this.isMobile = this.regex.mobile.test(window.navigator.userAgent) ? true : false;
 		this.detectIEBrowser = this.regex.ie.test(window.navigator.userAgent) ? true : false;
-		this.XMLHttpRequest = ("onload" in new XMLHttpRequest()) ? new XMLHttpRequest : new XDomainRequest;
 		this.refreshModules = [];
 	};
 
 	dekkoJS.prototype = {
+		dateNow: function() {
+			return new Date().getTime();
+		},
 		setStore: function(n, o) {
 			return window.localStorage.setItem(n, JSON.stringify(o));
 		},
@@ -145,22 +144,26 @@
 			window.dekkoModule.call(this, o);
 		},
 		// request module callback
-		notice: function(o, s) {
+		notice: function(o) {
+
 			if (typeof o.item.refresh === 'number' && o.rotate === true)
-				this.refreshOnModules(o, s);
+				this.refreshOnModules(o);
 
 			return (o.verbose === true) ?
 				this.timeEnd(o.timePoint) :
 				false;
 		},
 		expire: function(o) {
-			var a = this.getStore(o.closePoint);
+			var a = this.getStore(o.closePoint), b, s = {};
 
 			if (a === false)
 				return false;
 
-			var b = (a[0] === true) ? Math.floor((o.date.now() - a[1]) / 60) : false; // minutes ago
-			return (b && b > o.date.close) ?
+			b = a[0] === true ?
+				Math.floor(((o.date.now() - a[1]) / 1000) / 60)
+				: false; // minutes ago
+
+			return b && b > o.date.close ?
 				this.delStore(o.closePoint) :
 				true;
 		},
@@ -174,9 +177,19 @@
 		},
 
 		xhr: function(o, m) {
-			o.cache = (typeof o.cache == 'boolean') ? o.cache : this.defaults.cache;
-			var url = (o.cache === false) ? o.url + '&n=' + new Date().getTime() : o.url;
-			var xhr = this.XMLHttpRequest;
+
+			o.cache = typeof o.cache == 'boolean' ?
+				o.cache :
+				this.defaults.cache;
+
+			var xhr = ("onload" in new XMLHttpRequest()) ?
+				new XMLHttpRequest() :
+				new XDomainRequest();
+
+			var url = (o.cache === false) ?
+				o.url + '&n=' + new Date().getTime() :
+				o.url;
+
 			xhr.open('GET', url, this.defaults.async);
 			xhr.module = m;
 			xhr.onload = o.success;
@@ -236,29 +249,20 @@
 					name			: o.modules[i].name,
 					delay			: o.modules[i].delay,
 					append			: o.modules[i].append,
+					ppm 			: this.storePoint.name + this.storePoint.prev,
 					mobile			: o.modules[i].mobile === 'true' ? true : false,
 					rotate			: o.modules[i].rotate === 'true' ? true : false,
-					ppm 			: this.storePoint.name + o.fingerPrint + this.storePoint.prev,
 					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
-					timePoint		: this.console.timeModule +
-									  o.modules[i].name +
-									  this.console.timeSeconds,
-					url				: o.url + '?' + 'd=' +
-									  this.domain + '&m=' +
-									  o.modules[i].name + '&f=' +
-									  o.fingerPrint,
-					storeName		: this.storePoint.name + o.fingerPrint +
-									  this.storePoint.p + o.modules[i].type +
-									  this.storePoint.p + o.modules[i].name +
-									  this.storePoint.rev + o.modules[i].revision,
+					timePoint		: this.console.timeModule + o.modules[i].name + this.console.timeSeconds,
+					url				: o.url + '?' + 'd=' + this.domain + '&m=' + o.modules[i].name + '&f=' + o.fingerPrint,
+					storeName		: this.storePoint.name + o.modules[i].type + this.storePoint.p + o.modules[i].name + this.storePoint.rev + o.modules[i].revision,
 					date: {
-						now 		: function() { return new Date().getTime(); },
+						now 		: this.dateNow,
 						end			: this.toLocalDateTime(o.modules[i].date.end),
 						start		: this.toLocalDateTime(o.modules[i].date.start),
 						close		: o.modules[i].closeExpire
 					}
 				};
-
 
 				module.closePoint = module.storeName + this.storePoint.closed;
 
@@ -300,7 +304,7 @@
 			return this.getModules(ms.modules);
 		},
 		// refresh module without page reload
-		refreshOnModules: function(module, s) {
+		refreshOnModules: function(module) {
 			var t = {};
 			t.refresh = '';
 			t.el = jQuery('#' + module.name + '-wrap');
@@ -399,14 +403,9 @@
 		getOptions: function(o) {
 			var	d = {}, ajax = {};
 
-			o.spm = this.storePoint.name +
-						o.fingerPrint;
-
-			o.ppm = this.storePoint.name +
-						o.fingerPrint +
-						this.storePoint.prev;
-
 			ajax.cache = o.cache;
+			o.spm = this.storePoint.name;
+			o.ppm = this.storePoint.name + this.storePoint.prev;
 			ajax.url = o.url + '?' + 'd=' + this.domain + '&f=' + o.fingerPrint;
 
 			ajax.success = function(status) {
