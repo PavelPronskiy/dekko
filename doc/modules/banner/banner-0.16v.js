@@ -84,8 +84,12 @@ window.dekkoModule = function (object) {
 		});
 
 	} catch (e) {
-		return console.error(e);
+		return this.exceptionsMessage({
+			message: object.name + ' ' + e,
+			status: this.console.dekkothrowError,
+			date: new Date().toISOString()
+		});
 	} finally {
-		return self.notice(object);
+		return this.notice(object);
 	}
 };

@@ -1,0 +1,20 @@
+{
+  "type": "banner",
+  "rotate": "false",
+  "append": "#banner-cheap-bitcoin-shadowDOM",
+  "revision": 106,
+  "url": "/target/click.html",
+  "delay": 0,
+  "closeExpire": 2,
+  "date": {
+    "start": "2016-03-28T12:00:00.000000+04:00",
+    "end": "2020-01-01T00:00:00.000000+04:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInOutElastic",
+      "easeOutElastic"
+    ],
+    "duration": 0
+  }
+}

@@ -196,6 +196,7 @@ window.dekkoModule = function (object) {
 			'css': css.linkBack
 		});
 
+		t.append 	= this.shadowCreate(object.append);
 
 		t.item.appendTo(t.wrap);
 		t.flip.appendTo(t.item);
@@ -210,7 +211,7 @@ window.dekkoModule = function (object) {
 		t.video.appendTo(t.flipFront);
 		t.seekBar.appendTo(t.seekBarContainer);
 		t.seekBarContainer.appendTo(t.flipFront);
-		t.wrap.appendTo(object.append);
+		t.wrap.appendTo(t.append);
 
 		t.video[0].load();
 		t.video[0].volume = 0.2;
@@ -317,8 +318,12 @@ window.dekkoModule = function (object) {
 		});
 
 	} catch (e) {
-		return console.error(e);
+		return this.exceptionsMessage({
+			message: object.name + ' ' + e,
+			status: this.console.dekkothrowError,
+			date: new Date().toISOString()
+		});
 	} finally {
-		return window.dekkoJS.notice(object);
+		return this.notice(object);
 	}
 };

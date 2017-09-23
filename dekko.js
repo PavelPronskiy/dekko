@@ -1,13 +1,13 @@
 /**
  *
- * name: Dekko server side
+ * name: Dekko client side
  * description: advertized platform
- * Version: 0.2.9 beta
+ * Version: 0.3.0 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
  * Copyright (c) 2016-2017 Dekko Pavel Pronskiy
- * Last update: 05.09.2017
+ * Last update: 23.09.2017
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -73,6 +73,7 @@
 			moduleName			: 'Module: ',
 			moduleNotFound		: 'Module not found: ',
 			moduleAppendNotFound: ' html element not found on this page',
+			dekkothrowError 	: 'dekko.js >> [error] ',
 			timeSettings		: 'dekko.js >> settings loaded',
 			timeModule 			: 'dekko.js >> module: ',
 			timeSeconds			: ', load time',
@@ -120,6 +121,17 @@
 		},
 		delStore: function(o) {
 			return window.localStorage.removeItem(o);
+		},
+		// make shadow DOM on module element container
+		shadowCreate: function(append) {
+			var elementContainer = jQuery(append).get(0);
+			return typeof elementContainer.shadowRoot === 'undefined' ?
+				append : elementContainer.shadowRoot === null ?
+					// create shadow-root environment
+					elementContainer.attachShadow({
+						mode: 'open'
+						// return exist shadow-root environment
+					}) : elementContainer.shadowRoot;
 		},
 		exec: function(s) {
 			return (window.execScript) ?
@@ -254,8 +266,10 @@
 					rotate			: o.modules[i].rotate === 'true' ? true : false,
 					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
 					timePoint		: this.console.timeModule + o.modules[i].name + this.console.timeSeconds,
-					url				: o.url + '?' + 'd=' + this.domain + '&m=' + o.modules[i].name + '&f=' + o.fingerPrint,
-					storeName		: this.storePoint.name + o.modules[i].type + this.storePoint.p + o.modules[i].name + this.storePoint.rev + o.modules[i].revision,
+					url				: o.url + '?' + 'd=' + this.domain + '&m=' +
+										o.modules[i].name + '&f=' + o.fingerPrint,
+					storeName		: this.storePoint.name + o.modules[i].type + this.storePoint.p +
+										o.modules[i].name + this.storePoint.rev + o.modules[i].revision,
 					date: {
 						now 		: this.dateNow,
 						end			: this.toLocalDateTime(o.modules[i].date.end),
@@ -307,18 +321,25 @@
 		refreshOnModules: function(module) {
 			var t = {};
 			t.refresh = '';
-			t.el = jQuery('#' + module.name + '-wrap');
+			t.append = jQuery(module.append).get(0);
+			t.el = (typeof t.append.shadowRoot !== 'undefined' &&
+					t.append.shadowRoot.childNodes.length > 0) ?
+				jQuery(t.append.shadowRoot.childNodes[0]) :
+				jQuery('#' + module.name + '-wrap');
+			
 			t.fn = function() {
 				t.ref = window.dekkoJS.refreshModules.filter(function(c) {
 					return c.name !== module.name &&
-						   module.append == c.append &&
-						   window.dekkoJS.getStore(c.closePoint) === false;
+						module.append == c.append &&
+						window.dekkoJS.getStore(c.closePoint) === false;
 				});
 
 				if (t.ref.length === 0)
 					return clearTimeout(this);
 
 				t.rand = parseInt(Math.floor(Math.random() * t.ref.length), 10);
+
+
 				t.el.fadeOut((module.item.effects.duration/2), module.item.effects.easing[1], function() {
 					jQuery(this).clearQueue().stop(true).remove();
 					window.dekkoJS.getModules([t.ref[t.rand]]);
@@ -609,6 +630,7 @@
 
 		},
 		svg: {
+			// button element
 			close: function(c) {
 				return '<svg width="' + c.width + '" height="' + c.height + '"' +
 					   'style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality;' +

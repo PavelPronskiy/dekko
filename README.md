@@ -156,7 +156,11 @@ server {
 ```
 
 ### Changelog
-## [0.2.9](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-05)
+## [0.3.0](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-23)
+
+- New strategy isolation advertized modules - shadow DOM (native only)
+
+## [0.2.9](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-17)
 
 - Added new options: `videoFile`, `videoPoster`, `scroll`
 - Added max refresh option `this.refresh.max: 100`

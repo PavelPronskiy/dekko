@@ -65,6 +65,7 @@ window.dekkoModule = function (object) {
 
 	try {
 
+		t.append = this.createIsolateContainer(object.append);
 		t.wrap 		= $('<div/>', {  'id': object.name + '-wrap', 'css': css.wrap });
 		t.item 		= $('<div/>', { 'css': css.item });
 		t.close 	= $('<div/>', { 'css': css.close.none, 'html': self.svg.close(css.close.none) });
@@ -73,7 +74,7 @@ window.dekkoModule = function (object) {
 		t.item.appendTo(t.wrap);
 		t.close.appendTo(t.item);
 		t.link.appendTo(t.item);
-		t.wrap.appendTo(object.append);
+		t.wrap.appendTo(t.append);
 
 		t.wrap.delay(object.item.delay)
 			.fadeIn(object.item.effects.duration, object.item.effects.easing[0], function() {
@@ -117,8 +118,12 @@ window.dekkoModule = function (object) {
 		}
 
 	} catch (e) {
-		return console.error(e);
+		return this.exceptionsMessage({
+			message: object.name + ' ' + e,
+			status: this.console.dekkothrowError,
+			date: new Date().toISOString()
+		});
 	} finally {
-		return self.notice(object);
+		return this.notice(object);
 	}
 };
