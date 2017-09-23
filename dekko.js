@@ -70,12 +70,10 @@
 		};
 		// verbose options
 		this.console = {
-			moduleName			: 'Module: ',
 			moduleNotFound		: 'Module not found: ',
 			moduleAppendNotFound: ' html element not found on this page',
 			dekkothrowError 	: 'dekko.js >> [error] ',
-			timeSettings		: 'dekko.js >> settings loaded',
-			timeModule 			: 'dekko.js >> module: ',
+			timeModule 			: 'dekko.js >> ',
 			timeSeconds			: ', load time',
 			easingjQuery		: 'jQuery easing not initialized',
 			jQuery				: 'jQuery not initialized',
@@ -104,6 +102,7 @@
 		this.isMobile = this.regex.mobile.test(window.navigator.userAgent) ? true : false;
 		this.detectIEBrowser = this.regex.ie.test(window.navigator.userAgent) ? true : false;
 		this.refreshModules = [];
+		this.xhrParams = {};
 	};
 
 	dekkoJS.prototype = {
@@ -125,6 +124,14 @@
 		// make shadow DOM on module element container
 		shadowCreate: function(append) {
 			var elementContainer = jQuery(append).get(0);
+			if (typeof elementContainer == 'undefined')
+				return this.exceptionsMessage({
+					message: append + ' ' + this.console.moduleAppendNotFound,
+					status: this.console.dekkothrowError,
+					date: new Date().toISOString()
+				});
+
+			// moduleAppendNotFound
 			return typeof elementContainer.shadowRoot === 'undefined' ?
 				append : elementContainer.shadowRoot === null ?
 					// create shadow-root environment
@@ -189,27 +196,19 @@
 		},
 
 		xhr: function(o, m) {
-
-			o.cache = typeof o.cache == 'boolean' ?
-				o.cache :
-				this.defaults.cache;
-
 			var xhr = ("onload" in new XMLHttpRequest()) ?
 				new XMLHttpRequest() :
 				new XDomainRequest();
 
-			var url = (o.cache === false) ?
-				o.url + '&n=' + new Date().getTime() :
-				o.url;
+			var url = o.cache ?
+				o.url :
+				o.url + '&n=' + new Date().getTime();
 
 			xhr.open('GET', url, this.defaults.async);
 			xhr.module = m;
 			xhr.onload = o.success;
 			xhr.send(null);
 			xhr = null;
-		},
-		ajax: function(o) {
-			return this.xhr(o);
 		},
 		time: function(o) {
 			if (this.detectIEBrowser === false)
@@ -220,21 +219,6 @@
 				console.log(o);
 			else
 				console.timeEnd(o);
-		},
-		appendModule: function(e) {
-
-			var t = {};
-			t.id = /^\#/i;
-			t.tag = /^[a-z]+$/i;
-
-			if (t.id.test(e) === true && t.tag.test(e) === false)
-				t.el = document.getElementById(e.replace(t.id, ''));
-			else if (t.id.test(e) === false && t.tag.test(e) === true)
-				t.el = document.getElementsByTagName(e)[0];
-			else
-				t.el = false;
-				
-			return t.el;
 		},
 		// object params build
 		constructParams: function(o) {
@@ -248,7 +232,7 @@
 			if (o.modules.length === 0)
 				return false;
 
-			for (var i = 0, l = o.modules.length; i < l; i++) {
+			for (var i = 0; i < o.modules.length; i++) {
 
 				module = {
 					spm				: o.spm,
@@ -322,6 +306,14 @@
 			var t = {};
 			t.refresh = '';
 			t.append = jQuery(module.append).get(0);
+
+			if (typeof t.append === 'undefined')
+				return this.exceptionsMessage({
+					message: module.append + ' ' + this.console.moduleAppendNotFound,
+					status: this.console.dekkothrowError,
+					date: new Date().toISOString()
+				});
+			
 			t.el = (typeof t.append.shadowRoot !== 'undefined' &&
 					t.append.shadowRoot.childNodes.length > 0) ?
 				jQuery(t.append.shadowRoot.childNodes[0]) :
@@ -422,14 +414,14 @@
 		},
 		// get object options
 		getOptions: function(o) {
-			var	d = {}, ajax = {};
+			var	d = {};
 
-			ajax.cache = o.cache;
+			this.xhrParams.cache = o.cache;
 			o.spm = this.storePoint.name;
 			o.ppm = this.storePoint.name + this.storePoint.prev;
-			ajax.url = o.url + '?' + 'd=' + this.domain + '&f=' + o.fingerPrint;
+			this.xhrParams.url = o.url + '?' + 'd=' + this.domain + '&f=' + o.fingerPrint;
 
-			ajax.success = function(status) {
+			this.xhrParams.success = function(status) {
 				o.modules = JSON.parse(this.responseText);
 				o.contentType = this.getResponseHeader('content-type');
 				
@@ -447,13 +439,13 @@
 				return window.dekkoJS.constructParams(o);
 			};
 
-			return this.xhr(ajax, null);
+			return this.xhr(this.xhrParams, null);
 		},
 		// check options and switch request to render
 		getModules: function(m) {
-			var ajax = {};
+			// var ajax = {};
 
-			ajax.success = function(s) {
+			this.xhrParams.success = function(s) {
 				if (this.module.cache && window.dekkoJS.getStore(this.module.storeName) === false)
 					window.dekkoJS.setStore(this.module.storeName, this.responseText);
 
@@ -468,8 +460,8 @@
 			};
 
 			for (var i = 0, l = m.length; i < l; i++) {
-				ajax.url = m[i].url;
-				ajax.cache	= m[i].cache;
+				this.xhrParams.url = m[i].url;
+				this.xhrParams.cache	= m[i].cache;
 
 				if (m[i].verbose)
 					this.time(m[i].timePoint);
@@ -477,7 +469,7 @@
 				if (m[i].cache && this.getStore(m[i].storeName) !== false)
 					this.render(this.getStore(m[i].storeName), m[i]);
 				else
-					this.xhr(ajax, m[i]);
+					this.xhr(this.xhrParams, m[i]);
 			}
 		},
 		exceptionsMessage: function(o) {
@@ -512,25 +504,25 @@
 		},
 		// for module clients click
 		clickAdvert: function(o) {
-			var	ajax = {}, t = {};
+			var	t = {};
 
 			// ajax.cache			= true;
-			ajax.url = o.url + '&c=' + o.date.now();
+			this.xhrParams.url = o.url + '&c=' + o.date.now();
 
-			ajax.success = function(status) {
+			this.xhrParams.success = function(status) {
 				return true;
 			};
 			
-			return this.xhr(ajax);
+			return this.xhr(this.xhrParams);
 		},
 		getFingerprint: function(o) {
-			var ajax = {};
+			// var ajax = {};
 
-			ajax.cache = true;
-			ajax.url = o.dekkoURL +
+			this.xhrParams.cache = true;
+			this.xhrParams.url = o.dekkoURL +
 						this.defaults.libs.fingerprint.path;
 
-			ajax.success = function(status) {
+			this.xhrParams.success = function(status) {
 				window.dekkoJS.exec(this.responseText);
 
 				new Fingerprint2(window.dekkoJS.defaults.libs.fingerprint.options).get(function(f) {
@@ -543,7 +535,7 @@
 				});	
 			};
 
-			return this.xhr(ajax, null);
+			return this.xhr(this.xhrParams, null);
 
 		},
 		getScriptTagParams: function() {
@@ -569,6 +561,7 @@
 			t.arr = t.d.src.split('/');
 			o.dekkoURL = t.arr[0] + '//' + t.arr[2];
 			o.url = o.dekkoURL + this.defaults.path;
+
 			return o;
 		},
 		optionsPrepare: function() {
@@ -579,14 +572,13 @@
 				this.getOptions(o);
 		},
 		loadJQEasing: function() {
-			var ajax = {},
-				store = this.getStore(this.easingStoreKey),
+			var store = this.getStore(this.easingStoreKey),
 				o = this.getScriptTagParams();
 
-			ajax.cache = true;
-			ajax.url = o.dekkoURL + this.defaults.libs.easingjQuery.path;
+			this.xhrParams.cache = true;
+			this.xhrParams.url = o.dekkoURL + this.defaults.libs.easingjQuery.path;
 
-			ajax.success = function(status) {
+			this.xhrParams.success = function(status) {
 				window.dekkoJS.exec(this.responseText);
 
 				if (typeof jQuery.easing.def === 'undefined')
@@ -597,7 +589,7 @@
 			};
 
 			if (store === false)
-				return this.xhr(ajax, null);
+				return this.xhr(this.xhrParams, null);
 			
 			this.exec(store);
 
@@ -607,14 +599,13 @@
 			return this.optionsPrepare();
 		},
 		loadJQuery: function() {
-			var ajax = {},
-				o = this.getScriptTagParams();
+			var o = this.getScriptTagParams();
 
-			ajax.cache = true;
-			ajax.url = o.dekkoURL +
+			this.xhrParams.cache = true;
+			this.xhrParams.url = o.dekkoURL +
 						this.defaults.libs.jQuery.path;
 
-			ajax.success = function(status) {
+			this.xhrParams.success = function(status) {
 				window.dekkoJS.exec(this.responseText);
 
 				if (typeof jQuery === 'undefined')
@@ -626,7 +617,7 @@
 				return window.dekkoJS.optionsPrepare();
 			};
 
-			return this.xhr(ajax, null);
+			return this.xhr(this.xhrParams, null);
 
 		},
 		svg: {
