@@ -24,7 +24,7 @@
 
 ```
 
-## Module advertuzed types ##
+## Module ads types ##
 
  * popup
  * banner
