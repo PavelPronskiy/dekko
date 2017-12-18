@@ -29,6 +29,7 @@
  * popup
  * banner
  * bar
+ * modal
  * video
 
 ## Depends
