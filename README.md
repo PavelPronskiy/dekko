@@ -157,7 +157,11 @@ server {
 ```
 
 ### Changelog
-## [0.3.0](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-23)
+## [0.3.0.1](https://github.com/PavelPronskiy/dekko/tree/0.3.0) (2017-12-18)
+
+- Added new module: modal splash window
+
+## [0.3.0](https://github.com/PavelPronskiy/dekko/tree/0.3.0) (2017-09-23)
 
 - New strategy isolation advertized modules - shadow DOM (native only)
 
