@@ -136,15 +136,16 @@
 				.fadeIn(object.item.effects.duration, object.item.effects.easing[0], function() {
 					$(this).stop(true);
 			});
+				
+			t.leave = false;
 		};
 
 		try {
 			
 			$(window).mouseleave(function() {
-				if (t.leave) {
-					t.leave = false;
+				if (t.leave)
 					return t.renderModalOnLeave();
-				}
+				
 			});
 
 		} catch (e) {
