@@ -1,0 +1,22 @@
+{
+  "type": "modal",
+  "rotate": "false",
+  "mobile": "true",
+  "refresh": 6000,
+  "append": "body",
+  "revision": 120,
+  "url": "http://google.com",
+  "delay": 1000,
+  "closeExpire": 120,
+  "date": {
+    "start": "2017-09-11T01:40:00.000000+04:00",
+    "end": "2020-09-11T01:42:00.000000+04:00"
+  },
+  "effects": {
+    "easing": [
+      "easeInSine",
+      "easeOutSine"
+    ],
+    "duration": 500
+  }
+}
