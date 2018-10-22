@@ -2,12 +2,12 @@
  *
  * name: Dekko client side
  * description: advertized platform
- * Version: 0.3.0 beta
+ * Version: 0.3.0.1 beta
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
  * Copyright (c) 2016-2017 Dekko Pavel Pronskiy
- * Last update: 23.09.2017
+ * Last update: 22.10.2018
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -246,8 +246,8 @@
 					delay			: o.modules[i].delay,
 					append			: o.modules[i].append,
 					ppm 			: this.storePoint.name + this.storePoint.prev,
-					mobile			: o.modules[i].mobile === 'true' ? true : false,
-					rotate			: o.modules[i].rotate === 'true' ? true : false,
+					mobile			: o.modules[i].mobile === true ? true : false,
+					rotate			: o.modules[i].rotate === true ? true : false,
 					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
 					timePoint		: this.console.timeModule + o.modules[i].name + this.console.timeSeconds,
 					url				: o.url + '?' + 'd=' + this.domain + '&m=' +
