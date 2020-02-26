@@ -1,12 +1,12 @@
 
 -- Name: Dekko client side
 -- Description: dekko data logic
--- Version: 0.2.8 beta
+-- Version: 0.3.1 stable
 -- Author:  Pavel Pronskiy
 -- Contact: pavel.pronskiy@gmail.com
 
--- Copyright (c) 2016-2017 Dekko Pavel Pronskiy
--- Last update: 05.09.2017
+-- Copyright (c) 2016-2020 Dekko Pavel Pronskiy
+-- Last update: 15.12.2019
 
 -- Permission is hereby granted, free of charge, to any person
 -- obtaining a copy of this software and associated documentation

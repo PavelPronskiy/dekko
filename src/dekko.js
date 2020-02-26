@@ -1,13 +1,14 @@
+
 /**
  *
  * name: Dekko client side
  * description: advertized platform
- * Version: 0.3.0.1 beta
+ * Version: 0.3.1 stable
  * Author:  Pavel Pronskiy
  * Contact: pavel.pronskiy@gmail.com
  *
- * Copyright (c) 2016-2017 Dekko Pavel Pronskiy
- * Last update: 22.10.2018
+ * Copyright (c) 2016-2020 Dekko Pavel Pronskiy
+ * Last update: 15.12.2019
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -30,6 +31,10 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  *
+ * Integration
+ *  <!-- dekko advertized platform -->
+ *  <script src="https://dekko.host.tld/dekko.js" async data-verbose="true" data-cache="false"></script>
+ *  <!--// dekko advertized platform -->
  *
  **/
 
@@ -66,6 +71,7 @@
 			verbose				: true,
 			modules				: [],
 			rotate				: false,
+			version 			: '0.3.0.1',
 			path				: '/sa'
 		};
 		// verbose options
@@ -73,7 +79,7 @@
 			moduleNotFound		: 'Module not found: ',
 			moduleAppendNotFound: ' html element not found on this page',
 			dekkothrowError 	: 'dekko.js >> [error] ',
-			timeModule 			: 'dekko.js >> ',
+			timeModule 			: 'dekko',
 			timeSeconds			: ', load time',
 			easingjQuery		: 'jQuery easing not initialized',
 			jQuery				: 'jQuery not initialized',
@@ -93,10 +99,12 @@
 			prev 				: 'rotate:',
 			easing 				: 'easing',
 			options 			: 'options',
+			styles 				: 'styles',
 			rev 				: ':r',
 			p 					: ':'
 		};
 		this.easingStoreKey = this.storePoint.name + this.storePoint.easing;
+		this.stylesStoreKey = this.storePoint.name + this.storePoint.styles;
 		this.fingerprintStoreKey = this.storePoint.name + this.storePoint.options;
 		this.domain = window.location.hostname || window.location.host;
 		this.isMobile = this.regex.mobile.test(window.navigator.userAgent) ? true : false;
@@ -248,12 +256,19 @@
 					ppm 			: this.storePoint.name + this.storePoint.prev,
 					mobile			: o.modules[i].mobile === true ? true : false,
 					rotate			: o.modules[i].rotate === true ? true : false,
-					images			: typeof o.modules[i].images == 'object' ? o.modules[i].images : [],
-					timePoint		: this.console.timeModule + o.modules[i].name + this.console.timeSeconds,
-					url				: o.url + '?' + 'd=' + this.domain + '&m=' +
+					style			: typeof o.modules[i].css == 'boolean' && o.modules[i].css
+										? o.url + '?d=' + this.domain + '&s=' + o.modules[i].name + '&f=' + o.fingerPrint
+										: false,
+					images			: typeof o.modules[i].images == 'object'
+										? o.modules[i].images
+										: [],
+					timePoint		: this.console.timeModule + '-' + this.defaults.version + '.js' + ' >> ' + o.modules[i].name + this.console.timeSeconds,
+					url				: o.url + '?d=' + this.domain + '&m=' +
 										o.modules[i].name + '&f=' + o.fingerPrint,
 					storeName		: this.storePoint.name + o.modules[i].type + this.storePoint.p +
 										o.modules[i].name + this.storePoint.rev + o.modules[i].revision,
+					storeNameCSS	: this.storePoint.name + o.modules[i].type + this.storePoint.p +
+										o.modules[i].name + this.storePoint.p + this.storePoint.styles + this.storePoint.rev + o.modules[i].revision,
 					date: {
 						now 		: this.dateNow,
 						end			: this.toLocalDateTime(o.modules[i].date.end),
@@ -537,6 +552,29 @@
 
 			return this.xhr(this.xhrParams, null);
 
+		},
+		getStyles: function(o) {
+
+			var storeNameCSSData = window.dekkoJS.getStore(o.storeNameCSS);
+
+			if (o.cache && storeNameCSSData === false)
+			{
+				this.xhrParams.cache = o.cache;
+				this.xhrParams.url = o.style;
+				this.xhrParams.success = function(status) {
+					// console.log(this);
+					window.dekkoJS.setStore(o.storeNameCSS, this.responseText);
+					return jQuery('<style/>', {
+						text: this.responseText
+					}).appendTo(o.append);
+				};
+
+				return this.xhr(this.xhrParams, null);
+			} else {
+				return jQuery('<style/>', {
+					text: storeNameCSSData
+				}).appendTo(o.append);
+			}
 		},
 		getScriptTagParams: function() {
 			var t = {}, o = {};

@@ -19,7 +19,7 @@
 ```html
 
     <!-- dekko advertized platform -->
-    <script src="https://dekko.pronskiy.ru/dekko.js" async data-verbose="true" data-cache="false"></script>
+    <script src="https://example.host/dekko.js" async data-verbose="true" data-cache="false"></script>
     <!--// dekko advertized platform -->
 
 ```
@@ -31,6 +31,8 @@
  * bar
  * modal
  * video
+ * logger
+ * 3rd-party
 
 ## Depends
 ```
@@ -43,145 +45,102 @@
 
 ### Module structure example ##
 
-**all options example**
+**module.json config example**
 ```json
 [{
-  "geoTargeting":[88,77,32,50,333,334],           // geo regions (only Russian Federation support)
-  "append": "body",                               // append to html element 
-  "type": "popup",                                // type of module ad
-  "revision": 109,                                // cache revision
-  "rotate": "true",                               // rotate ads
-  "refresh": 10000,                               // refresh ads
-  "videoFile": "//dekko.pronskiy.ru/doc/modules/video/video-banner.mp4", // for video ads
-  "videoPoster": "//dekko.pronskiy.ru/doc/modules/video/video-banner.jpg", // for video ads
-  "scroll": "fixed",                              // scrolling ads with position fixed
-  "pages": ["/", "/page-1.html", "/page-2.html"], // only view ads on this urls
-  "mobile": {                                     // mobile view
-    "css": {                                      // mobile css
-      "param": "value"
-    }
-  },
-  "url": "http://google.com",                     // target click url
-  "delay": 500, // wait to view ad module
-  "closeExpire": 2, // click close ad module minutes number
+  "geoTargeting":[88,77,32,50,333,334],
+  "append": "#dekko-popup-thatever",
+  "type": "popup",
+  "revision": 109,
+  "rotate": "true",
+  "refresh": 10000,
+  "pages": ["/", "/page-1.html", "/page-2.html"],
+  "url": "http://google.com",
+  "delay": 500,
+  "closeExpire": 2,
   "date": {
-    "start": "2017-05-29T12:00:00.000000+04:00",  // date start view ad module
-    "end": "2020-01-01T00:00:00.000000+04:00"     // date stop view ad module
+    "start": "2017-05-29T12:00:00.000000+04:00",
+    "end": "2020-01-01T00:00:00.000000+04:00"
   },
   "effects": {
     "easing": [
-      "easeInOutElastic",                         // easing start
-      "easeOutElastic"                            // easing close
+      "easeInOutElastic",
+      "easeOutElastic"
     ],
-    "duration": 1000                              // easing time
+    "duration": 1000
   },
-  "position": {                                   // position of popup ad module
+  "position": {
     "left": "15px",
     "bottom": "15px"
   }
 }]
 ```
 
-**module function**
+**module.js function example**
 ```js
+(function($) {
     window.dekkoModule = function (object) {
-        ...
+      try {
+
+
+         ...
+
+
+      } catch (e) {
+        return this.exceptionsMessage({
+          message: object.name + " " + e,
+          status: this.console.dekkothrowError,
+          date: (new Date).toISOString()
+        });
+      } finally {
+        return dekkoJS.notice(object);
+      }
+
     };
+})(jQuery);
 ```
 
-### nginx configuration
-```
-lua_package_path "/home/dekko/lua/modules/?.lua;;";
-lua_shared_dict lastmodified 10m;
-lua_shared_dict redisPool 64k;
-
-geo $remote_addr $region {
-    ranges;
-    default 0;
-    include /usr/share/ip2geo/region.txt;
-}
-
-geo $remote_addr $countryCode {
-    ranges;
-    default 0;
-    include /usr/share/ip2geo/region.txt;
-}
-
-geoip_country /usr/share/GeoIP/GeoIP.dat;
-
-
-
-server {
-
-	set $cors_age 86400;
-
-  location / {
-  	if ($request_method = OPTIONS) {
-  		add_header 'Access-Control-Allow-Origin' '*';
-  		add_header 'Access-Control-Allow-Credentials' 'true';
-  		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
-  		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '$cors_age';
-  		add_header Content-Length 0;
-  		add_header Content-Type text/plain;
-  		return 204;
-  	}
-  
-		if ($request_method = GET) {
-			add_header 'Access-Control-Allow-Origin' '*';
-			add_header 'Access-Control-Allow-Credentials' 'true';
-			add_header 'Access-Control-Allow-Methods' 'GET';
-			add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-			add_header 'Access-Control-Max-Age' '$cors_age';
-		}
-	
-  
-  	expires max;
-  }
-
-  location = /sa {
-  	if ($request_method = OPTIONS) {
-  		add_header 'Access-Control-Allow-Origin' '*';
-  		add_header 'Access-Control-Allow-Credentials' 'true';
-  		add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
-  		add_header 'Access-Control-Allow-Headers' 'Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-  		add_header 'Access-Control-Max-Age' '$cors_age';
-  		add_header Content-Length 0;
-  		add_header Content-Type text/plain;
-  		return 204;
-  	}
-    content_by_lua_file '/path/to/dekko.lua';
+**banner.scss style example**
+```scss
+#module-name {
+  .module-style-container {
+    
   }
 }
 
 ```
 
 ### Changelog
-## [0.3.0.1](https://github.com/PavelPronskiy/dekko/tree/0.3.0) (2017-12-18)
+## [0.3.1] (2019-12-15)
+
+- Stable version.
+- Added scss/css module
+
+## [0.3.0.1] (2017-12-18)
 
 - Added new module: modal splash window
 
-## [0.3.0](https://github.com/PavelPronskiy/dekko/tree/0.3.0) (2017-09-23)
+## [0.3.0] (2017-09-23)
 
 - New strategy isolation advertized modules - shadow DOM (native only)
 
-## [0.2.9](https://github.com/PavelPronskiy/dekko/tree/0.2.9) (2017-09-17)
+## [0.2.9] (2017-09-17)
 
 - Added new options: `videoFile`, `videoPoster`, `scroll`
 - Added max refresh option `this.refresh.max: 100`
 
-## [0.2.8](https://github.com/PavelPronskiy/dekko/tree/0.2.8) (2017-09-05)
+## [0.2.8] (2017-09-05)
 
 - Refactoring and optimizing memory on dekko.js
 - Added max refresh option `this.refresh.max: 100`
 
-## [0.2.7](https://github.com/PavelPronskiy/dekko/tree/0.2.7) (2017-08-31)
+## [0.2.7] (2017-08-31)
 
 - Refactoring dekko.js
 - Added fingerprint2.js
 - Added jQuery easing
 
-## [0.2.6](https://github.com/PavelPronskiy/dekko/tree/0.2.6) (2017-08-27)
+## [0.2.6] (2017-08-27)
 
 - Added new module options param: `refresh: seconds`
   This parameter provide online refresh modules. Worked only defined two parameters: `refresh: seconds` and `rotate: "true"`
@@ -194,52 +153,93 @@ server {
 - Added new redis incrby: domain.tld:lg 0000-00-00:module-name increment counter
   This parameter count module downloads by day
 
-## [0.2.5](https://github.com/PavelPronskiy/dekko/tree/0.2.5) (2017-08-21)
+## [0.2.5] (2017-08-21)
 
 - Added svg close button
 - Removed old methods in dekko.js
 - Modules popup and banner updates
 
-## [0.2.4](https://github.com/PavelPronskiy/dekko/tree/0.2.4) (2017-08-16)
+## [0.2.4] (2017-08-16)
 
 - Support compatible Internet Explorer >=8
 
-## [0.2.3](https://github.com/PavelPronskiy/dekko/tree/0.2.3) (2017-08-08)
+## [0.2.3] (2017-08-08)
 
 - bugfix infinite loop if server returned error. This bug fully fixed.
 - removed deprecated sources and over on dekko.js
 - optimizing dekko.js logic
 - new style and syntax console.log
 
-## [0.2.2](https://github.com/PavelPronskiy/dekko/tree/0.2.2) (2017-08-01)
+## [0.2.2] (2017-08-01)
 
 - bugfix bug uri '/sa'
 
-## [0.2.1](https://github.com/PavelPronskiy/dekko/tree/0.2.1) (2017-07-26)
+## [0.2.1] (2017-07-26)
 
 **New options JSON structure**
 
 - Param: `object.append` need to bind html element
+- Geotargeing by region
 - New stack error handler `xpcall` in logic.lua
 - cjson error pcall
 - Added multilang library lang.lua
 - Refactoring logic.lua code and dekko.js 
 
-### Old changelog
+## [0.2.0]
 
-    0.2.1 beta - Geotargeing by region
-    0.2.0 beta - Refactoring dekko.js
-    0.1.9 beta - Refactoring lua and migrating to luajit
-    0.1.8 beta - Added new param `object.mobile` view adv
-    0.1.7 beta - Added geo targeting by geoip-db.com and many fixes
-    0.1.6 beta - Bug fixes.
-    0.1.5 beta - Bug fixes.
-    0.1.4 beta - Added new features. Redis, Nginx, Lua.
-    0.1.3 beta - Added new get method.
-    0.1.2 beta - New bugs and fixes.
-    0.1.1 beta - New option revision and jsonp format modules list.
-    0.1.0 beta - Fixes.
-    0.0.9 beta - Added added new param rotate.
-    0.0.8 beta - Added modulesUrl, removed required $.easing() plugin. Changed module template.
-    0.0.7 beta - Added new option elements.storeVersion and removed $.cookie() plugin
-    0.0.6 beta - init version
+- Refactoring dekko.js
+
+## [0.1.9]
+
+- Refactoring lua and migrating to luajit
+
+## [0.1.8]
+
+- Added new param `object.mobile` view adv
+
+## [0.1.7]
+
+- Added geo targeting by geoip-db.com and many fixes
+
+## [0.1.6]
+
+- Bug fixes.
+
+## [0.1.5]
+
+- Bug fixes.
+
+## [0.1.4]
+
+- Added new features. Redis, Nginx, Lua.
+
+## [0.1.3]
+
+- Added new get method.
+
+## [0.1.2]
+
+- New bugs and fixes.
+
+## [0.1.1]
+
+- New option revision and jsonp format modules list.
+
+## [0.1.0]
+- Fixes.
+
+## [0.0.9]
+
+- Added added new param rotate.
+
+## [0.0.8]
+
+- Added modulesUrl, removed required $.easing() plugin. Changed module template.
+
+## [0.0.7]
+
+- Added new option elements.storeVersion and removed $.cookie() plugin
+
+## [0.0.6]
+
+- init version
